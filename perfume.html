@@ -3,199 +3,369 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تصميم عطرك الخاص | لمسة LAMSA</title>
+  <title>مُختبر صناعة العطور | لمسة LAMSA</title>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
   <style>
-    body.dark-theme {
-      background: #180406;
-      color: #FFFFFF;
+    body {
+      background: #120305;
+      color: #FAF6F6;
+      overflow-x: hidden;
     }
-    .perfume-atelier {
-      max-width: 920px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-    .atelier-title {
+
+    .atelier-hero {
       text-align: center;
-      margin-bottom: 40px;
+      padding: 40px 20px 20px;
     }
-    .atelier-title h1 {
-      color: var(--white);
-      font-size: clamp(2.2rem, 5.5vw, 3.4rem);
-      margin-bottom: 12px;
-      font-family: var(--font-title);
-    }
-    .atelier-title p {
-      color: rgba(255,255,255,0.85);
-      font-size: 1.1rem;
-      max-width: 650px;
-      margin: 0 auto;
-    }
-    .atelier-section {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(212, 175, 55, 0.3);
-      border-radius: var(--radius-xl);
-      padding: 36px 32px;
-      margin-bottom: 32px;
-      backdrop-filter: blur(12px);
-    }
-    .atelier-section h3 {
+    .atelier-hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
       color: var(--gold);
-      margin-bottom: 24px;
-      font-size: 1.35rem;
+      font-family: var(--font-title);
+      margin-bottom: 8px;
+      text-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+    }
+    .atelier-hero p {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 1.05rem;
+      max-width: 620px;
+      margin: 0 auto 24px;
+    }
+
+    /* Mode Switcher Tabs */
+    .atelier-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .atelier-tab-btn {
+      padding: 12px 28px;
+      border-radius: var(--radius-xl);
+      border: 1.5px solid var(--gold-border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--gold-light);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.35s ease;
+    }
+    .atelier-tab-btn.active {
+      background: var(--gold-metallic);
+      color: #3B070B;
+      box-shadow: 0 6px 24px rgba(212, 175, 55, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* Main Split Layout: Bottle Preview on one side, Pyramid on the other */
+    .lab-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 36px;
+      max-width: 1100px;
+      margin: 0 auto 60px;
+      align-items: start;
+    }
+
+    /* Interactive 3D Bottle Showcase */
+    .bottle-showcase-box {
+      background: radial-gradient(circle at center top, rgba(92, 14, 20, 0.5) 0%, rgba(20, 4, 6, 0.95) 100%);
+      border: 2px solid var(--gold-border);
+      border-radius: var(--radius-xl);
+      padding: 36px 24px;
+      text-align: center;
+      position: sticky;
+      top: 100px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      backdrop-filter: blur(16px);
+    }
+
+    /* The Glass Flacon Vector */
+    .flacon-wrapper {
+      position: relative;
+      width: 190px;
+      height: 270px;
+      margin: 0 auto 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.7));
+    }
+
+    /* Cap & Atomizer */
+    .flacon-cap {
+      width: 54px;
+      height: 48px;
+      background: linear-gradient(135deg, #F3E7C4 0%, #D4AF37 50%, #997A15 100%);
+      border-radius: 6px 6px 2px 2px;
+      border: 1px solid #FFE89E;
+      box-shadow: inset 0 2px 6px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.4);
+      position: relative;
+      z-index: 3;
+    }
+    .flacon-neck {
+      width: 32px;
+      height: 16px;
+      background: linear-gradient(90deg, #997A15 0%, #D4AF37 50%, #997A15 100%);
+      z-index: 2;
+    }
+
+    /* Glass Body & Liquid */
+    .flacon-body {
+      width: 170px;
+      height: 206px;
+      border-radius: 18px 18px 24px 24px;
+      border: 3px solid rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 25px rgba(255,255,255,0.2), inset 0 0 10px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    /* Glass reflection shine */
+    .flacon-body::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 14px;
+      width: 20px;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.4) 0%, transparent 100%);
+      transform: skewX(-12deg);
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* Animated Dynamic Liquid */
+    .flacon-liquid {
+      width: 100%;
+      height: 82%;
+      background: linear-gradient(180deg, var(--liquid-top, #F7D070) 0%, var(--liquid-mid, #E65C00) 50%, var(--liquid-base, #4A0D11) 100%);
+      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      box-shadow: 0 0 35px var(--liquid-glow, rgba(212, 175, 55, 0.4));
+    }
+
+    .flacon-liquid::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 0;
+      right: 0;
+      height: 16px;
+      background: inherit;
+      border-radius: 50%;
+      opacity: 0.85;
+      filter: brightness(1.2);
+    }
+
+    /* Engraved Label Plaque */
+    .flacon-label {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      background: rgba(18, 3, 5, 0.85);
+      border: 1.5px solid var(--gold);
+      border-radius: 6px;
+      padding: 10px 8px;
+      text-align: center;
+      z-index: 5;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+    }
+    .flacon-label-brand {
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: var(--gold-light);
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+    }
+    .flacon-label-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin: 4px 0 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .flacon-label-conc {
+      font-size: 0.62rem;
+      color: var(--gold);
+    }
+
+    /* Engraving Input */
+    .engrave-input-wrap {
+      margin-bottom: 20px;
+      text-align: right;
+    }
+    .engrave-input-wrap label {
+      display: block;
+      font-size: 0.88rem;
+      color: var(--gold);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    /* Live Performance Gauges */
+    .perf-radar-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      margin-top: 20px;
+      text-align: right;
+    }
+    .radar-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.88rem;
+    }
+    .radar-bar-bg {
+      width: 120px;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .radar-bar-fill {
+      height: 100%;
+      background: var(--gold-metallic);
+      border-radius: 10px;
+      transition: width 0.6s ease;
+    }
+
+    /* Pyramid Layers Accordion/Cards */
+    .layer-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .layer-card.active-layer {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.06);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .layer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .layer-title-wrap {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    .scent-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
+    .layer-badge-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--gold) 0%, #997A15 100%);
+      color: #240407;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
     }
-    .scent-card {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+    .layer-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+    .layer-sub {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* Notes Chips Grid */
+    .notes-chips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+    }
+    .note-chip {
+      background: rgba(255, 255, 255, 0.05);
       border: 1.5px solid rgba(255, 255, 255, 0.12);
-      border-radius: var(--radius-lg);
-      padding: 24px 18px;
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s ease;
       user-select: none;
+    }
+    .note-chip:hover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.1);
+      transform: translateY(-3px);
+    }
+    .note-chip.selected {
+      border-color: var(--gold);
+      background: radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(92,14,20,0.4) 100%);
+      box-shadow: 0 0 16px rgba(212, 175, 55, 0.35);
+    }
+    .note-chip-icon {
+      font-size: 1.6rem;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .note-chip-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+    .note-chip-desc {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 2px;
+    }
+
+    /* Presets Mode Grid */
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto 50px;
+    }
+    .preset-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1.5px solid rgba(212,175,55,0.3);
+      border-radius: var(--radius-xl);
+      padding: 28px 22px;
+      text-align: right;
+      cursor: pointer;
+      transition: all 0.35s ease;
       position: relative;
       overflow: hidden;
     }
-    .scent-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: transparent;
-      transition: background 0.3s ease;
-    }
-    .scent-card:hover {
+    .preset-card:hover, .preset-card.selected {
       border-color: var(--gold);
-      background: rgba(212, 175, 55, 0.08);
-      transform: translateY(-4px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    }
-    .scent-card.selected {
-      border-color: var(--gold);
-      background: radial-gradient(circle at center, rgba(212, 175, 55, 0.18) 0%, rgba(59, 7, 11, 0.35) 100%);
-      box-shadow: 0 0 25px rgba(212, 175, 55, 0.35);
-    }
-    .scent-card.selected::before {
-      background: var(--gold-metallic);
-    }
-    .scent-icon-wrap {
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      background: radial-gradient(circle at center, rgba(212, 175, 55, 0.2) 0%, rgba(0,0,0,0.4) 100%);
-      border: 1.5px solid var(--gold-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 14px;
-      color: var(--gold);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    .scent-name {
-      font-weight: 700;
-      color: var(--white);
-      font-size: 1.05rem;
-      letter-spacing: -0.01em;
-    }
-    .scent-sub {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.6);
-      margin-top: 4px;
-    }
-    .conc-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-    .conc-card {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1.5px solid rgba(255, 255, 255, 0.12);
-      border-radius: var(--radius-lg);
-      padding: 22px 18px;
-      cursor: pointer;
-      transition: var(--transition);
-      text-align: center;
-    }
-    .conc-card:hover, .conc-card.selected {
-      border-color: var(--gold);
-      background: rgba(212, 175, 55, 0.12);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-    }
-    .conc-card h4 { color: var(--gold-light); margin-bottom: 6px; font-size: 1.05rem; }
-    .conc-card p { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
-
-    .size-toggle-row {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-    }
-    .size-btn {
-      flex: 1;
-      padding: 18px;
-      border-radius: var(--radius-md);
-      background: rgba(255,255,255,0.05);
-      border: 1.5px solid rgba(255,255,255,0.15);
-      color: white;
-      font-family: inherit;
-      font-size: 1.05rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .size-btn:hover, .size-btn.selected {
-      border-color: var(--gold);
-      background: var(--gold-metallic);
-      color: #2A0609;
-      box-shadow: 0 8px 24px rgba(212, 175, 55, 0.35);
+      background: radial-gradient(circle at center, rgba(212,175,55,0.18) 0%, rgba(59,7,11,0.4) 100%);
+      transform: translateY(-5px);
+      box-shadow: 0 14px 35px rgba(0,0,0,0.4);
     }
 
-    /* Summary Card */
-    .perfume-summary-box {
-      background: radial-gradient(circle at top, #4A0D11 0%, #200407 100%);
-      border: 2px solid var(--gold);
-      border-radius: var(--radius-xl);
-      padding: 40px 36px;
-      box-shadow: 0 16px 50px rgba(0,0,0,0.6);
-    }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      font-size: 1rem;
-    }
-    .summary-row span:last-child {
-      font-weight: 700;
-      color: var(--gold-light);
-    }
-    .price-big {
-      font-size: 2.2rem;
-      color: var(--gold);
-      font-weight: 800;
-      font-family: var(--font-title);
-    }
-
-    @media (max-width: 768px) {
-      .scent-grid, .conc-grid { grid-template-columns: 1fr; }
-      .size-toggle-row { flex-direction: column; }
-      .perfume-summary-box { padding: 24px 18px; }
+    @media (max-width: 860px) {
+      .lab-grid { grid-template-columns: 1fr; }
+      .bottle-showcase-box { position: static; margin-bottom: 24px; }
+      .presets-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-<body class="dark-theme">
+<body>
 
   <!-- Overlay & Cart -->
   <div class="overlay" id="overlay"></div>
@@ -227,34 +397,34 @@
   </div>
 
   <!-- Navbar -->
-  <header class="navbar" style="background:rgba(24, 4, 6, 0.95); border-bottom: 1px solid rgba(212,175,55,0.3);">
+  <header class="navbar">
     <div class="container nav-inner">
-      <button class="menu-toggle" id="menuToggle" aria-label="القائمة" style="background:rgba(255,255,255,0.1);">
-        <span style="background:var(--gold);"></span><span style="background:var(--gold);"></span><span style="background:var(--gold);"></span>
+      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+        <span></span><span></span><span></span>
       </button>
 
       <a href="index.html" class="nav-logo">
-        <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
-        <span class="nav-logo-text" style="color:var(--gold);">LAMSA</span>
+        <img src="assets/logo.png" alt="LAMSA" style="width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <span class="nav-logo-text">LAMSA</span>
       </a>
 
       <nav class="nav-links">
-        <a href="index.html" style="color:rgba(255,255,255,0.8);" data-key="nav_sets">الرئيسية</a>
-        <a href="shop.html" style="color:rgba(255,255,255,0.8);" data-key="nav_shop">المتجر</a>
-        <a href="routine.html" style="color:rgba(255,255,255,0.8);" data-key="nav_routine">اختارلي روتين</a>
-        <a href="gift.html" style="color:rgba(255,255,255,0.8);" data-key="nav_gift">صمم هديتك</a>
-        <a href="perfume.html" class="active" style="color:var(--gold); font-weight:700;" data-key="nav_perfume">اعمل برفانك</a>
-        <a href="about.html" style="color:rgba(255,255,255,0.8);" data-key="nav_about">عن لمسة</a>
-        <a href="contact.html" style="color:rgba(255,255,255,0.8);" data-key="nav_contact">تواصل معنا</a>
+        <a href="index.html" data-key="nav_sets">الرئيسية</a>
+        <a href="shop.html" data-key="nav_shop">المتجر</a>
+        <a href="routine.html" data-key="nav_routine">اختارلي روتين</a>
+        <a href="gift.html" data-key="nav_gift">صمم هديتك</a>
+        <a href="perfume.html" class="active" data-key="nav_perfume">اعمل برفانك</a>
+        <a href="about.html" data-key="nav_about">عن لمسة</a>
+        <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
       </nav>
 
       <div class="nav-actions">
         <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
-        <div class="lang-toggle" style="background:rgba(255,255,255,0.1);">
-          <button class="lang-btn active" data-lang="ar" style="color:white;">عربي</button>
-          <button class="lang-btn" data-lang="en" style="color:white;">EN</button>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="ar">عربي</button>
+          <button class="lang-btn" data-lang="en">EN</button>
         </div>
-        <button class="nav-icon-btn" id="cartToggle" style="color:var(--gold);" aria-label="السلة">
+        <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
           🛍️
           <span class="cart-count">0</span>
         </button>
@@ -262,188 +432,416 @@
     </div>
   </header>
 
-  <!-- Main Atelier Content -->
-  <main class="perfume-atelier">
-    <div class="atelier-title">
-      <div style="width:70px; height:70px; border-radius:50%; background:radial-gradient(circle at center, rgba(212,175,55,0.2) 0%, transparent 70%); border:1px solid var(--gold-border); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:var(--gold);">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4M12 2v4M6 10a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V10z"/><circle cx="12" cy="14" r="2"/></svg>
-      </div>
-      <h1 data-key="perf_title">تصميم عطرك الخاص</h1>
-      <p data-key="perf_sub">رحلة حسية لابتكار توقيعك العطري الفريد. اختر المكونات، التركيز، والتفاصيل لتجربة مصممة خصيصاً لك.</p>
-    </div>
+  <!-- Hero Header -->
+  <div class="atelier-hero">
+    <span class="badge badge-popular mb-12">🧪 مُختبر لمسة الحصري للعطور</span>
+    <h1>ابتكر توقيعك العطري الخاص</h1>
+    <p>صمم عطرك الفاخر نوتة بنوتة وشاهد تفاعل السائل العطري وحفر اسمك بالذهب على الزجاجة مباشرة!</p>
 
-    <!-- 1. Scent Family -->
-    <div class="atelier-section">
-      <h3><span>١.</span> <span data-key="perf_family">العائلة العطرية أو التركيبة</span></h3>
-      <div class="scent-grid" id="atelierScentGrid">
-        <!-- Rendered dynamically by JS -->
-      </div>
+    <!-- Switcher -->
+    <div class="atelier-tabs">
+      <button class="atelier-tab-btn active" id="btnModeLab" onclick="switchAtelierMode('lab')">🧪 خلط الهرم العطري التفاعلي</button>
+      <button class="atelier-tab-btn" id="btnModePresets" onclick="switchAtelierMode('presets')">👑 التركيبات الملكية الجاهزة</button>
     </div>
+  </div>
 
-    <!-- 2. Concentration -->
-    <div class="atelier-section">
-      <h3><span>٢.</span> <span data-key="perf_conc">التركيز والثبات</span></h3>
-      <div class="conc-grid">
-        <div class="conc-card" onclick="setConc('edt', 'خفيف (EDT)', this)">
-          <h4 data-key="perf_edt">خفيف (EDT)</h4>
-          <p data-key="perf_edt_d">مناسب للاستخدام اليومي والصباحي</p>
-        </div>
-        <div class="conc-card selected" onclick="setConc('edp', 'متوسط (EDP) ★', this)">
-          <h4 data-key="perf_edp">متوسط (EDP) ★</h4>
-          <p data-key="perf_edp_d">ثبات عالي ومثالي للمناسبات والخروجات</p>
-        </div>
-        <div class="conc-card" onclick="setConc('ext', 'قوي مكثف (Extrait)', this)">
-          <h4 data-key="perf_ext">قوي مكثف (Extrait)</h4>
-          <p data-key="perf_ext_d">أعلى تركيز زيت عطري وثبات يدوم لأيام</p>
-        </div>
-      </div>
-    </div>
+  <main class="container">
 
-    <!-- 3. Size -->
-    <div class="atelier-section">
-      <h3><span>٣.</span> <span data-key="perf_size">حجم الزجاجة</span></h3>
-      <div class="size-toggle-row">
-        <button class="size-btn" onclick="setSize('30ml', this)">30 مل</button>
-        <button class="size-btn selected" onclick="setSize('50ml', this)">50 مل (الحجم الأكثر طلباً)</button>
-        <button class="size-btn" onclick="setSize('100ml', this)">100 مل</button>
-      </div>
-    </div>
-
-    <!-- Summary & Order Form -->
-    <div class="perfume-summary-box">
-      <h3 style="color:var(--gold); margin-bottom:20px; font-size:1.45rem;" data-key="perf_summary">ملخص العطر الخاص بك</h3>
+    <!-- MODE 1: Interactive Lab -->
+    <div id="modeLabSection" class="lab-grid">
       
-      <div class="summary-row">
-        <span>التركيبة المختارة:</span>
-        <span id="sumScent">سوفاج (Sauvage Blend)</span>
-      </div>
-      <div class="summary-row">
-        <span>درجة التركيز:</span>
-        <span id="sumConc">متوسط (EDP) ★</span>
-      </div>
-      <div class="summary-row">
-        <span>حجم الزجاجة:</span>
-        <span id="sumSize">50 مل</span>
-      </div>
-      <div class="summary-row" style="border-bottom:none; padding-top:20px;">
-        <span style="font-size:1.2rem;">السعر التقديري:</span>
-        <span class="price-big" id="sumPrice">500 ج.م</span>
+      <!-- Left / Side: Interactive Bottle Showcase -->
+      <div class="bottle-showcase-box">
+        <h3 style="color:var(--gold); font-size:1.3rem; margin-bottom:18px;">✨ زجاجتك الملكية المخصصة</h3>
+        
+        <!-- The Live Flacon -->
+        <div class="flacon-wrapper">
+          <div class="flacon-cap"></div>
+          <div class="flacon-neck"></div>
+          <div class="flacon-body">
+            <div class="flacon-liquid" id="flaconLiquid"></div>
+            <div class="flacon-label">
+              <div class="flacon-label-brand">LAMSA ATELIER</div>
+              <div class="flacon-label-name" id="flaconLabelName">عطر لمسة الخاص</div>
+              <div class="flacon-label-conc" id="flaconLabelConc">EXTRAIT DE PARFUM</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Engraving Input -->
+        <div class="engrave-input-wrap">
+          <label>✍️ احفر اسمك أو اسم العطر على الزجاجة:</label>
+          <input type="text" class="form-input" id="customNameInput" value="عطر لمسة الخاص" oninput="updateEngraving(this.value)" placeholder="اكتب اسمك هنا ليظهر محفوراً...">
+        </div>
+
+        <!-- Size & Concentration Selectors -->
+        <div class="grid-2 mb-16" style="gap:10px;">
+          <div>
+            <label style="font-size:0.8rem; color:var(--text-light); display:block; margin-bottom:4px;">الحجم:</label>
+            <select class="form-select" id="labSizeSelect" onchange="updateLabCalculations()">
+              <option value="30ml">30 مل</option>
+              <option value="50ml" selected>50 مل (الأكثر طلباً)</option>
+              <option value="100ml">100 مل (VIP)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; color:var(--text-light); display:block; margin-bottom:4px;">التركيز:</label>
+            <select class="form-select" id="labConcSelect" onchange="updateLabCalculations()">
+              <option value="edt">خفيف (EDT)</option>
+              <option value="edp" selected>متوسط (EDP) ★</option>
+              <option value="ext">قوي مكثف (Extrait)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Performance Radar -->
+        <div class="perf-radar-box">
+          <div class="radar-item">
+            <span>💨 الفوحان والانتشار:</span>
+            <div class="flex-center gap-8">
+              <strong id="radarSillageVal" style="color:var(--gold);">92%</strong>
+              <div class="radar-bar-bg"><div class="radar-bar-fill" id="radarSillageBar" style="width:92%;"></div></div>
+            </div>
+          </div>
+          <div class="radar-item">
+            <span>⏳ الثبات على الملابس:</span>
+            <strong id="radarLongevityVal" style="color:var(--gold);">+24 ساعة</strong>
+          </div>
+          <div class="radar-item" style="margin-bottom:0;">
+            <span>🎭 الطابع والمناسبة:</span>
+            <strong id="radarVibeVal" style="color:#FFFFFF; font-size:0.85rem;">ملكي جذاب وفواح</strong>
+          </div>
+        </div>
+
+        <!-- Live Price & Action -->
+        <div class="flex-between mt-20 pt-16" style="border-top:1px solid rgba(255,255,255,0.1);">
+          <div style="text-align:right;">
+            <div style="font-size:0.85rem; color:rgba(255,255,255,0.7);">السعر التقديري:</div>
+            <div style="font-size:1.8rem; font-weight:800; color:var(--gold);" id="labPriceDisplay">500 ج.م</div>
+          </div>
+          <button class="btn btn-gold btn-lg" onclick="openOrderModal()">اطلب خلطتك الآن 🧪✨</button>
+        </div>
       </div>
 
-      <div class="divider" style="background:rgba(255,255,255,0.15);"></div>
+      <!-- Right: The 3 Pyramid Layers -->
+      <div>
+        
+        <!-- Layer 1: Top Notes -->
+        <div class="layer-card active-layer">
+          <div class="layer-header">
+            <div class="layer-title-wrap">
+              <div class="layer-badge-num">١</div>
+              <div>
+                <div class="layer-title">قمة الهرم — الافتتاحية (Top Notes)</div>
+                <div class="layer-sub">أول ما يُشم في العطر من الرشة الأولى — انتعاش فوري وجذاب</div>
+              </div>
+            </div>
+          </div>
+          <div class="notes-chips-grid" id="topNotesGrid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
 
-      <form id="perfumeOrderForm" onsubmit="submitPerfumeOrder(event)">
-        <div class="input-group">
-          <label style="color:white;" data-key="contact_name">الاسم الكامل *</label>
-          <input type="text" class="form-input" required placeholder="اسمك الكريم" id="custName">
+        <!-- Layer 2: Heart Notes -->
+        <div class="layer-card active-layer">
+          <div class="layer-header">
+            <div class="layer-title-wrap">
+              <div class="layer-badge-num">٢</div>
+              <div>
+                <div class="layer-title">قلب العطر — روح التركيبة (Heart Notes)</div>
+                <div class="layer-sub">الرائحة الأساسية الفواحة التي تعطي العطر شخصيته وتميزه</div>
+              </div>
+            </div>
+          </div>
+          <div class="notes-chips-grid" id="heartNotesGrid">
+            <!-- Rendered by JS -->
+          </div>
         </div>
-        <div class="input-group">
-          <label style="color:white;" data-key="contact_phone">رقم الهاتف / واتساب *</label>
-          <input type="tel" class="form-input" required placeholder="01xxxxxxxxx" id="custPhone">
+
+        <!-- Layer 3: Base Notes -->
+        <div class="layer-card active-layer">
+          <div class="layer-header">
+            <div class="layer-title-wrap">
+              <div class="layer-badge-num">٣</div>
+              <div>
+                <div class="layer-title">قاعدة العطر — الثبات والعمق (Base Notes)</div>
+                <div class="layer-sub">النوتات العميقة التي تمنح العطر ثباته الأسطوري ليدوم طويلاً</div>
+              </div>
+            </div>
+          </div>
+          <div class="notes-chips-grid" id="baseNotesGrid">
+            <!-- Rendered by JS -->
+          </div>
         </div>
-        <div class="input-group">
-          <label style="color:white;">ملاحظات خاصة للتركيبة (اختياري)</label>
-          <textarea class="form-textarea" placeholder="أي لمسات خاصة؟ مثلاً رشة إضافية فانيليا أو عنبر أو لمسة باودر..." id="custNotes" style="min-height:80px;"></textarea>
-        </div>
-        <button type="submit" class="btn btn-gold btn-lg btn-full" style="font-size:1.15rem;" data-key="perf_submit">
-          إرسال الطلب — سنقوم بتركيبه لك بحرفية 🌹
-        </button>
-      </form>
+
+      </div>
+
     </div>
+
+    <!-- MODE 2: Signature Presets Grid -->
+    <div id="modePresetsSection" style="display:none;">
+      <div class="presets-grid" id="presetsGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
   </main>
 
+  <!-- Modal for Customer Info & Order Submit -->
+  <div class="luxury-modal-backdrop" id="orderLabModal">
+    <div class="luxury-modal-box">
+      <div class="flex-between mb-20">
+        <h2 style="font-size: 1.5rem; color: var(--gold);">🌹 تأكيد طلب خلطة العطر الملكية</h2>
+        <button class="cart-close" onclick="closeOrderModal()">✕</button>
+      </div>
+
+      <div style="background:var(--bg-subtle); padding:16px 20px; border-radius:var(--radius-md); border:1px solid var(--gold-border); margin-bottom:20px;">
+        <div style="font-weight:700; color:var(--gold); font-size:1.1rem; margin-bottom:6px;" id="modalRecipeName">عطر لمسة الخاص</div>
+        <div style="font-size:0.9rem; color:var(--text-dark); line-height:1.7;" id="modalRecipeSummary">...</div>
+      </div>
+
+      <form onsubmit="submitCustomPerfumeOrder(event)">
+        <div class="input-group">
+          <label>الاسم الكريم *</label>
+          <input type="text" class="form-input" id="orderCustName" required placeholder="اسمك الكامل">
+        </div>
+        <div class="input-group">
+          <label>رقم الهاتف / واتساب *</label>
+          <input type="tel" class="form-input" id="orderCustPhone" required placeholder="01xxxxxxxxx">
+        </div>
+        <div class="input-group">
+          <label>ملاحظات إضافية للمحل (اختياري)</label>
+          <textarea class="form-textarea" id="orderCustNotes" placeholder="أي تفاصيل خاصة تحب نضيفها للتركيبة؟..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold btn-lg btn-full">إرسال التركيبة لتجهيزها فوراً عبر واتساب 💬🚀</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Footer -->
-  <footer class="footer mt-32" style="background:#140305; border-top:1px solid rgba(201,169,110,0.25);">
+  <footer class="footer">
     <div class="container text-center">
-      <p data-key="footer_copy">© 2024 لمسة (LAMSA). جميع الحقوق محفوظة.</p>
+      <p data-key="footer_copy">© 2026 متجر لمسة (LAMSA) — الإسكندرية. جميع الحقوق محفوظة.</p>
     </div>
   </footer>
 
   <script src="js/data.js"></script>
   <script src="js/main.js"></script>
   <script>
-    // Luxury Bottle SVGs & Monograms
-    const LUXURY_SCENTS = [
-      { id: 'sc_sauvage', nameAr: 'سوفاج ديور (Sauvage)', code: 'SV', note: 'منعش وحار فواح' },
-      { id: 'sc_oud', nameAr: 'عود ملكي خاص (Royal Oud)', code: 'RO', note: 'فخم ودافئ وثبات عالي' },
-      { id: 'sc_creed', nameAr: 'كريد أفينتوس (Aventus)', code: 'AV', note: 'أرستقراطي وجذاب' },
-      { id: 'sc_musk', nameAr: 'مسك الطهارة والرمان (Musk)', code: 'MK', note: 'نقي ومنعش وناعم' },
-      { id: 'sc_tobacco', nameAr: 'توباكو فانيلا (Tobacco Vanilla)', code: 'TV', note: 'شتوي وفاخر جداً' },
-      { id: 'sc_scandal', nameAr: 'سكاندال وزهور شرقية (Scandal)', code: 'SC', note: 'أنثوي فتان ومثير' },
+    // ── Olfactory Notes Database ──────────────────────────
+    const TOP_NOTES = [
+      { id: 'top_bergamot', name: 'برغموت إيطالي', icon: '🍋', desc: 'حمضي منعش وفواح', color: '#FFE066', glow: 'rgba(255, 224, 102, 0.5)', boostSillage: 8 },
+      { id: 'top_lavender', name: 'لافندر فرنسي', icon: '🪻', desc: 'أناقة وهدوء كلاسيكي', color: '#B388FF', glow: 'rgba(179, 136, 255, 0.5)', boostSillage: 5 },
+      { id: 'top_cardamom', name: 'هيل وتوابل حارة', icon: '🌿', desc: 'دفء وجاذبية آسرة', color: '#80E27E', glow: 'rgba(128, 226, 126, 0.5)', boostSillage: 7 },
+      { id: 'top_berries', name: 'توت وفواكه برية', icon: '🍓', desc: 'حيوية وبهجة حلوة', color: '#FF5252', glow: 'rgba(255, 82, 82, 0.5)', boostSillage: 6 },
+      { id: 'top_ocean', name: 'نسيم البحر المنعش', icon: '🌊', desc: 'نقاء وانتعاش صيفي', color: '#40C4FF', glow: 'rgba(64, 196, 255, 0.5)', boostSillage: 9 }
     ];
-    let customScents = JSON.parse(localStorage.getItem('lamsa_custom_scents')) || LUXURY_SCENTS;
 
-    let pScent = customScents[0]?.nameAr || 'سوفاج ديور (Sauvage)';
-    let pConc = 'edp';
-    let pConcLabel = 'متوسط (EDP) ★';
-    let pSize = '50ml';
+    const HEART_NOTES = [
+      { id: 'heart_jasmine', name: 'ياسمين دمشقي', icon: '🌸', desc: 'رقة وأنوثة فتاكة', color: '#FFF9C4', glow: 'rgba(255, 249, 196, 0.4)', boostSillage: 6 },
+      { id: 'heart_rose', name: 'ورد طائفي ملكي', icon: '🌹', desc: 'أصالة وفخامة شرقية', color: '#FF4081', glow: 'rgba(255, 64, 129, 0.5)', boostSillage: 8 },
+      { id: 'heart_tonka', name: 'تونكا وكراميل', icon: '🌰', desc: 'حلاوة دافئة ومثيرة', color: '#FFB74D', glow: 'rgba(255, 183, 77, 0.5)', boostSillage: 7 },
+      { id: 'heart_leather', name: 'جلود وأخشاب فاخرة', icon: '🧥', desc: 'طابع رجالي قوي', color: '#8D6E63', glow: 'rgba(141, 110, 99, 0.5)', boostSillage: 9 },
+      { id: 'heart_orchid', name: 'أوركيد سوداء', icon: '🌺', desc: 'سحر وغموض ليلي', color: '#AB47BC', glow: 'rgba(171, 71, 188, 0.5)', boostSillage: 8 }
+    ];
 
-    function renderScentsGrid() {
-      const grid = document.getElementById('atelierScentGrid');
-      if (!grid) return;
-      grid.innerHTML = customScents.map((s, idx) => `
-        <div class="scent-card ${idx === 0 ? 'selected' : ''}" onclick="setScent('${s.nameAr}', '${s.id}', this)">
-          <div class="scent-icon-wrap">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M10 2h4M12 2v4M6 10a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V10z"/>
-              <circle cx="12" cy="14" r="2.5"/>
-            </svg>
-          </div>
-          <div class="scent-name">${s.nameAr}</div>
-          <div class="scent-sub">${s.note || s.code || 'تركيبة لمسة الخاصة'}</div>
+    const BASE_NOTES = [
+      { id: 'base_oud', name: 'عود كمبودي معتق', icon: '🪵', desc: 'ثبات جبار وفخامة طاغية', color: '#4E342E', glow: 'rgba(78, 52, 46, 0.7)', boostLongevity: 12 },
+      { id: 'base_amber', name: 'عنبر ملكي نادر', icon: '💎', desc: 'دفء وفوحان يدوم لأيام', color: '#FF8F00', glow: 'rgba(255, 143, 0, 0.6)', boostLongevity: 10 },
+      { id: 'base_vanilla', name: 'فانيليا مدغشقر', icon: '🍦', desc: 'إغراء ونعومة ساحرة', color: '#FFE082', glow: 'rgba(255, 224, 130, 0.5)', boostLongevity: 8 },
+      { id: 'base_musk', name: 'مسك الطهارة والحرير', icon: '🌫️', desc: 'نقاء ونظافة تدوم', color: '#ECEFF1', glow: 'rgba(236, 239, 241, 0.5)', boostLongevity: 9 },
+      { id: 'base_sandal', name: 'خشب الصندل والأرز', icon: '🪵', desc: 'عمق خشبي أرستقراطي', color: '#A1887F', glow: 'rgba(161, 136, 127, 0.6)', boostLongevity: 11 }
+    ];
+
+    // Selected state
+    let selectedTop = TOP_NOTES[0];
+    let selectedHeart = HEART_NOTES[1];
+    let selectedBase = BASE_NOTES[0];
+    let customName = "عطر لمسة الخاص";
+
+    function switchAtelierMode(mode) {
+      document.getElementById('btnModeLab').classList.toggle('active', mode === 'lab');
+      document.getElementById('btnModePresets').classList.toggle('active', mode === 'presets');
+      document.getElementById('modeLabSection').style.display = mode === 'lab' ? 'grid' : 'none';
+      document.getElementById('modePresetsSection').style.display = mode === 'presets' ? 'grid' : 'none';
+    }
+
+    function renderNotesGrid() {
+      // Top
+      document.getElementById('topNotesGrid').innerHTML = TOP_NOTES.map(n => `
+        <div class="note-chip ${n.id === selectedTop.id ? 'selected' : ''}" onclick="selectTopNote('${n.id}')">
+          <span class="note-chip-icon">${n.icon}</span>
+          <div class="note-chip-name">${n.name}</div>
+          <div class="note-chip-desc">${n.desc}</div>
+        </div>
+      `).join('');
+
+      // Heart
+      document.getElementById('heartNotesGrid').innerHTML = HEART_NOTES.map(n => `
+        <div class="note-chip ${n.id === selectedHeart.id ? 'selected' : ''}" onclick="selectHeartNote('${n.id}')">
+          <span class="note-chip-icon">${n.icon}</span>
+          <div class="note-chip-name">${n.name}</div>
+          <div class="note-chip-desc">${n.desc}</div>
+        </div>
+      `).join('');
+
+      // Base
+      document.getElementById('baseNotesGrid').innerHTML = BASE_NOTES.map(n => `
+        <div class="note-chip ${n.id === selectedBase.id ? 'selected' : ''}" onclick="selectBaseNote('${n.id}')">
+          <span class="note-chip-icon">${n.icon}</span>
+          <div class="note-chip-name">${n.name}</div>
+          <div class="note-chip-desc">${n.desc}</div>
         </div>
       `).join('');
     }
 
-    function setScent(label, val, el) {
-      pScent = label;
-      document.querySelectorAll('.scent-card').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('sumScent').textContent = label;
-      updatePrice();
+    function selectTopNote(id) {
+      selectedTop = TOP_NOTES.find(n => n.id === id);
+      renderNotesGrid();
+      updateLiquidAndGauges();
     }
 
-    function setConc(val, label, el) {
-      pConc = val;
-      pConcLabel = label;
-      document.querySelectorAll('.conc-card').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('sumConc').textContent = label;
-      updatePrice();
+    function selectHeartNote(id) {
+      selectedHeart = HEART_NOTES.find(n => n.id === id);
+      renderNotesGrid();
+      updateLiquidAndGauges();
     }
 
-    function setSize(size, el) {
-      pSize = size;
-      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('sumSize').textContent = size;
-      updatePrice();
+    function selectBaseNote(id) {
+      selectedBase = BASE_NOTES.find(n => n.id === id);
+      renderNotesGrid();
+      updateLiquidAndGauges();
     }
 
-    function updatePrice() {
-      const price = window.LAMSA.getPerfumePrice(pSize, pConc);
-      document.getElementById('sumPrice').textContent = `${price} ${t[currentLang].currency}`;
+    function updateEngraving(val) {
+      customName = val.trim() || "عطر لمسة الخاص";
+      document.getElementById('flaconLabelName').textContent = customName;
     }
 
-    function submitPerfumeOrder(e) {
-      e.preventDefault();
-      const name = document.getElementById('custName').value;
-      const phone = document.getElementById('custPhone').value;
-      const notes = document.getElementById('custNotes').value;
-      const price = window.LAMSA.getPerfumePrice(pSize, pConc);
+    function updateLiquidAndGauges() {
+      const liquid = document.getElementById('flaconLiquid');
+      liquid.style.setProperty('--liquid-top', selectedTop.color);
+      liquid.style.setProperty('--liquid-mid', selectedHeart.color);
+      liquid.style.setProperty('--liquid-base', selectedBase.color);
+      liquid.style.setProperty('--liquid-glow', selectedBase.glow);
 
-      const msg = `🌹 *طلب تركيب عطر خاص — متجر لمسة (LAMSA)*\n👤 *الاسم:* ${name}\n📞 *الهاتف:* ${phone}\n💎 *التركيبة المختارة:* ${pScent}\n✨ *التركيز:* ${pConcLabel}\n🧴 *الحجم:* ${pSize}\n💰 *السعر:* ${price} ج.م\n📝 *ملاحظات:* ${notes || 'لا يوجد'}`;
-      
+      // Sillage & Longevity math
+      const sillageScore = Math.min(98, 75 + selectedTop.boostSillage + selectedHeart.boostSillage);
+      document.getElementById('radarSillageVal').textContent = sillageScore + '%';
+      document.getElementById('radarSillageBar').style.width = sillageScore + '%';
+
+      const hours = 20 + selectedBase.boostLongevity;
+      document.getElementById('radarLongevityVal').textContent = `+${hours} ساعة ثبات`;
+
+      // Vibe determination
+      let vibe = "ملكي جذاب وفواح";
+      if (selectedTop.id === 'top_ocean' || selectedTop.id === 'top_bergamot') vibe = "منعش وفواح ومثالي للصيف والصباح 🌊";
+      if (selectedBase.id === 'base_oud' || selectedHeart.id === 'heart_leather') vibe = "فخم وثقيل للسهرات والمناسبات الشتوية 👑";
+      if (selectedHeart.id === 'heart_rose' || selectedHeart.id === 'heart_jasmine') vibe = "أنثوي رقيق وجذاب وساحر 🌸";
+      document.getElementById('radarVibeVal').textContent = vibe;
+
+      updateLabCalculations();
+    }
+
+    function updateLabCalculations() {
+      const size = document.getElementById('labSizeSelect').value;
+      const conc = document.getElementById('labConcSelect').value;
+
+      const concLabel = conc === 'edt' ? 'EAU DE TOILETTE' : (conc === 'edp' ? 'EAU DE PARFUM' : 'EXTRAIT DE PARFUM');
+      document.getElementById('flaconLabelConc').textContent = concLabel;
+
+      const price = window.LAMSA ? window.LAMSA.getPerfumePrice(size, conc) : 500;
+      document.getElementById('labPriceDisplay').textContent = `${price} ج.م`;
+    }
+
+    function renderPresetsGrid() {
+      const PRESETS = [
+        { name: 'سوفاج الملكي (Sauvage Blend)', top: 'برغموت وفلفل حار', heart: 'لافندر وزهور برية', base: 'أمبروكسان وأخشاب الأرز', vibe: 'الأكثر مبيعاً ورجولية طاغية' },
+        { name: 'كريد أفينتوس الأرستقراطي (Aventus)', top: 'أناناس وتفاح منعش', heart: 'بتولا وياسمين', base: 'مسك وعنبر طحلبي', vibe: 'رسمي وفخم جداً لرجال الأعمال' },
+        { name: 'توم فورد توباكو فانيلا (Tobacco Vanilla)', top: 'أوراق التبغ وتوابل شرقية', heart: 'تونكا وفانيليا وسيرب', base: 'فواكه مجففة وخشب كاكاو', vibe: 'دافئ شتوي ساحر وجذاب' },
+        { name: 'سكاندال وزهور شرقية (Scandal Gold)', top: 'برتقال وزهور بيضاء', heart: 'عسل ملكي وياسمين', base: 'باتشولي وعنبر مدغشقر', vibe: 'أنثوي فتان ومثير للمناسبات' },
+        { name: 'بلاك أوبيوم (Black Opium)', top: 'كمثرى وفلفل وردي', heart: 'قهوة سوداء ولوز', base: 'فانيليا وباتشولي وأرز', vibe: 'طاقة وجاذبية ليلية لا تُنسى' },
+        { name: 'مسك الطهارة والرمان الملكي', top: 'رمان منعش وفاكهي', heart: 'مسك أبيض وقطن ناعم', base: 'عنبر أبيض وخشب صندل', vibe: 'نظافة وانتعاش هادئ يدوم لأيام' }
+      ];
+
+      document.getElementById('presetsGrid').innerHTML = PRESETS.map(p => `
+        <div class="preset-card" onclick="selectPreset('${p.name}')">
+          <div style="font-size:1.25rem; font-weight:800; color:var(--gold); margin-bottom:8px;">🌹 ${p.name}</div>
+          <div style="font-size:0.88rem; color:rgba(255,255,255,0.85); line-height:1.7; margin-bottom:12px;">
+            <div>🍋 <strong>الافتتاحية:</strong> ${p.top}</div>
+            <div>🌸 <strong>القلب:</strong> ${p.heart}</div>
+            <div>🪵 <strong>القاعدة:</strong> ${p.base}</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge badge-popular">${p.vibe}</span>
+            <button class="btn btn-gold btn-sm">طلب هذه التركيبة ←</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectPreset(name) {
+      customName = name;
+      document.getElementById('customNameInput').value = name;
+      updateEngraving(name);
+      switchAtelierMode('lab');
       triggerConfetti();
-      showToast('✓ تم استلام طلب تركيب العطر بنجاح! هنتواصل معك فوراً 🌹');
+      showToast(`✓ تم اختيار تركيبة "${name}"! يمكنك تخصيص الحجم وتأكيد الطلب.`);
+    }
+
+    function openOrderModal() {
+      const size = document.getElementById('labSizeSelect').value;
+      const conc = document.getElementById('labConcSelect').value;
+      const price = document.getElementById('labPriceDisplay').textContent;
+
+      document.getElementById('modalRecipeName').textContent = `💎 ${customName} (${size} — ${conc.toUpperCase()})`;
+      document.getElementById('modalRecipeSummary').innerHTML = `
+        • <strong>المقدمة:</strong> ${selectedTop.name} ${selectedTop.icon}<br>
+        • <strong>القلب:</strong> ${selectedHeart.name} ${selectedHeart.icon}<br>
+        • <strong>القاعدة:</strong> ${selectedBase.name} ${selectedBase.icon}<br>
+        • <strong>السعر التقديري:</strong> ${price}
+      `;
+      document.getElementById('orderLabModal').classList.add('active');
+    }
+
+    function closeOrderModal() {
+      document.getElementById('orderLabModal').classList.remove('active');
+    }
+
+    function submitCustomPerfumeOrder(e) {
+      e.preventDefault();
+      const name = document.getElementById('orderCustName').value;
+      const phone = document.getElementById('orderCustPhone').value;
+      const notes = document.getElementById('orderCustNotes').value;
+      const size = document.getElementById('labSizeSelect').value;
+      const conc = document.getElementById('labConcSelect').options[document.getElementById('labConcSelect').selectedIndex].text;
+      const price = document.getElementById('labPriceDisplay').textContent;
+
+      const msg = `🌹 *طلب تركيب عطر خاص — مُختبر متجر لمسة (LAMSA)*\n\n` +
+                  `👤 *اسم العميل:* ${name}\n` +
+                  `📞 *رقم الهاتف:* ${phone}\n` +
+                  `💎 *الاسم المحفور على الزجاجة:* "${customName}"\n\n` +
+                  `🧪 *الهرم العطري المختار:*\n` +
+                  `🍋 الافتتاحية: ${selectedTop.name}\n` +
+                  `🌸 القلب: ${selectedHeart.name}\n` +
+                  `🪵 القاعدة: ${selectedBase.name}\n\n` +
+                  `🧴 *الحجم والتركيز:* ${size} (${conc})\n` +
+                  `💰 *السعر التقديري:* ${price}\n` +
+                  `📝 *ملاحظات خاصة:* ${notes || 'لا يوجد'}`;
+
+      triggerConfetti();
+      showToast('✓ تم تجهيز وصفة عطرك الفاخر بنجاح! جاري فتح الواتساب...');
+      closeOrderModal();
+
       setTimeout(() => {
         window.open(`https://wa.me/201080239612?text=${encodeURIComponent(msg)}`, '_blank');
-      }, 1000);
+      }, 1200);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      renderScentsGrid();
-      updatePrice();
+      renderNotesGrid();
+      renderPresetsGrid();
+      updateLiquidAndGauges();
     });
   </script>
 </body>
