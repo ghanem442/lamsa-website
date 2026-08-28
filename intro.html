@@ -253,11 +253,13 @@
 
   // clicking anywhere = "continue to site" hook point
   stage.addEventListener('click', () => {
-    // Redirect to main site
+    // Redirect to auth page first
     stage.style.transition = 'opacity 0.6s ease';
     stage.style.opacity = '0';
     setTimeout(() => { 
-      window.location.href = 'index.html';
+      // If already logged in, go straight to index, otherwise go to auth.html
+      const savedUser = localStorage.getItem('lamsa_user');
+      window.location.href = savedUser ? 'index.html' : 'auth.html';
     }, 600);
   });
 </script>

@@ -947,9 +947,25 @@ function toggleMobileMenu() {
 // ── Init ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Apply saved theme & lang
-  applyTheme(currentTheme);
-  applyLang(currentLang);
-  updateCartUI();
+  // User Auth Badge in Navbar
+  const savedUser = JSON.parse(localStorage.getItem('lamsa_user') || 'null');
+  const navActions = document.querySelector('.nav-actions');
+  if (navActions && !document.getElementById('navUserBtn')) {
+    const userBtn = document.createElement('a');
+    userBtn.id = 'navUserBtn';
+    userBtn.href = 'auth.html';
+    userBtn.className = 'nav-icon-btn';
+    userBtn.style.fontSize = '1.05rem';
+    userBtn.style.textDecoration = 'none';
+    if (savedUser) {
+      userBtn.innerHTML = `<span>${savedUser.avatar || '👤'}</span>`;
+      userBtn.title = `أهلاً بك يا ${savedUser.name} (اضغط لتغيير الحساب)`;
+    } else {
+      userBtn.innerHTML = `<span>👤</span>`;
+      userBtn.title = 'تسجيل الدخول / حسابي';
+    }
+    navActions.prepend(userBtn);
+  }
 
   // Lang buttons
   document.querySelectorAll('.lang-btn').forEach(btn => {

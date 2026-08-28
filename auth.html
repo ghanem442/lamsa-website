@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول | متجر لمسة LAMSA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at center top, #4A0D11 0%, #200407 50%, #100204 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #FFFFFF;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Gold Light Behind Card */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .auth-container {
+      max-width: 480px;
+      width: 90%;
+      margin: 40px auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .auth-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(212, 175, 55, 0.35);
+      border-radius: var(--radius-xl);
+      padding: 44px 36px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      position: relative;
+    }
+
+    .auth-logo-wrap {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(212, 175, 55, 0.2) 0%, rgba(92, 14, 20, 0.6) 100%);
+      border: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
+      padding: 3px;
+    }
+
+    .auth-logo-wrap img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .auth-title {
+      font-size: 1.85rem;
+      color: var(--gold);
+      font-family: var(--font-title);
+      margin-bottom: 6px;
+    }
+
+    .auth-sub {
+      font-size: 0.92rem;
+      color: rgba(255, 255, 255, 0.75);
+      margin-bottom: 28px;
+    }
+
+    /* Google Button (Primary Action) */
+    .btn-google-luxury {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: #FFFFFF;
+      color: #2D0609;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 20px;
+      border-radius: var(--radius-xl);
+      border: 1.5px solid var(--gold);
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-bottom: 24px;
+    }
+
+    .btn-google-luxury:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+      background: #FAF7F0;
+    }
+
+    .btn-google-luxury svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* Divider */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.85rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+    }
+
+    /* Tabs (Login / Register) */
+    .auth-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-xl);
+      padding: 4px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 700;
+      font-size: 0.92rem;
+      border-radius: var(--radius-xl);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .auth-tab.active {
+      background: var(--gold-metallic);
+      color: #2D0609;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .auth-form {
+      text-align: right;
+    }
+
+    .auth-form .input-group label {
+      color: var(--gold-light);
+      font-size: 0.88rem;
+    }
+
+    .auth-form .form-input {
+      background: rgba(0, 0, 0, 0.35);
+      border-color: rgba(212, 175, 55, 0.3);
+      color: #FFFFFF;
+    }
+
+    .auth-form .form-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+    }
+
+    /* Guest Skip Link */
+    .guest-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .guest-link:hover {
+      color: var(--gold);
+      text-decoration: underline;
+    }
+
+    .auth-footer {
+      text-align: center;
+      padding: 20px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      
+      <!-- Logo -->
+      <div class="auth-logo-wrap">
+        <img src="assets/logo.png" alt="LAMSA Logo">
+      </div>
+
+      <h1 class="auth-title">متجر لمسة (LAMSA)</h1>
+      <p class="auth-sub">سجل دخولك لتجربة تسوق فاخرة وحفظ روتينك وخلطاتك العطرية</p>
+
+      <!-- Primary Google Gmail Login Button -->
+      <button class="btn-google-luxury" onclick="handleGoogleLogin()">
+        <svg viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.97 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+        </svg>
+        <span>المتابعة عبر حساب Google (Gmail)</span>
+      </button>
+
+      <!-- Divider -->
+      <div class="auth-divider">أو عبر البريد الإلكتروني</div>
+
+      <!-- Tabs (Login / Signup) -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">تسجيل الدخول</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">حساب جديد</button>
+      </div>
+
+      <!-- Form -->
+      <form class="auth-form" id="authForm" onsubmit="handleEmailAuth(event)">
+        
+        <div class="input-group" id="nameGroup" style="display: none;">
+          <label>الاسم الكريم *</label>
+          <input type="text" class="form-input" id="authName" placeholder="اكتب اسمك">
+        </div>
+
+        <div class="input-group">
+          <label>البريد الإلكتروني (Gmail) *</label>
+          <input type="email" class="form-input" id="authEmail" required placeholder="example@gmail.com">
+        </div>
+
+        <div class="input-group">
+          <label>كلمة المرور *</label>
+          <input type="password" class="form-input" id="authPassword" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="btn btn-gold btn-full btn-lg mt-8" id="submitAuthBtn">
+          تسجيل الدخول للمتجر ←
+        </button>
+      </form>
+
+      <!-- Continue as Guest -->
+      <a href="index.html" class="guest-link">
+        تخطي والدخول كـ زائر الآن ←
+      </a>
+
+    </div>
+  </div>
+
+  <div class="auth-footer">
+    © 2026 متجر لمسة (LAMSA) — جميع الحقوق محفوظة
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let currentAuthMode = 'login';
+
+    function switchAuthTab(mode) {
+      currentAuthMode = mode;
+      document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+      
+      const nameGroup = document.getElementById('nameGroup');
+      const submitBtn = document.getElementById('submitAuthBtn');
+
+      if (mode === 'signup') {
+        nameGroup.style.display = 'block';
+        document.getElementById('authName').required = true;
+        submitBtn.textContent = 'إنشاء حساب جديد والدخول ✨';
+      } else {
+        nameGroup.style.display = 'none';
+        document.getElementById('authName').required = false;
+        submitBtn.textContent = 'تسجيل الدخول للمتجر ←';
+      }
+    }
+
+    // Google Login Simulator (Prepopulates verified profile)
+    function handleGoogleLogin() {
+      const email = prompt("أدخل بريدك الإلكتروني (Gmail):", "ghanem@gmail.com");
+      if (!email) return;
+
+      const defaultName = email.split('@')[0];
+      const userName = prompt("اسمك الكريم للترحيب بك:", defaultName) || defaultName;
+
+      const userObj = {
+        name: userName,
+        email: email,
+        isGoogle: true,
+        avatar: '👑',
+        loginTime: new Date().toISOString()
+      };
+
+      localStorage.setItem('lamsa_user', JSON.stringify(userObj));
+      triggerConfetti();
+      showToast(`✨ مرحباً بك في لمسة يا ${userName}! جاري تحويلك للمتجر...`);
+
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1200);
+    }
+
+    // Email / Password Handler
+    function handleEmailAuth(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value;
+      const name = currentAuthMode === 'signup' 
+        ? document.getElementById('authName').value 
+        : (email.split('@')[0]);
+
+      const userObj = {
+        name: name,
+        email: email,
+        isGoogle: false,
+        avatar: '✨',
+        loginTime: new Date().toISOString()
+      };
+
+      localStorage.setItem('lamsa_user', JSON.stringify(userObj));
+      triggerConfetti();
+      showToast(`✓ تم تسجيل الدخول بنجاح! أهلاً بك يا ${name} 🌹`);
+
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
