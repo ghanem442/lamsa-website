@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lamsa — انترو</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,400&family=Tajawal:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-950:#150406;
+    --ink-900:#200608;
+    --ink-800:#2c0a0d;
+    --frame-red:#ff0000;
+    --gold-500:#c9a24b;
+    --gold-300:#e6c877;
+    --ivory:#f3ecdd;
+    --bronze-muted:#8c7b5e;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    width:100%; height:100%;
+    background:var(--ink-950);
+    overflow:hidden;
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Tajawal', sans-serif;
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 50% 45%, var(--ink-800) 0%, var(--ink-900) 45%, var(--ink-950) 100%);
+    box-sizing:border-box;
+    cursor:pointer;
+  }
+
+  /* subtle grain / vignette */
+  .stage::after{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+    pointer-events:none;
+  }
+
+  /* the touch point that starts everything */
+  .touch-point{
+    position:absolute;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--gold-300);
+    box-shadow:0 0 20px 4px var(--gold-500);
+    opacity:0;
+    animation: touchIn 0.6s ease-out 0.2s forwards, touchOut 0.5s ease-in 1.05s forwards;
+  }
+
+  @keyframes touchIn{
+    0%{ opacity:0; transform:scale(0.2); }
+    100%{ opacity:1; transform:scale(1); }
+  }
+  @keyframes touchOut{
+    0%{ opacity:1; }
+    100%{ opacity:0; }
+  }
+
+  /* concentric ripples emanating from the touch point */
+  .ripple{
+    position:absolute;
+    width:6px; height:6px;
+    border-radius:50%;
+    border:1px solid var(--gold-500);
+    opacity:0;
+    animation: rippleOut 1.8s cubic-bezier(0.2,0.6,0.3,1) forwards;
+  }
+  .ripple.r1{ animation-delay:0.35s; }
+  .ripple.r2{ animation-delay:0.55s; }
+  .ripple.r3{ animation-delay:0.75s; }
+
+  @keyframes rippleOut{
+    0%{ width:6px; height:6px; opacity:0.9; border-width:1.5px; }
+    12%{ opacity:0.55; }
+    100%{ width:640px; height:640px; opacity:0; border-width:0.5px; }
+  }
+
+  /* wordmark */
+  .wordmark{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    z-index:2;
+  }
+
+  .latin{
+    display:flex;
+    direction:ltr;
+    unicode-bidi:isolate;
+    font-family:'Fraunces', serif;
+    font-weight:400;
+    font-style:italic;
+    font-optical-sizing:auto;
+    font-size:clamp(48px, 11vw, 108px);
+    letter-spacing:0.01em;
+    color:var(--gold-300);
+  }
+
+  .latin span{
+    display:inline-block;
+    opacity:0;
+    filter:blur(6px);
+    transform:translateY(14px) scale(0.96);
+    animation: letterIn 0.7s cubic-bezier(0.22,0.9,0.3,1) forwards;
+    text-shadow:0 0 24px rgba(201,162,75,0.0);
+  }
+
+  @keyframes letterIn{
+    0%{ opacity:0; filter:blur(6px); transform:translateY(14px) scale(0.96); }
+    55%{ opacity:1; filter:blur(0px); text-shadow:0 0 26px rgba(201,162,75,0.55); }
+    100%{ opacity:1; filter:blur(0px); transform:translateY(0) scale(1); text-shadow:0 0 0 rgba(201,162,75,0); }
+  }
+
+  /* stroke drawn under the wordmark, like a fingertip trace */
+  .stroke{
+    width:0%;
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold-500), transparent);
+    animation: drawStroke 0.9s cubic-bezier(0.4,0,0.2,1) 1.55s forwards;
+  }
+  @keyframes drawStroke{
+    0%{ width:0%; opacity:0; }
+    30%{ opacity:1; }
+    100%{ width:120px; opacity:1; }
+  }
+
+  .arabic{
+    font-family:'Tajawal', sans-serif;
+    font-weight:300;
+    font-size:clamp(14px, 2.6vw, 18px);
+    letter-spacing:0.12em;
+    color:var(--bronze-muted);
+    opacity:0;
+    animation: fadeUp 0.9s ease-out 1.9s forwards;
+  }
+
+  @keyframes fadeUp{
+    0%{ opacity:0; transform:translateY(8px); }
+    100%{ opacity:1; transform:translateY(0); }
+  }
+
+  /* skip hint */
+  .hint{
+    position:absolute;
+    bottom:36px;
+    font-family:'Tajawal', sans-serif;
+    font-weight:300;
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:var(--bronze-muted);
+    opacity:0;
+    animation: fadeUp 0.8s ease-out 2.4s forwards;
+  }
+
+  .replay{
+    position:absolute;
+    top:24px;
+    inset-inline-end:24px;
+    font-family:'Tajawal', sans-serif;
+    font-size:12px;
+    color:var(--bronze-muted);
+    background:transparent;
+    border:1px solid rgba(140,123,94,0.35);
+    border-radius:20px;
+    padding:8px 16px;
+    cursor:pointer;
+    opacity:0;
+    animation: fadeUp 0.8s ease-out 2.4s forwards;
+    transition:border-color 0.25s ease, color 0.25s ease;
+  }
+  .replay:hover{ border-color:var(--gold-500); color:var(--gold-300); }
+
+  @media (prefers-reduced-motion: reduce){
+    .latin span, .stroke, .arabic, .hint, .replay, .touch-point, .ripple{
+      animation-duration:0.01ms !important;
+      animation-delay:0s !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="touch-point" id="touchPoint"></div>
+  <div class="ripple r1" id="r1"></div>
+  <div class="ripple r2" id="r2"></div>
+  <div class="ripple r3" id="r3"></div>
+
+  <div class="wordmark">
+    <div class="latin" id="latin"></div>
+    <div class="stroke"></div>
+    <div class="arabic">لمسة تفرق</div>
+  </div>
+
+  <div class="hint">اضغط في أي مكان للمتابعة</div>
+  <button class="replay" id="replayBtn">إعادة</button>
+</div>
+
+<script>
+  const word = "lamsa";
+  const latinEl = document.getElementById('latin');
+  const stage = document.getElementById('stage');
+
+  function buildLetters(){
+    latinEl.innerHTML = "";
+    [...word].forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.textContent = ch;
+      span.style.animationDelay = (0.55 + i * 0.09) + "s";
+      latinEl.appendChild(span);
+    });
+  }
+  buildLetters();
+
+  function replay(){
+    stage.classList.remove('replaying');
+    void stage.offsetWidth; // reflow to restart CSS animations
+    document.querySelectorAll('.touch-point, .ripple, .latin span, .stroke, .arabic, .hint, .replay')
+      .forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = '';
+      });
+    buildLetters();
+  }
+
+  document.getElementById('replayBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    replay();
+  });
+
+  // clicking anywhere = "continue to site" hook point
+  stage.addEventListener('click', () => {
+    // Redirect to main site
+    stage.style.transition = 'opacity 0.6s ease';
+    stage.style.opacity = '0';
+    setTimeout(() => { 
+      window.location.href = 'index.html';
+    }, 600);
+  });
+</script>
+
+</body>
+</html>

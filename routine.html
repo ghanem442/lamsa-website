@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختارلي روتين | لمسة LAMSA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .routine-container {
+      min-height: calc(100vh - 72px);
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      background: var(--bg-page);
+    }
+    .routine-form-side {
+      padding: 60px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-width: 650px;
+      margin: 0 auto;
+      width: 100%;
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      margin-block: 30px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: background-color 0.4s ease, border-color 0.4s ease;
+    }
+    
+    /* IMPORTANT: Hide all steps except active */
+    .quiz-step {
+      display: none;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .quiz-step.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+      animation: slideInStep 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes slideInStep {
+      0% {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .routine-media-side {
+      background: 
+        linear-gradient(135deg, rgba(74, 13, 17, 0.85) 0%, rgba(107, 19, 25, 0.75) 50%, rgba(139, 38, 53, 0.85) 100%),
+        url('assets/routine/sidebar-bg.jpg') center/cover no-repeat;
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .routine-media-side::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(rgba(201, 169, 110, 0.2) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .media-card-showcase {
+      position: relative;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(201, 169, 110, 0.4);
+      border-radius: var(--radius-xl);
+      padding: 40px 32px;
+      max-width: 380px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+    }
+    .media-card-showcase .big-emoji {
+      font-size: 4.5rem;
+      margin-bottom: 20px;
+      display: block;
+      animation: floatSlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes floatSlow {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-10px); }
+    }
+    .step-indicator-bar {
+      height: 4px;
+      background: var(--cream-dark);
+      border-radius: 2px;
+      margin: 20px 0 32px;
+      overflow: hidden;
+    }
+    .step-indicator-fill {
+      height: 100%;
+      background: var(--burgundy);
+      transition: width 0.4s ease;
+      width: 25%;
+    }
+    
+    /* Options Grid - 2x2 layout */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+    
+    /* Quiz Question Styling */
+    .quiz-question {
+      margin-bottom: 24px;
+    }
+    .quiz-question h2 {
+      font-size: 1.8rem;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+    }
+    .quiz-question p {
+      color: var(--text-mid);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    
+    .chips-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .chip-option {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: var(--transition-fast);
+      user-select: none;
+    }
+    .chip-option:hover {
+      border-color: var(--burgundy);
+      background: var(--bg-subtle);
+    }
+    .chip-option.selected {
+      background: var(--burgundy);
+      color: var(--white);
+      border-color: var(--burgundy);
+    }
+    .result-view {
+      display: none;
+      padding: 40px 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .result-products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      margin: 32px 0;
+    }
+    @media (max-width: 900px) {
+      .routine-container { grid-template-columns: 1fr; }
+      .routine-media-side { display: none; }
+      .routine-form-side { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay & Cart -->
+  <div class="overlay" id="overlay"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3 data-key="cart_title">السلة</h3>
+      <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <div class="cart-total cart-total-row">
+        <span data-key="cart_total">المجموع</span>
+        <span id="cartTotal">0 ج.م</span>
+      </div>
+      <button class="btn btn-primary btn-full" id="cartCheckout" data-key="cart_whatsapp">اطلبي عبر واتساب 💬</button>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a href="index.html" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <span class="nav-logo-text">LAMSA</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html" data-key="nav_sets">الرئيسية</a>
+        <a href="shop.html" data-key="nav_shop">المتجر</a>
+        <a href="routine.html" class="active" data-key="nav_routine">اختارلي روتين</a>
+        <a href="gift.html" data-key="nav_gift">صمم هديتك</a>
+        <a href="perfume.html" data-key="nav_perfume">اعمل برفانك</a>
+        <a href="about.html" data-key="nav_about">عن لمسة</a>
+        <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="ar">عربي</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
+          🛍️
+          <span class="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Quiz Form Container -->
+  <div id="quizContainer" class="routine-container">
+    
+    <!-- Form Side (Left in RTL, Right in LTR) -->
+    <div class="routine-form-side">
+      <div class="flex-between">
+        <span style="font-weight:700; color:var(--burgundy);" id="stepCategoryLabel">تحليل البشرة والعناية</span>
+        <span class="quiz-step-label" id="stepCounter">الخطوة 1 من 4</span>
+      </div>
+      <div class="step-indicator-bar">
+        <div class="step-indicator-fill" id="stepProgressFill"></div>
+      </div>
+
+      <!-- Step 1: Skin Type -->
+      <div class="quiz-step active" id="step1">
+        <div class="quiz-question">
+          <h2 data-key="q1_title">ما هو نوع بشرتك؟</h2>
+          <p data-key="q1_sub">يساعدنا هذا في اختيار التركيبات والمكونات المناسبة لبشرتك بدقة</p>
+        </div>
+        <div class="options-grid">
+          <div class="option-card" onclick="selectSingleOption('skinType', 'dry', this)">
+            <div class="option-label" data-key="q1_dry">جافة</div>
+            <div class="option-desc" data-key="q1_dry_d">تحتاج ترطيب مكثف</div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('skinType', 'oily', this)">
+            <div class="option-label" data-key="q1_oily">دهنية</div>
+            <div class="option-desc" data-key="q1_oily_d">تحتاج تحكم في الدهون</div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('skinType', 'combo', this)">
+            <div class="option-label" data-key="q1_combo">مختلطة</div>
+            <div class="option-desc" data-key="q1_combo_d">جافة وزيتية معاً</div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('skinType', 'sensitive', this)">
+            <div class="option-label" data-key="q1_sensitive">حساسة</div>
+            <div class="option-desc" data-key="q1_sensitive_d">تحتاج منتجات لطيفة ومهدئة</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Hair Type -->
+      <div class="quiz-step" id="step2">
+        <div class="quiz-question">
+          <h2 data-key="q2_title">ما هو نوع شعرك؟</h2>
+          <p data-key="q2_sub">لنكمل روتين العناية المتكامل لشعرك أيضاً</p>
+        </div>
+        <div class="options-grid">
+          <div class="option-card" onclick="selectSingleOption('hairType', 'dry', this)">
+            <div class="option-label" data-key="q2_dry">جاف</div>
+            <div class="option-desc" data-key="q2_dry_d">يحتاج تغذية وترطيب عميق</div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('hairType', 'oily', this)">
+            <div class="option-label" data-key="q2_oily">دهني</div>
+            <div class="option-desc" data-key="q2_oily_d">يصبح زيتياً ومحتاج تنقية</div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('hairType', 'damaged', this)">
+            <div class="option-label" data-key="q2_damaged">تالف / متقصف</div>
+            <div class="option-desc" data-key="q2_damaged_d">محتاج إصلاح وتقوية</div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('hairType', 'normal', this)">
+            <div class="option-label" data-key="q2_normal">عادي / صحي</div>
+            <div class="option-desc" data-key="q2_normal_d">يحتاج عناية متوازنة</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Concerns (Multi) -->
+      <div class="quiz-step" id="step3">
+        <div class="quiz-question">
+          <h2 data-key="q3_title">ما هي مشكلتك الأساسية؟</h2>
+          <p data-key="q3_sub">يمكنك اختيار أكثر من مشكلة لنعالجها معاً في روتينك</p>
+        </div>
+        <div class="chips-grid">
+          <div class="chip-option" onclick="toggleConcern('acne', this)">حب شباب ومسام واسعة</div>
+          <div class="chip-option" onclick="toggleConcern('dry_skin', this)">جفاف وقشور</div>
+          <div class="chip-option" onclick="toggleConcern('hair_loss', this)">تساقط وضعف الشعر</div>
+          <div class="chip-option" onclick="toggleConcern('dull', this)">بهتان وفقدان النضارة</div>
+          <div class="chip-option" onclick="toggleConcern('wrinkles', this)">خطوط دقيقة وتجاعيد</div>
+          <div class="chip-option" onclick="toggleConcern('dark_spots', this)">بقع داكنة وتصبغات</div>
+        </div>
+      </div>
+
+      <!-- Step 4: Budget -->
+      <div class="quiz-step" id="step4">
+        <div class="quiz-question">
+          <h2 data-key="q4_title">ما هي الميزانية المناسبة لك؟</h2>
+          <p data-key="q4_sub">سنختار لك أفضل المنتجات المتوفرة في حدود ميزانيتك</p>
+        </div>
+        <div class="options-grid" style="grid-template-columns: 1fr;">
+          <div class="option-card" onclick="selectSingleOption('budget', 'eco', this)">
+            <div class="flex-between">
+              <div style="text-align:right;">
+                <div class="option-label" data-key="q4_eco">اقتصادي (Eco)</div>
+                <div class="option-desc" data-key="q4_eco_d">أقل من 500 جنيه — أساسيات الروتين الفعالة</div>
+              </div>
+            </div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('budget', 'mid', this)">
+            <div class="flex-between">
+              <div style="text-align:right;">
+                <div class="option-label" data-key="q4_mid">متوسط (Mid-range) ★ الأفضل قيمة</div>
+                <div class="option-desc" data-key="q4_mid_d">500 - 1000 جنيه — روتين متكامل بنتائج سريعة</div>
+              </div>
+            </div>
+          </div>
+          <div class="option-card" onclick="selectSingleOption('budget', 'prem', this)">
+            <div class="flex-between">
+              <div style="text-align:right;">
+                <div class="option-label" data-key="q4_prem">بريميوم (Premium)</div>
+                <div class="option-desc" data-key="q4_prem_d">أكتر من 1000 جنيه — أقصى درجات الفخامة والنتائج</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav Buttons -->
+      <div class="quiz-nav mt-24">
+        <button class="btn btn-outline" id="btnBack" onclick="goBack()" style="visibility:hidden;">السابق</button>
+        <button class="btn btn-primary" id="btnNext" onclick="goNext()">التالي ←</button>
+      </div>
+
+    </div>
+
+    <!-- Showcase Media Side (Right) -->
+    <div class="routine-media-side">
+      <div class="media-card-showcase">
+        <h3 style="color:var(--gold); margin-bottom:16px; font-size: 1.8rem;">نظام لمسة الذكي</h3>
+        <p style="color:rgba(255,255,255,0.95); font-size:1rem; line-height:1.8;">
+          أنت لا تشتري مجرد منتجات عشوائية، أنت تشتري حلاً متكاملاً ومدروساً لبشرتك من مخزون المحل الحقيقي.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="resultContainer" class="result-view">
+    <div class="text-center mb-32">
+      <span style="font-size:3.5rem;">🎉✨</span>
+      <h2 style="color:var(--burgundy); margin: 12px 0;" data-key="result_title">روتينك المثالي جاهز!</h2>
+      <p data-key="result_sub">اخترنا لك هذه المنتجات المتناغمة معاً للحصول على أفضل نتيجة بأسرع وقت</p>
+      <div class="title-line"></div>
+    </div>
+
+    <div class="result-total">
+      <div>
+        <div class="result-total-label">إجمالي الروتين المقترح:</div>
+        <small style="opacity:0.8;">يشمل كل المنتجات الموصى بها أدناه</small>
+      </div>
+      <div class="result-total-price" id="routineTotalPrice">0 ج.م</div>
+    </div>
+
+    <div class="flex gap-16 mb-24 flex-wrap">
+      <button class="btn btn-gold btn-lg flex-1" id="btnAddFullRoutine" onclick="addFullRoutineToCart()">
+        🛍️ اشتري الروتين كامل بخصم 10%
+      </button>
+      <button class="btn btn-outline" onclick="shareRoutine()">
+        🔗 شاركي روتينك
+      </button>
+      <button class="btn btn-outline" onclick="restartQuiz()">
+        🔄 إعادة الاختبار
+      </button>
+    </div>
+
+    <div class="result-products-grid" id="routineProductsGrid">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p data-key="footer_copy">© 2024 لمسة (LAMSA). جميع الحقوق محفوظة.</p>
+        <a href="index.html" style="color:var(--gold);">← العودة للرئيسية</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let currentStep = 1;
+    const totalSteps = 4;
+    const answers = {
+      skinType: '',
+      hairType: '',
+      concerns: [],
+      budget: 'mid'
+    };
+    let currentRecommendedProducts = [];
+
+    function selectSingleOption(field, value, el) {
+      answers[field] = value;
+      el.parentElement.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function toggleConcern(val, el) {
+      if (answers.concerns.includes(val)) {
+        answers.concerns = answers.concerns.filter(c => c !== val);
+        el.classList.remove('selected');
+      } else {
+        answers.concerns.push(val);
+        el.classList.add('selected');
+      }
+    }
+
+    function updateStepUI() {
+      // Hide all steps
+      for (let i = 1; i <= totalSteps; i++) {
+        document.getElementById(`step${i}`)?.classList.remove('active');
+      }
+      document.getElementById(`step${currentStep}`)?.classList.add('active');
+
+      // Progress bar & text
+      const progressPercent = (currentStep / totalSteps) * 100;
+      document.getElementById('stepProgressFill').style.width = `${progressPercent}%`;
+      document.getElementById('stepCounter').textContent = `الخطوة ${currentStep} من ${totalSteps}`;
+
+      // Back button visibility
+      document.getElementById('btnBack').style.visibility = currentStep > 1 ? 'visible' : 'hidden';
+
+      // Next button text
+      const nextBtn = document.getElementById('btnNext');
+      if (currentStep === totalSteps) {
+        nextBtn.textContent = 'اطلعيلي روتيني! 🌟';
+        nextBtn.className = 'btn btn-gold';
+      } else {
+        nextBtn.textContent = 'التالي ←';
+        nextBtn.className = 'btn btn-primary';
+      }
+    }
+
+    function goNext() {
+      // Validate
+      if (currentStep === 1 && !answers.skinType) {
+        showToast('يرجى اختيار نوع بشرتك للمتابعة');
+        return;
+      }
+      if (currentStep === 2 && !answers.hairType) {
+        showToast('يرجى اختيار نوع شعرك للمتابعة');
+        return;
+      }
+
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateStepUI();
+      } else {
+        showResults();
+      }
+    }
+
+    function goBack() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('quizContainer').style.display = 'none';
+      const resContainer = document.getElementById('resultContainer');
+      resContainer.style.display = 'block';
+      triggerConfetti();
+
+      currentRecommendedProducts = window.LAMSA.getRoutineProducts(answers);
+
+      let total = currentRecommendedProducts.reduce((sum, p) => sum + p.price, 0);
+      document.getElementById('routineTotalPrice').textContent = `${total} ${t[currentLang].currency}`;
+
+      const grid = document.getElementById('routineProductsGrid');
+      grid.innerHTML = currentRecommendedProducts.map(p => `
+        <div class="product-card">
+          <div class="product-img-wrap" style="display:flex; align-items:center; justify-content:center; font-size: 3rem; background: var(--cream);">
+            ${p.emoji}
+            <span class="badge badge-popular product-badge">خطوة بالروتين</span>
+          </div>
+          <div class="product-info">
+            <div class="product-category">${p.category === 'skin' ? 'للبشرة' : 'للشعر'}</div>
+            <h4 class="product-name">${currentLang === 'ar' ? p.name : p.nameEn}</h4>
+            <div class="product-price-row">
+              <div class="product-price">${p.price} ${t[currentLang].currency}</div>
+              <button class="add-to-cart-btn" onclick='addToCart(${JSON.stringify(p)})' title="أضف للسلة">+</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function addFullRoutineToCart() {
+      currentRecommendedProducts.forEach(p => addToCart(p));
+      showToast('✓ تمت إضافة الروتين الكامل إلى سلتك مع الخصم!');
+      openCart();
+    }
+
+    function shareRoutine() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'روتيني من متجر لمسة',
+          text: 'اكتشفت روتيني المثالي للعناية بالبشرة والشعر على موقع لمسة!',
+          url: window.location.href,
+        });
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('✓ تم نسخ رابط الروتين للمشاركة');
+      }
+    }
+
+    function restartQuiz() {
+      currentStep = 1;
+      answers.skinType = '';
+      answers.hairType = '';
+      answers.concerns = [];
+      answers.budget = 'mid';
+      document.querySelectorAll('.option-card, .chip-option').forEach(c => c.classList.remove('selected'));
+      document.getElementById('resultContainer').style.display = 'none';
+      document.getElementById('quizContainer').style.display = 'grid';
+      updateStepUI();
+    }
+  </script>
+</body>
+</html>

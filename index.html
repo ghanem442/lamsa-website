@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لمسة | LAMSA — متجر الجمال والعطور الفاخرة</title>
+  
+  <!-- Redirect to intro on first visit -->
+  <script>
+    if (!sessionStorage.getItem('introShown')) {
+      sessionStorage.setItem('introShown', 'true');
+      window.location.href = 'intro.html';
+    }
+  </script>
+
+  
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    /* Ultra Modern Hero */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      background: radial-gradient(circle at top center, #7E1D26 0%, #5C0E14 45%, #2A0609 100%);
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 70px 24px;
+      overflow: hidden;
+      border-bottom: 2px solid var(--gold-border);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.12) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .hero-logo-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 35px rgba(212, 175, 55, 0.45);
+      object-fit: cover;
+      background: #3B070B;
+      transition: transform 0.6s ease;
+    }
+    .hero-logo-img:hover {
+      transform: scale(1.05) rotate(3deg);
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 22px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      border-radius: var(--radius-xl);
+      color: var(--gold-light);
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .hero h1 {
+      color: var(--white);
+      font-size: clamp(2.8rem, 6.5vw, 4.6rem);
+      margin-bottom: 18px;
+      text-shadow: 0 6px 30px rgba(0,0,0,0.4);
+      font-weight: 700;
+    }
+    .hero p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.15rem;
+      margin-bottom: 40px;
+      line-height: 1.9;
+      max-width: 680px;
+      margin-inline: auto;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    /* Feature cards floating section */
+    .features-section {
+      margin-top: -70px;
+      position: relative;
+      z-index: 10;
+      padding-bottom: 40px;
+    }
+
+    /* Store about box */
+    .store-about-box {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 56px;
+      box-shadow: var(--shadow-strong);
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 48px;
+      align-items: center;
+      border: 1px solid var(--border-light);
+    }
+    .store-photo-mockup {
+      background: radial-gradient(circle at center, #5C0E14 0%, #2A0609 100%);
+      border-radius: var(--radius-lg);
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      border: 2px solid var(--gold-border);
+      box-shadow: 0 16px 40px rgba(42, 6, 9, 0.35);
+      text-align: center;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .store-photo-mockup::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(rgba(212, 175, 55, 0.2) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .store-photo-mockup span {
+      font-size: 4rem;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (max-width: 768px) {
+      .store-about-box {
+        grid-template-columns: 1fr;
+        padding: 28px 20px;
+      }
+      .features-section {
+        margin-top: -35px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3 data-key="cart_title">السلة</h3>
+      <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <div class="cart-total cart-total-row">
+        <span data-key="cart_total">المجموع</span>
+        <span id="cartTotal">0 ج.م</span>
+      </div>
+      <button class="btn btn-primary btn-full" id="cartCheckout" data-key="cart_whatsapp">اطلبي عبر واتساب 💬</button>
+    </div>
+  </div>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobileNav">
+    <a href="index.html" class="active" data-key="nav_sets">الرئيسية</a>
+    <a href="shop.html" data-key="nav_shop">المتجر</a>
+    <a href="routine.html" data-key="nav_routine">اختارلي روتين 🔥</a>
+    <a href="gift.html" data-key="nav_gift">صمم هديتك 🎁</a>
+    <a href="perfume.html" data-key="nav_perfume">اعمل برفانك 🌹</a>
+    <a href="about.html" data-key="nav_about">عن لمسة</a>
+    <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a href="index.html" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" style="width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <span class="nav-logo-text">LAMSA</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html" class="active" data-key="nav_sets">الرئيسية</a>
+        <a href="shop.html" data-key="nav_shop">المتجر</a>
+        <a href="routine.html" data-key="nav_routine">اختارلي روتين</a>
+        <a href="gift.html" data-key="nav_gift">صمم هديتك</a>
+        <a href="perfume.html" data-key="nav_perfume">اعمل برفانك</a>
+        <a href="about.html" data-key="nav_about">عن لمسة</a>
+        <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="ar">عربي</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
+          🛍️
+          <span class="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <img src="assets/logo.png" alt="LAMSA" class="hero-logo-img">
+      <div class="hero-tag" data-key="hero_tag">✨ عالم الجمال والعناية الفاخرة</div>
+      <h1 data-key="hero_title">لمسة تفرق</h1>
+      <p data-key="hero_sub">عناية فائقة بالبشرة والشعر، تركيبات عطور حصرية نصنعها لك، وهدايا مميزة تليق بك — كل ما تحتاجينه في مكان واحد.</p>
+      <div class="hero-btns">
+        <a href="shop.html" class="btn btn-gold btn-lg" data-key="hero_cta">تسوقي الآن 🛍️</a>
+        <a href="routine.html" class="btn btn-white btn-lg" data-key="hero_cta2">اكتشفي روتينك 🔥</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 Interactive Feature Cards -->
+  <section class="features-section">
+    <div class="container">
+      <div class="grid-3">
+        <!-- Card 1: Routine -->
+        <a href="routine.html" class="feature-card">
+          <div class="feature-card-bg" style="background: url('assets/features/routine.jpg') center/cover no-repeat;"></div>
+          <div class="feature-card-overlay"></div>
+          <div class="feature-card-content">
+            <h3 data-key="feat_routine_title">اختارلي روتين</h3>
+            <p data-key="feat_routine_sub">روتين عناية ذكي ومخصص بالكامل لبشرتك وشعرك وميزانيتك</p>
+            <span class="feature-card-btn" data-key="feat_routine_btn">ابدئي الآن ←</span>
+          </div>
+        </a>
+
+        <!-- Card 2: Gift -->
+        <a href="gift.html" class="feature-card">
+          <div class="feature-card-bg" style="background: url('assets/features/gift.jpg') center/cover no-repeat;"></div>
+          <div class="feature-card-overlay"></div>
+          <div class="feature-card-content">
+            <h3 data-key="feat_gift_title">صمم هديتك</h3>
+            <p data-key="feat_gift_sub">اختاري المناسبة وسنقوم بتنسيق هدية فاخرة تعبر عن ذوقك</p>
+            <span class="feature-card-btn" data-key="feat_gift_btn">صممي هديتك ←</span>
+          </div>
+        </a>
+
+        <!-- Card 3: Perfume -->
+        <a href="perfume.html" class="feature-card">
+          <div class="feature-card-bg" style="background: url('assets/features/perfume.jpg') center/cover no-repeat;"></div>
+          <div class="feature-card-overlay"></div>
+          <div class="feature-card-content">
+            <h3 data-key="feat_perfume_title">اعمل برفانك</h3>
+            <p data-key="feat_perfume_sub">تركيبة عطرية يدوية خاصة نصنعها بحرفية وخبرة</p>
+            <span class="feature-card-btn" data-key="feat_perfume_btn">ابدئي التركيبة ←</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Picks -->
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-key="picks_title">مختارات لمسة</h2>
+        <p data-key="picks_sub">منتجات مختارة بعناية لمنحك أفضل تجربة إشراق وجمال</p>
+        <div class="title-line"></div>
+      </div>
+
+      <div class="grid-3" id="picksGrid"></div>
+
+      <div class="text-center mt-32">
+        <a href="shop.html" class="btn btn-outline btn-lg" data-key="view_all">عرض جميع المنتجات (8 أقسام) ←</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Store Highlight / About -->
+  <section class="section" style="background: var(--cream-dark);">
+    <div class="container">
+      <div class="store-about-box">
+        <div>
+          <span class="badge badge-popular mb-8">عالم لمسة</span>
+          <h2 data-key="about_title" class="mb-16">عن متجرنا</h2>
+          <p class="mb-16">نحن في **لمسة** نؤمن بأن الجمال تجربة متكاملة تبدأ من التفاصيل الدقيقة. نوفر لك مستحضرات العناية بالبشرة والشعر، أدوات التصفيف، مجوهرات الإكسسوارات، وهدايا المناسبات الفاخرة.</p>
+          <p class="mb-24">ميزتنا الفريدة هي **تركيبات البرفانات اليدوية** التي نبتكرها خصيصاً لتمنحك توقيعاً عطرياً لا ينسى.</p>
+          <a href="about.html" class="btn btn-primary" data-key="nav_about">تعرفي علينا أكثر</a>
+        </div>
+        <div class="store-photo-mockup">
+          <span>🏪✨</span>
+          <h3 style="color:var(--gold); margin-bottom: 8px; position:relative; z-index:2;">محل لمسة — LAMSA</h3>
+          <p style="color: rgba(255,255,255,0.85); font-size: 0.95rem; position:relative; z-index:2;">أجواء راقية وتجربة عناية متميزة</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why LAMSA -->
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-key="why_title">لماذا لمسة؟</h2>
+        <div class="title-line"></div>
+      </div>
+
+      <div class="grid-4">
+        <div class="why-us-card">
+          <div class="why-us-icon">🌹</div>
+          <h4 data-key="why_1_title">عطور يدوية</h4>
+          <p data-key="why_1_desc">نصنع تركيبات عطرية فريدة بأيدينا خصيصاً لك</p>
+        </div>
+        <div class="why-us-card">
+          <div class="why-us-icon">✨</div>
+          <h4 data-key="why_2_title">جودة مضمونة</h4>
+          <p data-key="why_2_desc">منتجات أصلية 100% مختارة بأعلى المعايير</p>
+        </div>
+        <div class="why-us-card">
+          <div class="why-us-icon">🎀</div>
+          <h4 data-key="why_3_title">تغليف فاخر</h4>
+          <p data-key="why_3_desc">كل طلب وهدية تُغلّف بعناية ورقي يعبر عن مشاعرك</p>
+        </div>
+        <div class="why-us-card">
+          <div class="why-us-icon">💬</div>
+          <h4 data-key="why_4_title">خبرة واستشارة</h4>
+          <p data-key="why_4_desc">نساعدك خطوة بخطوة في اختيار الروتين الأنسب لك</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customer Reviews -->
+  <section class="section" style="background: var(--bg-surface);">
+    <div class="container">
+      <div class="section-title">
+        <h2 data-key="reviews_title">آراء عملاءنا</h2>
+        <p data-key="reviews_sub">ثقتكم ورضاكم هي أجمل لمسة نسعى لها دائماً</p>
+        <div class="title-line"></div>
+      </div>
+
+      <div class="grid-3">
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"صفحة اختارلي روتين وفرت عليا حيرة سنين! الروتين اللي طلعلي ناسب بشرتي جداً وحسيت بفرق بعد أسبوعين بس."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">👩</div>
+            <div>
+              <div class="testimonial-name">سارة أحمد</div>
+              <div class="testimonial-label">عميلة مميزة</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"البرفان التركيب اللي اتعملي ثباته خرافي! طلبت تركيبة عود مع زهور وكل اللي يقابلني يسألني على اسمه."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">🧔</div>
+            <div>
+              <div class="testimonial-name">محمد كريم</div>
+              <div class="testimonial-label">عاشق للعطور</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"صممت هدية عيد ميلاد أختي من الموقع، التغليف كان يجنن وفاخر جداً والمنتجات كلها أصلية وممتازة."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">🧕</div>
+            <div>
+              <div class="testimonial-name">نور الهدى</div>
+              <div class="testimonial-label">عميلة دائمة</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">LAMSA</div>
+          <div class="footer-logo-ar">متجر لمسة</div>
+          <p data-key="footer_brand_desc">متجر لمسة — وجهتك الأولى للعناية الفاخرة بالبشرة، الشعر، تركيبات العطور الحصرية، والهدايا المميزة.</p>
+          <div class="social-links" style="gap:12px;">
+            <a href="https://www.facebook.com/share/1CKEaEaqRF/" target="_blank" class="social-link" style="background:#1877F2;" title="Facebook">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="https://www.instagram.com/lamsastore00?igsi=dmVhaGZzcnk3ZTJt" target="_blank" class="social-link" style="background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);" title="Instagram">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <a href="https://www.tiktok.com/@lamsastore03?_r=1&_t=ZS-994zaDq7bdP" target="_blank" class="social-link" style="background:#000000; border:1px solid rgba(255,255,255,0.3);" title="TikTok">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+            </a>
+            <a href="https://whatsapp.com/channel/0029Vb8wEA80bIde3x07Om1p" target="_blank" class="social-link" style="background:#25D366;" title="قناة واتساب لمسة">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="footer_shop">المتجر</h4>
+          <ul>
+            <li><a href="shop.html?cat=skin" data-key="nav_skincare">العناية بالبشرة</a></li>
+            <li><a href="shop.html?cat=hair" data-key="nav_haircare">العناية بالشعر</a></li>
+            <li><a href="shop.html?cat=perfumes" data-key="nav_perfumes">العطور</a></li>
+            <li><a href="shop.html?cat=gifts" data-key="nav_gifts">الهدايا</a></li>
+            <li><a href="shop.html?cat=accessories">الإكسسوارات</a></li>
+            <li><a href="shop.html?cat=devices">أجهزة التجميل</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="footer_links">تجارب تفاعلية</h4>
+          <ul>
+            <li><a href="routine.html" data-key="nav_routine">اختارلي روتين 🔥</a></li>
+            <li><a href="gift.html" data-key="nav_gift">صمم هديتك 🎁</a></li>
+            <li><a href="perfume.html" data-key="nav_perfume">اعمل برفانك 🌹</a></li>
+            <li><a href="about.html" data-key="nav_about">عن لمسة</a></li>
+            <li><a href="contact.html" data-key="nav_contact">تواصل معنا</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 data-key="contact_title">تواصل معنا</h4>
+          <ul>
+            <li><a href="https://wa.me/201080239612" target="_blank" style="color:rgba(255,255,255,0.85)">📞 01080239612 (واتساب)</a></li>
+            <li><span style="color:rgba(255,255,255,0.85)">📍 الإسكندرية، عزبة محسن، شارع نمرة 9</span></li>
+            <li><span style="color:rgba(255,255,255,0.85)">🕒 يومياً من 11:00 ص إلى 1:00 بعد منتصف الليل</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p data-key="footer_copy">© 2024 لمسة (LAMSA). جميع الحقوق محفوظة.</p>
+        <p style="color: var(--gold-light); font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">Luxury Beauty & Fragrance Atelier</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const picks = window.LAMSA.PRODUCTS.filter(p => p.badge === 'popular' || p.badge === 'new').slice(0, 3);
+      const grid = document.getElementById('picksGrid');
+      if (grid && picks.length > 0) {
+        grid.innerHTML = picks.map(p => `
+          <div class="product-card" onclick="openQuickView('${p.id}')">
+            <div class="product-img-wrap">
+              ${p.emoji}
+              ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'الأكثر طلباً'}</span>` : ''}
+              <button class="product-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active')">🤍</button>
+            </div>
+            <div class="product-info">
+              <div>
+                <div class="product-category">${p.category}</div>
+                <h4 class="product-name">${currentLang === 'ar' ? p.name : p.nameEn}</h4>
+              </div>
+              <div class="product-price-row">
+                <div class="product-price">${p.price} ${t[currentLang].currency}</div>
+                <button class="add-to-cart-btn" onclick='event.stopPropagation(); addToCart(${JSON.stringify(p)})' title="أضف للسلة">+</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    });
+  </script>
+</body>
+</html>

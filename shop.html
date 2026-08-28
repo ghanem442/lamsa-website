@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المتجر | لمسة LAMSA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cat-tab {
+      padding: 8px 18px;
+      border-radius: var(--radius-xl);
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--text-mid);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .cat-tab:hover, .cat-tab.active {
+      background: var(--burgundy);
+      color: var(--white);
+      border-color: var(--burgundy);
+    }
+    .sort-wrap select {
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      font-family: inherit;
+      background: var(--cream);
+      font-weight: 600;
+      color: var(--text-dark);
+      cursor: pointer;
+    }
+    .routine-banner-card {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #6B1319 0%, #4A0D11 100%);
+      color: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      box-shadow: 0 4px 20px var(--shadow);
+      margin: 16px 0;
+    }
+    .routine-banner-card h3 { color: var(--white); margin-bottom: 8px; font-size: 1.6rem; }
+    .routine-banner-card p { color: rgba(255,255,255,0.85); max-width: 550px; font-size: 1rem; }
+    @media (max-width: 768px) {
+      .routine-banner-card { flex-direction: column; text-align: center; padding: 24px; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3 data-key="cart_title">السلة</h3>
+      <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <div class="cart-total cart-total-row">
+        <span data-key="cart_total">المجموع</span>
+        <span id="cartTotal">0 ج.م</span>
+      </div>
+      <button class="btn btn-primary btn-full" id="cartCheckout" data-key="cart_whatsapp">اطلبي عبر واتساب 💬</button>
+    </div>
+  </div>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobileNav">
+    <a href="index.html" data-key="nav_sets">الرئيسية</a>
+    <a href="shop.html" class="active" data-key="nav_shop">المتجر</a>
+    <a href="routine.html" data-key="nav_routine">اختارلي روتين 🔥</a>
+    <a href="gift.html" data-key="nav_gift">صمم هديتك 🎁</a>
+    <a href="perfume.html" data-key="nav_perfume">اعمل برفانك 🌹</a>
+    <a href="about.html" data-key="nav_about">عن لمسة</a>
+    <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a href="index.html" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <span class="nav-logo-text">LAMSA</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html" data-key="nav_sets">الرئيسية</a>
+        <a href="shop.html" class="active" data-key="nav_shop">المتجر</a>
+        <a href="routine.html" data-key="nav_routine">اختارلي روتين</a>
+        <a href="gift.html" data-key="nav_gift">صمم هديتك</a>
+        <a href="perfume.html" data-key="nav_perfume">اعمل برفانك</a>
+        <a href="about.html" data-key="nav_about">عن لمسة</a>
+        <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="ar">عربي</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
+          🛍️
+          <span class="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="container">
+      <h1 data-key="shop_title">المتجر</h1>
+      <p data-key="shop_sub">اكتشفي مجموعتنا الفاخرة من منتجات العناية بالبشرة، الشعر، العطور، والهدايا</p>
+    </div>
+  </div>
+
+  <!-- Shop Content -->
+  <main class="section">
+    <div class="container">
+      
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <!-- Search Bar -->
+        <div style="flex: 1; min-width: 280px;">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="ابحثي عن منتج..." 
+            style="width: 100%; padding: 10px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark); font-size: 0.95rem;"
+            oninput="handleSearch()"
+          />
+        </div>
+        
+        <div class="sort-wrap">
+          <select id="sortSelect" onchange="handleSort()">
+            <option value="default" data-key="sort_new">الأحدث</option>
+            <option value="low" data-key="sort_low">السعر: الأقل للأعلى</option>
+            <option value="high" data-key="sort_high">السعر: الأعلى للأقل</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div style="margin-bottom: 32px;">
+        <div class="category-tabs" id="catTabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="cat-tab active" data-cat="all" onclick="filterCategory('all')">الكل</button>
+          <button class="cat-tab" data-cat="skin" onclick="filterCategory('skin')">البشرة</button>
+          <button class="cat-tab" data-cat="hair" onclick="filterCategory('hair')">الشعر</button>
+          <button class="cat-tab" data-cat="body" onclick="filterCategory('body')">الجسم</button>
+          <button class="cat-tab" data-cat="deodorant" onclick="filterCategory('deodorant')">مزيل العرق</button>
+          <button class="cat-tab" data-cat="makeup" onclick="filterCategory('makeup')">المكياج</button>
+          <button class="cat-tab" data-cat="tools" onclick="filterCategory('tools')">الأدوات</button>
+          <button class="cat-tab" data-cat="perfumes" onclick="filterCategory('perfumes')">العطور</button>
+          <button class="cat-tab" data-cat="gifts" onclick="filterCategory('gifts')">الهدايا</button>
+          <button class="cat-tab" data-cat="accessories" onclick="filterCategory('accessories')">إكسسوارات</button>
+          <button class="cat-tab" data-cat="devices" onclick="filterCategory('devices')">أجهزة</button>
+        </div>
+        
+        <!-- Sub-category Pills (shown when category is selected) -->
+        <div id="subCatPills" style="display: none; margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <!-- Will be populated by JS -->
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="grid-4" id="productsGrid">
+        <!-- Rendered by JS -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">LAMSA</div>
+          <div class="footer-logo-ar">متجر لمسة</div>
+          <p data-key="footer_brand_desc">متجر لمسة — وجهتك الأولى للعناية الفاخرة بالبشرة، الشعر، والعطور المميزة.</p>
+        </div>
+        <div class="footer-col">
+          <h4 data-key="footer_shop">المتجر</h4>
+          <ul>
+            <li><a href="shop.html?cat=skin" data-key="nav_skincare">العناية بالبشرة</a></li>
+            <li><a href="shop.html?cat=hair" data-key="nav_haircare">العناية بالشعر</a></li>
+            <li><a href="shop.html?cat=perfumes" data-key="nav_perfumes">العطور</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 data-key="footer_links">تجارب تفاعلية</h4>
+          <ul>
+            <li><a href="routine.html" data-key="nav_routine">اختارلي روتين 🔥</a></li>
+            <li><a href="gift.html" data-key="nav_gift">صمم هديتك 🎁</a></li>
+            <li><a href="perfume.html" data-key="nav_perfume">اعمل برفانك 🌹</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 data-key="contact_title">تواصل معنا</h4>
+          <ul>
+            <li><a href="https://wa.me/201080239612" target="_blank" style="color:rgba(255,255,255,0.85)">📞 01080239612 (واتساب)</a></li>
+            <li><span style="color:rgba(255,255,255,0.85)">📍 الإسكندرية، عزبة محسن، شارع نمرة 9</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p data-key="footer_copy">© 2024 لمسة (LAMSA). جميع الحقوق محفوظة.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let activeCat = 'all';
+    let activeSubCat = 'all';
+    let currentSort = 'default';
+    let searchQuery = '';
+
+    // Sub-categories mapping
+    const SUB_CATEGORIES = {
+      hair: [
+        { id: 'shampoo', name: 'شامبو' },
+        { id: 'conditioner', name: 'بلسم' },
+        { id: 'hair-cream', name: 'كريم شعر' },
+        { id: 'hair-gel', name: 'جل' },
+        { id: 'hair-oil', name: 'زيت شعر' },
+        { id: 'oil-alternative', name: 'بديل زيت' },
+        { id: 'protein', name: 'بروتين' },
+        { id: 'hair-mask', name: 'ماسك شعر' }
+      ],
+      body: [
+        { id: 'shower-gel', name: 'شاور جل' },
+        { id: 'body-lotion', name: 'مرطب جسم' },
+        { id: 'body-scrub', name: 'مقشر جسم' },
+        { id: 'body-butter', name: 'زبدة الجسم' }
+      ],
+      deodorant: [
+        { id: 'body-splash', name: 'بودي سبلاش' },
+        { id: 'spray', name: 'سبراي' },
+        { id: 'roll-on', name: 'رول أون' },
+        { id: 'stick', name: 'استيك' }
+      ],
+      makeup: [
+        { id: 'foundation', name: 'فاونديشن' },
+        { id: 'lipstick', name: 'أحمر شفاه' },
+        { id: 'mascara', name: 'ماسكارا' },
+        { id: 'eyeshadow', name: 'ظلال عيون' },
+        { id: 'blush', name: 'بلاشر' },
+        { id: 'eyeliner', name: 'آيلاينر' }
+      ],
+      skin: [
+        { id: 'cleanser', name: 'غسول' },
+        { id: 'toner', name: 'تونر' },
+        { id: 'serum', name: 'سيروم' },
+        { id: 'moisturizer', name: 'مرطب' },
+        { id: 'sunscreen', name: 'واقي شمس' },
+        { id: 'face-mask', name: 'ماسك وجه' }
+      ],
+      perfumes: [
+        { id: 'ready-made', name: 'عطور جاهزة 🌹' },
+        { id: 'custom', name: 'تركيبة خاصة ✨' }
+      ]
+    };
+
+    function filterCategory(cat) {
+      activeCat = cat;
+      activeSubCat = 'all';
+      document.querySelectorAll('.cat-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.cat === cat);
+      });
+      
+      // Show sub-categories if available
+      const subCatContainer = document.getElementById('subCatPills');
+      if (SUB_CATEGORIES[cat]) {
+        subCatContainer.style.display = 'flex';
+        subCatContainer.innerHTML = `
+          <button class="cat-tab active" style="font-size: 0.85rem; padding: 6px 14px;" onclick="filterSubCategory('all')">الكل</button>
+          ${SUB_CATEGORIES[cat].map(sub => `
+            <button class="cat-tab" style="font-size: 0.85rem; padding: 6px 14px;" onclick="filterSubCategory('${sub.id}')">${sub.name}</button>
+          `).join('')}
+        `;
+      } else {
+        subCatContainer.style.display = 'none';
+        subCatContainer.innerHTML = '';
+      }
+      
+      renderShop();
+    }
+
+    function filterSubCategory(subCat) {
+      activeSubCat = subCat;
+      document.querySelectorAll('#subCatPills .cat-tab').forEach(b => {
+        b.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      renderShop();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+      renderShop();
+    }
+
+    function handleSort() {
+      currentSort = document.getElementById('sortSelect').value;
+      renderShop();
+    }
+
+    function renderShop() {
+      const grid = document.getElementById('productsGrid');
+      if (!grid) return;
+
+      // Load products from data.js + admin localStorage
+      const adminProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
+      const dataProducts = window.LAMSA?.PRODUCTS || [];
+      
+      // Convert admin products to shop format
+      const adminFormatted = adminProducts.map(p => ({
+        id: 'admin-' + p.id,
+        name: p.name,
+        nameEn: p.name,
+        category: p.category,
+        subCategory: p.subCategory,
+        price: p.sellPrice,
+        image: p.image, // Add image data
+        emoji: p.image ? null : '🛍️', // Use emoji only if no image
+        badge: 'new'
+      }));
+      
+      let list = [...dataProducts, ...adminFormatted];
+
+      // Filter by URL param on first load
+      const urlParams = new URLSearchParams(window.location.search);
+      const catParam = urlParams.get('cat');
+      if (catParam && activeCat === 'all') {
+        filterCategory(catParam);
+        return;
+      }
+
+      // Filter by category
+      if (activeCat !== 'all') {
+        list = list.filter(p => p.category === activeCat);
+      }
+
+      // Filter by sub-category
+      if (activeSubCat !== 'all') {
+        list = list.filter(p => p.subCategory === activeSubCat);
+      }
+
+      // Filter by search
+      if (searchQuery) {
+        list = list.filter(p => 
+          p.name.toLowerCase().includes(searchQuery) || 
+          p.nameEn.toLowerCase().includes(searchQuery) ||
+          (p.subCategory && p.subCategory.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      if (currentSort === 'low') list.sort((a, b) => a.price - b.price);
+      if (currentSort === 'high') list.sort((a, b) => b.price - a.price);
+
+      let html = '';
+      list.forEach((p, index) => {
+        html += `
+          <div class="product-card" onclick="openQuickView('${p.id}')">
+            <div class="product-img-wrap" style="display: flex; align-items: center; justify-content: center; min-height: 200px; ${p.image ? `background: url(${p.image}) center/cover no-repeat;` : ''}">
+              ${!p.image && p.emoji ? `<span style="font-size: 3rem;">${p.emoji}</span>` : ''}
+              ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'مميز'}</span>` : ''}
+              <button class="product-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active')">🤍</button>
+            </div>
+            <div class="product-info">
+              <div class="product-category">${p.category}</div>
+              <h4 class="product-name">${currentLang === 'ar' ? p.name : p.nameEn}</h4>
+              <div class="product-price-row">
+                <div class="product-price">${p.price} ${t[currentLang].currency}</div>
+                <button class="add-to-cart-btn" onclick='event.stopPropagation(); addToCart(${JSON.stringify(p)})' title="أضف للسلة">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Insert Routine promo banner after 4th item
+        if (index === 3 && activeCat === 'all') {
+          html += `
+            <div class="routine-banner-card">
+              <div>
+                <h3>✨ مش عارفة تختاري روتينك المناسب؟</h3>
+                <p>جاوبي على 4 أسئلة بسيطة وسيقوم نظامنا الذكي باقتراح أفضل مجموعة منتجات متكاملة من مخزون المحل تلائم بشرتك وشعرك وميزانيتك.</p>
+              </div>
+              <a href="routine.html" class="btn btn-gold btn-lg" style="white-space:nowrap;">ابدئي تحليل الروتين 🚀</a>
+            </div>
+          `;
+        }
+      });
+
+      grid.innerHTML = html;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderShop();
+
+      document.querySelectorAll('.cat-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeCat = btn.dataset.cat;
+          renderShop();
+        });
+      });
+
+      document.getElementById('sortSelect')?.addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        renderShop();
+      });
+
+      document.addEventListener('langChanged', () => renderShop());
+    });
+  </script>
+</body>
+</html>

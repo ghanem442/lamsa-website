@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تصميم عطرك الخاص | لمسة LAMSA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    body.dark-theme {
+      background: #180406;
+      color: #FFFFFF;
+    }
+    .perfume-atelier {
+      max-width: 920px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .atelier-title {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .atelier-title h1 {
+      color: var(--white);
+      font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+      margin-bottom: 12px;
+      font-family: var(--font-title);
+    }
+    .atelier-title p {
+      color: rgba(255,255,255,0.85);
+      font-size: 1.1rem;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+    .atelier-section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      margin-bottom: 32px;
+      backdrop-filter: blur(12px);
+    }
+    .atelier-section h3 {
+      color: var(--gold);
+      margin-bottom: 24px;
+      font-size: 1.35rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .scent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .scent-card {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 24px 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .scent-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: transparent;
+      transition: background 0.3s ease;
+    }
+    .scent-card:hover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.08);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .scent-card.selected {
+      border-color: var(--gold);
+      background: radial-gradient(circle at center, rgba(212, 175, 55, 0.18) 0%, rgba(59, 7, 11, 0.35) 100%);
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.35);
+    }
+    .scent-card.selected::before {
+      background: var(--gold-metallic);
+    }
+    .scent-icon-wrap {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(212, 175, 55, 0.2) 0%, rgba(0,0,0,0.4) 100%);
+      border: 1.5px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+      color: var(--gold);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .scent-name {
+      font-weight: 700;
+      color: var(--white);
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+    .scent-sub {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+    .conc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .conc-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 22px 18px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+    }
+    .conc-card:hover, .conc-card.selected {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.12);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    .conc-card h4 { color: var(--gold-light); margin-bottom: 6px; font-size: 1.05rem; }
+    .conc-card p { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
+
+    .size-toggle-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+    .size-btn {
+      flex: 1;
+      padding: 18px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      color: white;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .size-btn:hover, .size-btn.selected {
+      border-color: var(--gold);
+      background: var(--gold-metallic);
+      color: #2A0609;
+      box-shadow: 0 8px 24px rgba(212, 175, 55, 0.35);
+    }
+
+    /* Summary Card */
+    .perfume-summary-box {
+      background: radial-gradient(circle at top, #4A0D11 0%, #200407 100%);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius-xl);
+      padding: 40px 36px;
+      box-shadow: 0 16px 50px rgba(0,0,0,0.6);
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 1rem;
+    }
+    .summary-row span:last-child {
+      font-weight: 700;
+      color: var(--gold-light);
+    }
+    .price-big {
+      font-size: 2.2rem;
+      color: var(--gold);
+      font-weight: 800;
+      font-family: var(--font-title);
+    }
+
+    @media (max-width: 768px) {
+      .scent-grid, .conc-grid { grid-template-columns: 1fr; }
+      .size-toggle-row { flex-direction: column; }
+      .perfume-summary-box { padding: 24px 18px; }
+    }
+  </style>
+</head>
+<body class="dark-theme">
+
+  <!-- Overlay & Cart -->
+  <div class="overlay" id="overlay"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3 data-key="cart_title">السلة</h3>
+      <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <div class="cart-total cart-total-row">
+        <span data-key="cart_total">المجموع</span>
+        <span id="cartTotal">0 ج.م</span>
+      </div>
+      <button class="btn btn-primary btn-full mb-8" id="cartCheckout" data-key="cart_checkout">إتمام الطلب والشحن 🚀</button>
+      <button class="btn btn-outline btn-full" id="cartQuickWhatsApp" onclick="orderViaWhatsApp()" data-key="cart_whatsapp">طلب سريع عبر واتساب 💬</button>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar" style="background:rgba(24, 4, 6, 0.95); border-bottom: 1px solid rgba(212,175,55,0.3);">
+    <div class="container nav-inner">
+      <button class="menu-toggle" id="menuToggle" aria-label="القائمة" style="background:rgba(255,255,255,0.1);">
+        <span style="background:var(--gold);"></span><span style="background:var(--gold);"></span><span style="background:var(--gold);"></span>
+      </button>
+
+      <a href="index.html" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <span class="nav-logo-text" style="color:var(--gold);">LAMSA</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html" style="color:rgba(255,255,255,0.8);" data-key="nav_sets">الرئيسية</a>
+        <a href="shop.html" style="color:rgba(255,255,255,0.8);" data-key="nav_shop">المتجر</a>
+        <a href="routine.html" style="color:rgba(255,255,255,0.8);" data-key="nav_routine">اختارلي روتين</a>
+        <a href="gift.html" style="color:rgba(255,255,255,0.8);" data-key="nav_gift">صمم هديتك</a>
+        <a href="perfume.html" class="active" style="color:var(--gold); font-weight:700;" data-key="nav_perfume">اعمل برفانك</a>
+        <a href="about.html" style="color:rgba(255,255,255,0.8);" data-key="nav_about">عن لمسة</a>
+        <a href="contact.html" style="color:rgba(255,255,255,0.8);" data-key="nav_contact">تواصل معنا</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <div class="lang-toggle" style="background:rgba(255,255,255,0.1);">
+          <button class="lang-btn active" data-lang="ar" style="color:white;">عربي</button>
+          <button class="lang-btn" data-lang="en" style="color:white;">EN</button>
+        </div>
+        <button class="nav-icon-btn" id="cartToggle" style="color:var(--gold);" aria-label="السلة">
+          🛍️
+          <span class="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Atelier Content -->
+  <main class="perfume-atelier">
+    <div class="atelier-title">
+      <div style="width:70px; height:70px; border-radius:50%; background:radial-gradient(circle at center, rgba(212,175,55,0.2) 0%, transparent 70%); border:1px solid var(--gold-border); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:var(--gold);">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4M12 2v4M6 10a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V10z"/><circle cx="12" cy="14" r="2"/></svg>
+      </div>
+      <h1 data-key="perf_title">تصميم عطرك الخاص</h1>
+      <p data-key="perf_sub">رحلة حسية لابتكار توقيعك العطري الفريد. اختر المكونات، التركيز، والتفاصيل لتجربة مصممة خصيصاً لك.</p>
+    </div>
+
+    <!-- 1. Scent Family -->
+    <div class="atelier-section">
+      <h3><span>١.</span> <span data-key="perf_family">العائلة العطرية أو التركيبة</span></h3>
+      <div class="scent-grid" id="atelierScentGrid">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- 2. Concentration -->
+    <div class="atelier-section">
+      <h3><span>٢.</span> <span data-key="perf_conc">التركيز والثبات</span></h3>
+      <div class="conc-grid">
+        <div class="conc-card" onclick="setConc('edt', 'خفيف (EDT)', this)">
+          <h4 data-key="perf_edt">خفيف (EDT)</h4>
+          <p data-key="perf_edt_d">مناسب للاستخدام اليومي والصباحي</p>
+        </div>
+        <div class="conc-card selected" onclick="setConc('edp', 'متوسط (EDP) ★', this)">
+          <h4 data-key="perf_edp">متوسط (EDP) ★</h4>
+          <p data-key="perf_edp_d">ثبات عالي ومثالي للمناسبات والخروجات</p>
+        </div>
+        <div class="conc-card" onclick="setConc('ext', 'قوي مكثف (Extrait)', this)">
+          <h4 data-key="perf_ext">قوي مكثف (Extrait)</h4>
+          <p data-key="perf_ext_d">أعلى تركيز زيت عطري وثبات يدوم لأيام</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Size -->
+    <div class="atelier-section">
+      <h3><span>٣.</span> <span data-key="perf_size">حجم الزجاجة</span></h3>
+      <div class="size-toggle-row">
+        <button class="size-btn" onclick="setSize('30ml', this)">30 مل</button>
+        <button class="size-btn selected" onclick="setSize('50ml', this)">50 مل (الحجم الأكثر طلباً)</button>
+        <button class="size-btn" onclick="setSize('100ml', this)">100 مل</button>
+      </div>
+    </div>
+
+    <!-- Summary & Order Form -->
+    <div class="perfume-summary-box">
+      <h3 style="color:var(--gold); margin-bottom:20px; font-size:1.45rem;" data-key="perf_summary">ملخص العطر الخاص بك</h3>
+      
+      <div class="summary-row">
+        <span>التركيبة المختارة:</span>
+        <span id="sumScent">سوفاج (Sauvage Blend)</span>
+      </div>
+      <div class="summary-row">
+        <span>درجة التركيز:</span>
+        <span id="sumConc">متوسط (EDP) ★</span>
+      </div>
+      <div class="summary-row">
+        <span>حجم الزجاجة:</span>
+        <span id="sumSize">50 مل</span>
+      </div>
+      <div class="summary-row" style="border-bottom:none; padding-top:20px;">
+        <span style="font-size:1.2rem;">السعر التقديري:</span>
+        <span class="price-big" id="sumPrice">500 ج.م</span>
+      </div>
+
+      <div class="divider" style="background:rgba(255,255,255,0.15);"></div>
+
+      <form id="perfumeOrderForm" onsubmit="submitPerfumeOrder(event)">
+        <div class="input-group">
+          <label style="color:white;" data-key="contact_name">الاسم الكامل *</label>
+          <input type="text" class="form-input" required placeholder="اسمك الكريم" id="custName">
+        </div>
+        <div class="input-group">
+          <label style="color:white;" data-key="contact_phone">رقم الهاتف / واتساب *</label>
+          <input type="tel" class="form-input" required placeholder="01xxxxxxxxx" id="custPhone">
+        </div>
+        <div class="input-group">
+          <label style="color:white;">ملاحظات خاصة للتركيبة (اختياري)</label>
+          <textarea class="form-textarea" placeholder="أي لمسات خاصة؟ مثلاً رشة إضافية فانيليا أو عنبر أو لمسة باودر..." id="custNotes" style="min-height:80px;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold btn-lg btn-full" style="font-size:1.15rem;" data-key="perf_submit">
+          إرسال الطلب — سنقوم بتركيبه لك بحرفية 🌹
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer mt-32" style="background:#140305; border-top:1px solid rgba(201,169,110,0.25);">
+    <div class="container text-center">
+      <p data-key="footer_copy">© 2024 لمسة (LAMSA). جميع الحقوق محفوظة.</p>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Luxury Bottle SVGs & Monograms
+    const LUXURY_SCENTS = [
+      { id: 'sc_sauvage', nameAr: 'سوفاج ديور (Sauvage)', code: 'SV', note: 'منعش وحار فواح' },
+      { id: 'sc_oud', nameAr: 'عود ملكي خاص (Royal Oud)', code: 'RO', note: 'فخم ودافئ وثبات عالي' },
+      { id: 'sc_creed', nameAr: 'كريد أفينتوس (Aventus)', code: 'AV', note: 'أرستقراطي وجذاب' },
+      { id: 'sc_musk', nameAr: 'مسك الطهارة والرمان (Musk)', code: 'MK', note: 'نقي ومنعش وناعم' },
+      { id: 'sc_tobacco', nameAr: 'توباكو فانيلا (Tobacco Vanilla)', code: 'TV', note: 'شتوي وفاخر جداً' },
+      { id: 'sc_scandal', nameAr: 'سكاندال وزهور شرقية (Scandal)', code: 'SC', note: 'أنثوي فتان ومثير' },
+    ];
+    let customScents = JSON.parse(localStorage.getItem('lamsa_custom_scents')) || LUXURY_SCENTS;
+
+    let pScent = customScents[0]?.nameAr || 'سوفاج ديور (Sauvage)';
+    let pConc = 'edp';
+    let pConcLabel = 'متوسط (EDP) ★';
+    let pSize = '50ml';
+
+    function renderScentsGrid() {
+      const grid = document.getElementById('atelierScentGrid');
+      if (!grid) return;
+      grid.innerHTML = customScents.map((s, idx) => `
+        <div class="scent-card ${idx === 0 ? 'selected' : ''}" onclick="setScent('${s.nameAr}', '${s.id}', this)">
+          <div class="scent-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M10 2h4M12 2v4M6 10a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V10z"/>
+              <circle cx="12" cy="14" r="2.5"/>
+            </svg>
+          </div>
+          <div class="scent-name">${s.nameAr}</div>
+          <div class="scent-sub">${s.note || s.code || 'تركيبة لمسة الخاصة'}</div>
+        </div>
+      `).join('');
+    }
+
+    function setScent(label, val, el) {
+      pScent = label;
+      document.querySelectorAll('.scent-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('sumScent').textContent = label;
+      updatePrice();
+    }
+
+    function setConc(val, label, el) {
+      pConc = val;
+      pConcLabel = label;
+      document.querySelectorAll('.conc-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('sumConc').textContent = label;
+      updatePrice();
+    }
+
+    function setSize(size, el) {
+      pSize = size;
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('sumSize').textContent = size;
+      updatePrice();
+    }
+
+    function updatePrice() {
+      const price = window.LAMSA.getPerfumePrice(pSize, pConc);
+      document.getElementById('sumPrice').textContent = `${price} ${t[currentLang].currency}`;
+    }
+
+    function submitPerfumeOrder(e) {
+      e.preventDefault();
+      const name = document.getElementById('custName').value;
+      const phone = document.getElementById('custPhone').value;
+      const notes = document.getElementById('custNotes').value;
+      const price = window.LAMSA.getPerfumePrice(pSize, pConc);
+
+      const msg = `🌹 *طلب تركيب عطر خاص — متجر لمسة (LAMSA)*\n👤 *الاسم:* ${name}\n📞 *الهاتف:* ${phone}\n💎 *التركيبة المختارة:* ${pScent}\n✨ *التركيز:* ${pConcLabel}\n🧴 *الحجم:* ${pSize}\n💰 *السعر:* ${price} ج.م\n📝 *ملاحظات:* ${notes || 'لا يوجد'}`;
+      
+      triggerConfetti();
+      showToast('✓ تم استلام طلب تركيب العطر بنجاح! هنتواصل معك فوراً 🌹');
+      setTimeout(() => {
+        window.open(`https://wa.me/201080239612?text=${encodeURIComponent(msg)}`, '_blank');
+      }, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderScentsGrid();
+      updatePrice();
+    });
+  </script>
+</body>
+</html>

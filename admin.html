@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم | إدارة متجر لمسة</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .admin-container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .admin-header-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .admin-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .admin-tab-btn {
+      padding: 10px 24px;
+      border-radius: var(--radius-xl);
+      border: 1.5px solid var(--border);
+      background: var(--bg-subtle);
+      font-weight: 700;
+      color: var(--text-mid);
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition-fast);
+    }
+    .admin-tab-btn.active {
+      background: var(--burgundy);
+      color: white;
+      border-color: var(--burgundy);
+    }
+    [data-theme="dark"] .admin-tab-btn.active {
+      background: var(--gold-metallic);
+      color: #3B070B;
+      border-color: var(--gold);
+    }
+    .admin-stats {
+      display: flex;
+      gap: 20px;
+    }
+    .admin-stat-chip {
+      background: var(--bg-subtle);
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .admin-stat-chip strong {
+      display: block;
+      font-size: 1.4rem;
+      color: var(--burgundy);
+    }
+    [data-theme="dark"] .admin-stat-chip strong {
+      color: var(--gold);
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      max-width: 650px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      border: 2px solid var(--gold-border);
+    }
+    .table-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+    }
+    th {
+      background: var(--bg-subtle);
+      padding: 16px 20px;
+      color: var(--text-dark);
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-mid);
+    }
+    tr:hover td {
+      background: var(--bg-subtle);
+    }
+    .table-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .action-btn-sm {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .btn-delete {
+      background: #FFEAEA;
+      color: #D32F2F;
+    }
+    .btn-delete:hover {
+      background: #D32F2F;
+      color: white;
+    }
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--text-mid);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold);">
+        <span class="nav-logo-text">LAMSA</span>
+        <span class="badge badge-popular" style="margin-inline-start: 10px;">لوحة الإدارة</span>
+      </a>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <a href="shop.html" class="btn btn-outline btn-sm">← المتجر</a>
+        <a href="perfume.html" class="btn btn-gold btn-sm">🌹 استوديو البرفان</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Admin Main -->
+  <main class="admin-container">
+
+    <!-- Important Notice -->
+    <div style="background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-dark) 100%); border-radius: var(--radius-xl); padding: 24px 32px; margin-bottom: 32px; color: white; border: 2px solid var(--gold);">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="font-size: 2.5rem;">⚠️</span>
+        <div>
+          <h3 style="color: var(--gold); margin-bottom: 8px; font-size: 1.2rem;">ملاحظة هامة: نسخة Frontend فقط</h3>
+          <p style="line-height: 1.7; color: rgba(255,255,255,0.95); font-size: 0.95rem;">
+            هذه لوحة تحكم مؤقتة تحفظ البيانات في متصفحك فقط (LocalStorage). لنظام إدارة كامل مع قاعدة بيانات حقيقية، نحتاج إضافة Backend (Firebase / Node.js).
+            <strong style="color: var(--gold); display: block; margin-top: 8px;">✅ مناسبة للتجربة والاختبار حالياً.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tabs Switcher -->
+    <div class="admin-tabs">
+      <button class="admin-tab-btn active" onclick="switchTab('dashboard')">📊 الرئيسية</button>
+      <button class="admin-tab-btn" onclick="switchTab('add')">➕ إضافة منتج</button>
+      <button class="admin-tab-btn" onclick="switchTab('list')">📋 المنتجات</button>
+      <button class="admin-tab-btn" onclick="switchTab('orders')">🛒 الطلبات</button>
+    </div>
+
+    <!-- Tab 0: Dashboard -->
+    <div id="tabDashboard" class="admin-tab-content">
+      
+      <!-- Stats Cards -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 32px;">
+        <div class="table-card" style="padding: 24px; text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">👥</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--burgundy);" id="totalVisitors">0</div>
+          <div style="color: var(--text-mid); font-size: 0.9rem;">إجمالي الزوار</div>
+        </div>
+        <div class="table-card" style="padding: 24px; text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">🛒</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--burgundy);" id="totalOrders">0</div>
+          <div style="color: var(--text-mid); font-size: 0.9rem;">إجمالي الطلبات</div>
+        </div>
+        <div class="table-card" style="padding: 24px; text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">💵</div>
+          <div style="font-size: 2rem; font-weight: 700; color: var(--gold);" id="totalSales">0 ج.م</div>
+          <div style="color: var(--text-mid); font-size: 0.9rem;">إجمالي المبيعات</div>
+        </div>
+        <div class="table-card" style="padding: 24px; text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 8px;">💰</div>
+          <div style="font-size: 2rem; font-weight: 700; color: #28a745;" id="totalProfit">0 ج.م</div>
+          <div style="color: var(--text-mid); font-size: 0.9rem;">صافي الربح</div>
+        </div>
+      </div>
+
+      <!-- Today & Month Stats -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px;">
+        <div class="table-card" style="padding: 24px;">
+          <h3 style="color: var(--burgundy); margin-bottom: 16px;">📅 اليوم</h3>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <span style="color: var(--text-mid);">المبيعات:</span>
+            <strong style="color: var(--gold);" id="todaySales">0 ج.م</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <span style="color: var(--text-mid);">الطلبات:</span>
+            <strong id="todayOrders">0</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-mid);">الربح:</span>
+            <strong style="color: #28a745;" id="todayProfit">0 ج.م</strong>
+          </div>
+        </div>
+        <div class="table-card" style="padding: 24px;">
+          <h3 style="color: var(--burgundy); margin-bottom: 16px;">📆 الشهر الحالي</h3>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <span style="color: var(--text-mid);">المبيعات:</span>
+            <strong style="color: var(--gold);" id="monthSales">0 ج.م</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <span style="color: var(--text-mid);">الطلبات:</span>
+            <strong id="monthOrders">0</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-mid);">الربح:</span>
+            <strong style="color: #28a745;" id="monthProfit">0 ج.م</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="table-card" style="padding: 24px; margin-bottom: 32px;">
+        <h3 style="color: var(--burgundy); margin-bottom: 16px;">📈 المبيعات اليومية (آخر 7 أيام)</h3>
+        <canvas id="salesChart" style="max-height: 300px;"></canvas>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="table-card">
+        <div style="padding: 24px; border-bottom: 1px solid var(--border);">
+          <h3 style="color: var(--burgundy);">🧾 آخر الطلبات</h3>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>رقم الطلب</th>
+                <th>التاريخ</th>
+                <th>العميل</th>
+                <th>المنتجات</th>
+                <th>الإجمالي</th>
+                <th>الربح</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrdersTable">
+              <tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">لا توجد طلبات بعد</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 1: Add Product -->
+    <div id="tabAdd" class="admin-tab-content">
+      <div class="table-card" style="padding: 32px;">
+        <h2 style="color: var(--burgundy); margin-bottom: 24px;">إضافة منتج جديد</h2>
+        
+        <form id="addProductForm" style="display: grid; gap: 20px;">
+          
+          <!-- Category Selection -->
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+              القسم الرئيسي <span style="color: red;">*</span>
+            </label>
+            <select id="mainCategory" required style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);" onchange="updateSubCategories()">
+              <option value="">-- اختر القسم --</option>
+              <option value="skin">البشرة</option>
+              <option value="hair">الشعر</option>
+              <option value="body">الجسم</option>
+              <option value="deodorant">مزيل العرق</option>
+              <option value="makeup">المكياج</option>
+              <option value="tools">الأدوات</option>
+              <option value="perfumes">العطور</option>
+              <option value="gifts">الهدايا</option>
+              <option value="accessories">إكسسوارات</option>
+              <option value="devices">أجهزة</option>
+            </select>
+          </div>
+
+          <!-- Sub-Category Selection -->
+          <div id="subCategoryContainer" style="display: none;">
+            <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+              القسم الفرعي <span style="color: red;">*</span>
+            </label>
+            <select id="subCategory" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);">
+              <option value="">-- اختر القسم الفرعي --</option>
+            </select>
+          </div>
+
+          <!-- Product Name -->
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+              اسم المنتج <span style="color: red;">*</span>
+            </label>
+            <input type="text" id="productName" required placeholder="مثال: شامبو لوريال للشعر الجاف" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);">
+          </div>
+
+          <!-- Pricing Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div>
+              <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+                سعر الشراء (التكلفة) <span style="color: red;">*</span>
+              </label>
+              <input type="number" id="costPrice" required placeholder="100" min="0" step="0.01" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);" oninput="calculateProfit()">
+            </div>
+            <div>
+              <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+                سعر البيع (للعميل) <span style="color: red;">*</span>
+              </label>
+              <input type="number" id="sellPrice" required placeholder="150" min="0" step="0.01" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);" oninput="calculateProfit()">
+            </div>
+            <div>
+              <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--gold);">
+                الربح 💰
+              </label>
+              <input type="text" id="profitAmount" readonly placeholder="0" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--gold); font-family: inherit; background: var(--bg-subtle); color: var(--gold); font-weight: 700; font-size: 1.1rem;">
+            </div>
+          </div>
+
+          <!-- Size -->
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+              الحجم / الكمية
+            </label>
+            <input type="text" id="productSize" placeholder="مثال: 500 مل / 200 جرام / 30 كبسولة" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);">
+          </div>
+
+          <!-- Product Image -->
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+              صورة المنتج
+            </label>
+            <input type="file" id="productImage" accept="image/*" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);">
+            <small style="color: var(--text-light); margin-top: 4px; display: block;">أو اترك الحقل فارغاً لاستخدام أيقونة افتراضية</small>
+          </div>
+
+          <!-- Notes -->
+          <div>
+            <label style="display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-dark);">
+              ملاحظات (اختياري)
+            </label>
+            <textarea id="productNotes" rows="3" placeholder="أي ملاحظات إضافية عن المنتج..." style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark); resize: vertical;"></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+              ✅ حفظ المنتج
+            </button>
+            <button type="reset" class="btn btn-outline btn-lg" onclick="resetForm()">
+              🔄 إعادة تعيين
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab 2: Products List -->
+    <div id="tabList" class="admin-tab-content" style="display: none;">
+      <div class="table-card">
+        <div style="padding: 24px; border-bottom: 1px solid var(--border);">
+          <h2 style="color: var(--burgundy);">قائمة المنتجات المضافة</h2>
+        </div>
+        <div style="overflow-x: auto;">
+          <table id="productsTable">
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>القسم</th>
+                <th>التكلفة</th>
+                <th>السعر</th>
+                <th>الربح</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">لا توجد منتجات بعد</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Orders List -->
+    <div id="tabOrders" class="admin-tab-content" style="display: none;">
+      <div class="table-card">
+        <div style="padding: 24px; border-bottom: 1px solid var(--border);">
+          <h2 style="color: var(--burgundy);">🛒 جميع الطلبات</h2>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>رقم الطلب</th>
+                <th>التاريخ</th>
+                <th>العميل</th>
+                <th>المنتجات</th>
+                <th>الإجمالي</th>
+                <th>الربح</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="allOrdersTable">
+              <tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-light);">لا توجد طلبات بعد</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Add Chart.js for charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Sub-categories mapping (same as shop.html)
+    const SUB_CATEGORIES = {
+      hair: [
+        { id: 'shampoo', name: 'شامبو' },
+        { id: 'conditioner', name: 'بلسم' },
+        { id: 'hair-cream', name: 'كريم شعر' },
+        { id: 'hair-gel', name: 'جل' },
+        { id: 'hair-oil', name: 'زيت شعر' },
+        { id: 'oil-alternative', name: 'بديل زيت' },
+        { id: 'protein', name: 'بروتين' },
+        { id: 'hair-mask', name: 'ماسك شعر' }
+      ],
+      body: [
+        { id: 'shower-gel', name: 'شاور جل' },
+        { id: 'body-lotion', name: 'مرطب جسم' },
+        { id: 'body-scrub', name: 'مقشر جسم' },
+        { id: 'body-butter', name: 'زبدة الجسم' }
+      ],
+      deodorant: [
+        { id: 'body-splash', name: 'بودي سبلاش' },
+        { id: 'spray', name: 'سبراي' },
+        { id: 'roll-on', name: 'رول أون' },
+        { id: 'stick', name: 'استيك' }
+      ],
+      makeup: [
+        { id: 'foundation', name: 'فاونديشن' },
+        { id: 'lipstick', name: 'أحمر شفاه' },
+        { id: 'mascara', name: 'ماسكارا' },
+        { id: 'eyeshadow', name: 'ظلال عيون' },
+        { id: 'blush', name: 'بلاشر' },
+        { id: 'eyeliner', name: 'آيلاينر' }
+      ],
+      skin: [
+        { id: 'cleanser', name: 'غسول' },
+        { id: 'toner', name: 'تونر' },
+        { id: 'serum', name: 'سيروم' },
+        { id: 'moisturizer', name: 'مرطب' },
+        { id: 'sunscreen', name: 'واقي شمس' },
+        { id: 'face-mask', name: 'ماسك وجه' }
+      ],
+      perfumes: [
+        { id: 'ready-made', name: 'عطور جاهزة' },
+        { id: 'custom', name: 'تركيبة خاصة' }
+      ]
+    };
+
+    let adminProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
+    let adminOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
+    let siteVisitors = parseInt(localStorage.getItem('siteVisitors') || '0');
+    let salesChart = null;
+
+    // Track visitor (call this from main site)
+    function trackVisitor() {
+      siteVisitors++;
+      localStorage.setItem('siteVisitors', siteVisitors);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
+      
+      if (tab === 'dashboard') {
+        document.querySelectorAll('.admin-tab-btn')[0].classList.add('active');
+        document.getElementById('tabDashboard').style.display = 'block';
+        updateDashboard();
+      } else if (tab === 'add') {
+        document.querySelectorAll('.admin-tab-btn')[1].classList.add('active');
+        document.getElementById('tabAdd').style.display = 'block';
+      } else if (tab === 'list') {
+        document.querySelectorAll('.admin-tab-btn')[2].classList.add('active');
+        document.getElementById('tabList').style.display = 'block';
+        renderProductsTable();
+      } else if (tab === 'orders') {
+        document.querySelectorAll('.admin-tab-btn')[3].classList.add('active');
+        document.getElementById('tabOrders').style.display = 'block';
+        renderAllOrders();
+      }
+    }
+
+    function updateDashboard() {
+      // Calculate stats
+      const totalSales = adminOrders.reduce((sum, o) => sum + o.total, 0);
+      const totalProfit = adminOrders.reduce((sum, o) => sum + o.profit, 0);
+      
+      // Today stats
+      const today = new Date().toDateString();
+      const todayOrders = adminOrders.filter(o => new Date(o.date).toDateString() === today);
+      const todaySales = todayOrders.reduce((sum, o) => sum + o.total, 0);
+      const todayProfit = todayOrders.reduce((sum, o) => sum + o.profit, 0);
+      
+      // Month stats
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthOrders = adminOrders.filter(o => {
+        const d = new Date(o.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      const monthSales = monthOrders.reduce((sum, o) => sum + o.total, 0);
+      const monthProfit = monthOrders.reduce((sum, o) => sum + o.profit, 0);
+      
+      // Update UI
+      document.getElementById('totalVisitors').textContent = siteVisitors;
+      document.getElementById('totalOrders').textContent = adminOrders.length;
+      document.getElementById('totalSales').textContent = totalSales.toFixed(2) + ' ج.م';
+      document.getElementById('totalProfit').textContent = totalProfit.toFixed(2) + ' ج.م';
+      
+      document.getElementById('todaySales').textContent = todaySales.toFixed(2) + ' ج.م';
+      document.getElementById('todayOrders').textContent = todayOrders.length;
+      document.getElementById('todayProfit').textContent = todayProfit.toFixed(2) + ' ج.م';
+      
+      document.getElementById('monthSales').textContent = monthSales.toFixed(2) + ' ج.م';
+      document.getElementById('monthOrders').textContent = monthOrders.length;
+      document.getElementById('monthProfit').textContent = monthProfit.toFixed(2) + ' ج.م';
+      
+      // Recent orders table
+      renderRecentOrders();
+      
+      // Chart
+      renderSalesChart();
+    }
+
+    function renderRecentOrders() {
+      const tbody = document.getElementById('recentOrdersTable');
+      const recent = adminOrders.slice(-5).reverse();
+      
+      if (recent.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">لا توجد طلبات بعد</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = recent.map(o => `
+        <tr>
+          <td><strong>#${o.id}</strong></td>
+          <td>${new Date(o.date).toLocaleDateString('ar-EG')}</td>
+          <td>${o.customer || 'عميل'}</td>
+          <td>${o.items.length} منتج</td>
+          <td><strong style="color: var(--gold);">${o.total.toFixed(2)} ج.م</strong></td>
+          <td><strong style="color: #28a745;">${o.profit.toFixed(2)} ج.م</strong></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderAllOrders() {
+      const tbody = document.getElementById('allOrdersTable');
+      if (adminOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-light);">لا توجد طلبات بعد</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = adminOrders.slice().reverse().map(o => `
+        <tr>
+          <td><strong>#${o.id}</strong></td>
+          <td>${new Date(o.date).toLocaleDateString('ar-EG')}</td>
+          <td>${o.customer || 'عميل'}</td>
+          <td>${o.items.length} منتج</td>
+          <td><strong style="color: var(--gold);">${o.total.toFixed(2)} ج.م</strong></td>
+          <td><strong style="color: #28a745;">${o.profit.toFixed(2)} ج.م</strong></td>
+          <td><span style="background: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">مكتمل</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderSalesChart() {
+      const ctx = document.getElementById('salesChart');
+      if (!ctx) return;
+      
+      // Get last 7 days data
+      const last7Days = [];
+      const salesData = [];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toDateString();
+        last7Days.push(date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }));
+        
+        const daySales = adminOrders
+          .filter(o => new Date(o.date).toDateString() === dateStr)
+          .reduce((sum, o) => sum + o.total, 0);
+        
+        salesData.push(daySales);
+      }
+      
+      // Destroy previous chart
+      if (salesChart) {
+        salesChart.destroy();
+      }
+      
+      // Create new chart
+      salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: last7Days,
+          datasets: [{
+            label: 'المبيعات (ج.م)',
+            data: salesData,
+            borderColor: '#D4AF37',
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Demo: Add a sample order for testing
+    function addDemoOrder() {
+      const order = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        customer: 'عميل تجريبي',
+        items: [
+          { name: 'منتج تجريبي', price: 150, cost: 100 }
+        ],
+        total: 150,
+        profit: 50
+      };
+      adminOrders.push(order);
+      localStorage.setItem('adminOrders', JSON.stringify(adminOrders));
+      updateDashboard();
+    }
+
+    let adminProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
+
+    function switchTab(tab) {
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
+      
+      if (tab === 'add') {
+        document.querySelectorAll('.admin-tab-btn')[0].classList.add('active');
+        document.getElementById('tabAdd').style.display = 'block';
+      } else if (tab === 'list') {
+        document.querySelectorAll('.admin-tab-btn')[1].classList.add('active');
+        document.getElementById('tabList').style.display = 'block';
+        renderProductsTable();
+      } else if (tab === 'stats') {
+        document.querySelectorAll('.admin-tab-btn')[2].classList.add('active');
+        document.getElementById('tabStats').style.display = 'block';
+        updateStats();
+      }
+    }
+
+    function updateSubCategories() {
+      const mainCat = document.getElementById('mainCategory').value;
+      const subCatContainer = document.getElementById('subCategoryContainer');
+      const subCatSelect = document.getElementById('subCategory');
+      
+      if (SUB_CATEGORIES[mainCat]) {
+        subCatContainer.style.display = 'block';
+        subCatSelect.innerHTML = '<option value="">-- اختر القسم الفرعي --</option>';
+        SUB_CATEGORIES[mainCat].forEach(sub => {
+          subCatSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+        });
+        subCatSelect.required = true;
+      } else {
+        subCatContainer.style.display = 'none';
+        subCatSelect.required = false;
+      }
+    }
+
+    function calculateProfit() {
+      const cost = parseFloat(document.getElementById('costPrice').value) || 0;
+      const sell = parseFloat(document.getElementById('sellPrice').value) || 0;
+      const profit = sell - cost;
+      document.getElementById('profitAmount').value = profit > 0 ? profit.toFixed(2) + ' ج.م' : '0 ج.م';
+    }
+
+    document.getElementById('addProductForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const imageFile = document.getElementById('productImage').files[0];
+      
+      // Function to save product
+      const saveProduct = (imageData) => {
+        const product = {
+          id: Date.now(),
+          name: document.getElementById('productName').value,
+          category: document.getElementById('mainCategory').value,
+          subCategory: document.getElementById('subCategory').value || null,
+          costPrice: parseFloat(document.getElementById('costPrice').value),
+          sellPrice: parseFloat(document.getElementById('sellPrice').value),
+          profit: parseFloat(document.getElementById('sellPrice').value) - parseFloat(document.getElementById('costPrice').value),
+          size: document.getElementById('productSize').value || null,
+          notes: document.getElementById('productNotes').value || null,
+          image: imageData,
+          addedAt: new Date().toISOString()
+        };
+        
+        adminProducts.push(product);
+        localStorage.setItem('adminProducts', JSON.stringify(adminProducts));
+        
+        alert('✅ تم إضافة المنتج بنجاح!');
+        this.reset();
+        document.getElementById('subCategoryContainer').style.display = 'none';
+        document.getElementById('profitAmount').value = '';
+      };
+      
+      // If image is selected, convert to base64
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          saveProduct(e.target.result);
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        saveProduct(null);
+      }
+    });
+
+    function resetForm() {
+      document.getElementById('subCategoryContainer').style.display = 'none';
+      document.getElementById('profitAmount').value = '';
+    }
+
+    function renderProductsTable() {
+      const tbody = document.getElementById('productsTableBody');
+      if (adminProducts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-light);">لا توجد منتجات بعد</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = adminProducts.map(p => `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.category}</td>
+          <td>${p.costPrice} ج.م</td>
+          <td><strong>${p.sellPrice} ج.م</strong></td>
+          <td style="color: var(--gold); font-weight: 700;">${p.profit.toFixed(2)} ج.م</td>
+          <td>
+            <div class="table-actions">
+              <button class="action-btn-sm btn-delete" onclick="deleteProduct(${p.id})">🗑️ حذف</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function deleteProduct(id) {
+      if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+        adminProducts = adminProducts.filter(p => p.id !== id);
+        localStorage.setItem('adminProducts', JSON.stringify(adminProducts));
+        renderProductsTable();
+        updateStats();
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('totalProducts').textContent = adminProducts.length;
+      const uniqueCategories = new Set(adminProducts.map(p => p.category));
+      document.getElementById('totalCategories').textContent = uniqueCategories.size;
+      const avgProfit = adminProducts.length > 0 
+        ? (adminProducts.reduce((sum, p) => sum + p.profit, 0) / adminProducts.length).toFixed(2)
+        : 0;
+      document.getElementById('avgProfit').textContent = avgProfit + ' ج.م';
+    }
+  </script>
+</body>
+</html>
+      <button class="admin-tab-btn active" id="tabBtnProducts" onclick="switchTab('products')">📦 إدارة منتجات المتجر</button>
+      <button class="admin-tab-btn" id="tabBtnScents" onclick="switchTab('scents')">🌹 إدارة روائح وعطور الاستوديو</button>
+    </div>
+
+    <!-- Section 1: Store Products -->
+    <div id="sectionProducts">
+      <!-- Top Action Card -->
+      <div class="admin-header-card">
+        <div>
+          <h1 style="font-size: 1.8rem; margin-bottom: 6px;">لوحة إدارة مخزون المتجر</h1>
+          <p>أضف أو عدل أو استورد منتجات المحل بسهولة لتظهر مباشرة في المتجر وكويز الروتين.</p>
+        </div>
+
+        <div class="flex gap-12 flex-wrap">
+          <button class="btn btn-primary" onclick="openAddModal()">➕ إضافة منتج جديد</button>
+          <button class="btn btn-gold" onclick="document.getElementById('excelFileInput').click()">📊 استيراد إكسيل المحل</button>
+          <button class="btn btn-outline" onclick="exportProductsToCSV()">💾 تصدير القائمة CSV</button>
+          <input type="file" id="excelFileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="handleExcelImport(event)">
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="admin-stats mb-24">
+        <div class="admin-stat-chip">
+          <span style="font-size: 0.85rem; color: var(--text-light);">إجمالي المنتجات</span>
+          <strong id="statTotalCount">0</strong>
+        </div>
+        <div class="admin-stat-chip">
+          <span style="font-size: 0.85rem; color: var(--text-light);">أقسام المتجر</span>
+          <strong>8 أقسام</strong>
+        </div>
+      </div>
+
+      <!-- Help Box -->
+      <div style="background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); border: 2px solid #FFA000; border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: start; gap: 16px;">
+          <span style="font-size: 2rem;">💡</span>
+          <div>
+            <h4 style="color: #E65100; margin-bottom: 8px; font-size: 1.1rem;">طريقة استيراد منتجات من إكسيل:</h4>
+            <p style="color: #4E342E; line-height: 1.7; font-size: 0.95rem; margin-bottom: 12px;">
+              حضّر ملف CSV بالأعمدة التالية بالترتيب: <strong>الاسم عربي, الاسم EN, القسم, السعر, Emoji, أنواع البشرة, الميزانية</strong>
+            </p>
+            <p style="color: #4E342E; line-height: 1.7; font-size: 0.9rem;">
+              مثال: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">غسول منقي,Purifying Wash,skin,250,🧴,oily|combo,mid</code>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Table -->
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>المنتج</th>
+              <th>القسم</th>
+              <th>السعر</th>
+              <th>نوع البشرة / الشعر</th>
+              <th>الميزانية</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="adminProductsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 2: Perfume Scents Studio -->
+    <div id="sectionScents" style="display: none;">
+      
+      <!-- Pricing Matrix Card -->
+      <div class="admin-header-card" style="display:block;">
+        <div class="flex-between mb-16">
+          <div>
+            <h2 style="font-size: 1.5rem; color: var(--gold); margin-bottom:4px;">💰 جدول تسعير زجاجات وتركيزات العطور</h2>
+            <p style="font-size: 0.9rem;">حدد سعر البيع لكل حجم وتركيز ليتم حسابه تلقائياً للزبون في الاستوديو:</p>
+          </div>
+          <button class="btn btn-gold" onclick="savePerfumePrices()">حفظ وتحديث الأسعار فوراً ✓</button>
+        </div>
+
+        <div class="grid-3" style="gap:20px;">
+          <!-- 30ml -->
+          <div style="background:var(--bg-subtle); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border);">
+            <h3 style="color:var(--text-dark); margin-bottom:12px; font-size:1.15rem;">🧴 زجاجة 30 مل</h3>
+            <div class="input-group mb-12">
+              <label style="font-size:0.85rem;">خفيف (EDT):</label>
+              <input type="number" class="form-input" id="p_30_edt" value="250">
+            </div>
+            <div class="input-group mb-12">
+              <label style="font-size:0.85rem;">متوسط (EDP):</label>
+              <input type="number" class="form-input" id="p_30_edp" value="350">
+            </div>
+            <div class="input-group mb-0">
+              <label style="font-size:0.85rem;">قوي مكثف (Extrait):</label>
+              <input type="number" class="form-input" id="p_30_ext" value="450">
+            </div>
+          </div>
+
+          <!-- 50ml -->
+          <div style="background:var(--bg-subtle); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--gold-border);">
+            <h3 style="color:var(--gold); margin-bottom:12px; font-size:1.15rem;">🧴 زجاجة 50 مل (الأكثر طلباً)</h3>
+            <div class="input-group mb-12">
+              <label style="font-size:0.85rem;">خفيف (EDT):</label>
+              <input type="number" class="form-input" id="p_50_edt" value="400">
+            </div>
+            <div class="input-group mb-12">
+              <label style="font-size:0.85rem;">متوسط (EDP):</label>
+              <input type="number" class="form-input" id="p_50_edp" value="500">
+            </div>
+            <div class="input-group mb-0">
+              <label style="font-size:0.85rem;">قوي مكثف (Extrait):</label>
+              <input type="number" class="form-input" id="p_50_ext" value="650">
+            </div>
+          </div>
+
+          <!-- 100ml -->
+          <div style="background:var(--bg-subtle); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border);">
+            <h3 style="color:var(--text-dark); margin-bottom:12px; font-size:1.15rem;">🧴 زجاجة 100 مل (VIP)</h3>
+            <div class="input-group mb-12">
+              <label style="font-size:0.85rem;">خفيف (EDT):</label>
+              <input type="number" class="form-input" id="p_100_edt" value="600">
+            </div>
+            <div class="input-group mb-12">
+              <label style="font-size:0.85rem;">متوسط (EDP):</label>
+              <input type="number" class="form-input" id="p_100_edp" value="750">
+            </div>
+            <div class="input-group mb-0">
+              <label style="font-size:0.85rem;">قوي مكثف (Extrait):</label>
+              <input type="number" class="form-input" id="p_100_ext" value="950">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-header-card">
+        <div>
+          <h1 style="font-size: 1.8rem; margin-bottom: 6px;">قائمة العطور والتركيبات المتاحة</h1>
+          <p>أضف أسماء العطور لتظهر للزبائن للاختيار منها في صفحة "اعمل برفانك".</p>
+        </div>
+
+        <div class="flex gap-12">
+          <button class="btn btn-primary" onclick="openAddScentModal()">➕ إضافة عطر / تركيبة جديدة</button>
+          <button class="btn btn-outline" onclick="resetScentsToDefault()">🔄 استعادة القائمة الافتراضية</button>
+        </div>
+      </div>
+
+      <!-- Scents Table -->
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>العطر / التركيبة</th>
+              <th>طابع الرائحة</th>
+              <th>الكود</th>
+              <th>الحالة في الموقع</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="adminScentsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Add Product Modal -->
+  <div class="modal-backdrop" id="addModal">
+    <div class="modal-box">
+      <div class="flex-between mb-24">
+        <h2 style="font-size: 1.5rem; color: var(--burgundy);" id="modalTitle">إضافة منتج جديد للمحل</h2>
+        <button class="cart-close" onclick="closeAddModal()">✕</button>
+      </div>
+
+      <form id="productForm" onsubmit="saveProduct(event)">
+        <div class="input-group">
+          <label>اسم المنتج (عربي) *</label>
+          <input type="text" class="form-input" id="pName" required placeholder="مثال: غسول الوجه المنقي">
+        </div>
+
+        <div class="input-group">
+          <label>اسم المنتج (إنجليزي)</label>
+          <input type="text" class="form-input" id="pNameEn" placeholder="مثال: Purifying Face Wash">
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>القسم *</label>
+            <select class="form-select" id="pCategory" required>
+              <option value="skin">العناية بالبشرة</option>
+              <option value="hair">العناية بالشعر</option>
+              <option value="body">العناية بالجسم</option>
+              <option value="perfumes">العطور والبرفانات</option>
+              <option value="gifts">الهدايا والباكدجات</option>
+              <option value="accessories">الإكسسوارات والمجوهرات</option>
+              <option value="devices">أجهزة التجميل والشعر</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>السعر (ج.م) *</label>
+            <input type="number" class="form-input" id="pPrice" required placeholder="مثال: 250">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>أيقونة أو رمز المنتج (Emoji)</label>
+          <input type="text" class="form-input" id="pEmoji" placeholder="🧴 أو 🌹 أو 🎁 أو ✨" value="🧴">
+        </div>
+
+        <div class="divider"></div>
+
+        <h4 class="mb-8" style="color: var(--burgundy);">🎯 التوافق مع صفحة "اختارلي روتين":</h4>
+        <div class="checkbox-grid mb-16">
+          <label class="checkbox-item"><input type="checkbox" name="skinType" value="oily"> دهنية</label>
+          <label class="checkbox-item"><input type="checkbox" name="skinType" value="dry"> جافة</label>
+          <label class="checkbox-item"><input type="checkbox" name="skinType" value="combo"> مختلطة</label>
+          <label class="checkbox-item"><input type="checkbox" name="skinType" value="sensitive"> حساسة</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg">حفظ وإضافة للموقع فوراً ✓</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Scent Modal -->
+  <div class="modal-backdrop" id="addScentModal">
+    <div class="modal-box">
+      <div class="flex-between mb-24">
+        <h2 style="font-size: 1.5rem; color: var(--gold);">إضافة عطر / تركيبة جديدة للاستوديو 🌹</h2>
+        <button class="cart-close" onclick="closeAddScentModal()">✕</button>
+      </div>
+
+      <form id="scentForm" onsubmit="saveScent(event)">
+        <div class="input-group">
+          <label>اسم العطر / التركيبة (عربي) *</label>
+          <input type="text" class="form-input" id="sNameAr" required placeholder="مثال: سوفاج ديور / كريد أفينتوس / عود ملكي">
+        </div>
+
+        <div class="input-group">
+          <label>طابع ورائحة العطر (الوصف المختصر) *</label>
+          <input type="text" class="form-input" id="sNote" required placeholder="مثال: منعش وفواح / فخم ودافئ وثبات عالي">
+        </div>
+
+        <div class="input-group">
+          <label>كود العطر أو الاسم بالإنجليزي (اختياري)</label>
+          <input type="text" class="form-input" id="sNameEn" placeholder="مثال: Sauvage Dior / SV-01">
+        </div>
+
+        <div class="input-group">
+          <label>أيقونة العطر (Emoji)</label>
+          <input type="text" class="form-input" id="sEmoji" placeholder="🌹 أو 🪵 أو 🌸 أو 🍃" value="🌹">
+        </div>
+
+        <button type="submit" class="btn btn-gold btn-full btn-lg mt-16">حفظ وإتاحة العطر للزبائن فوراً ✨</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let localProducts = JSON.parse(localStorage.getItem('lamsa_custom_products')) || window.LAMSA.PRODUCTS;
+    
+    // Default Scents if not stored
+    const DEFAULT_SCENTS = [
+      { id: 'sc_oud', nameAr: 'عود فاخر (Oud)', nameEn: 'Royal Oud', emoji: '🪵' },
+      { id: 'sc_musk', nameAr: 'مسك نقي (Musky)', nameEn: 'Pure Musk', emoji: '🌫️' },
+      { id: 'sc_floral', nameAr: 'زهري أنيق (Floral)', nameEn: 'Elegant Floral', emoji: '🌸' },
+      { id: 'sc_spicy', nameAr: 'حار وجذاب (Spicy)', nameEn: 'Alluring Spicy', emoji: '🌶️' },
+      { id: 'sc_fresh', nameAr: 'منعش صيفي (Fresh)', nameEn: 'Summer Fresh', emoji: '🍃' },
+      { id: 'sc_fruity', nameAr: 'فاكهي حلو (Fruity)', nameEn: 'Sweet Fruity', emoji: '🍑' },
+    ];
+    let localScents = JSON.parse(localStorage.getItem('lamsa_custom_scents')) || DEFAULT_SCENTS;
+
+    function switchTab(tab) {
+      document.getElementById('tabBtnProducts').classList.toggle('active', tab === 'products');
+      document.getElementById('tabBtnScents').classList.toggle('active', tab === 'scents');
+      document.getElementById('sectionProducts').style.display = tab === 'products' ? 'block' : 'none';
+      document.getElementById('sectionScents').style.display = tab === 'scents' ? 'block' : 'none';
+    }
+
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminProductsTable');
+      document.getElementById('statTotalCount').textContent = localProducts.length;
+
+      tbody.innerHTML = localProducts.map((p, idx) => `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-size:1.8rem;">${p.emoji || '🧴'}</span>
+              <div>
+                <strong style="color:var(--text-dark);">${p.name}</strong>
+                ${p.nameEn ? `<div style="font-size:0.8rem; color:var(--text-light);">${p.nameEn}</div>` : ''}
+              </div>
+            </div>
+          </td>
+          <td><span class="badge badge-popular">${p.category}</span></td>
+          <td><strong style="color:var(--gold); font-size:1.1rem;">${p.price} ج.م</strong></td>
+          <td><span style="font-size:0.88rem;">${p.skinType ? p.skinType.join(', ') : 'عام'}</span></td>
+          <td><span style="font-size:0.88rem;">${p.budget ? p.budget.join(', ') : 'الكل'}</span></td>
+          <td>
+            <button class="action-btn-sm btn-delete" onclick="deleteProduct(${idx})">🗑️ حذف</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderScentsTable() {
+      const tbody = document.getElementById('adminScentsTable');
+      tbody.innerHTML = localScents.map((s, idx) => `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-size:1.8rem;">${s.emoji || '🌹'}</span>
+              <div>
+                <strong style="color:var(--text-dark); font-size:1.05rem;">${s.nameAr}</strong>
+                ${s.note ? `<div style="font-size:0.85rem; color:var(--text-light); margin-top:4px;">${s.note}</div>` : ''}
+              </div>
+            </div>
+          </td>
+          <td><span style="font-size:1.5rem;">${s.emoji}</span></td>
+          <td><span style="color:var(--text-light);">${s.nameEn || '—'}</span></td>
+          <td><span class="badge badge-popular" style="background:#2E7D32; color:white;">متاح للزبائن ✓</span></td>
+          <td>
+            <button class="action-btn-sm btn-delete" onclick="deleteScent(${idx})">🗑️ حذف</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openAddModal() { document.getElementById('addModal').classList.add('active'); }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('active'); document.getElementById('productForm').reset(); }
+
+    function openAddScentModal() { document.getElementById('addScentModal').classList.add('active'); }
+    function closeAddScentModal() { document.getElementById('addScentModal').classList.remove('active'); document.getElementById('scentForm').reset(); }
+
+    function saveProduct(e) {
+      e.preventDefault();
+      const skinTypes = Array.from(document.querySelectorAll('input[name="skinType"]:checked')).map(c => c.value);
+      const newP = {
+        id: 'cust_' + Date.now(),
+        name: document.getElementById('pName').value,
+        nameEn: document.getElementById('pNameEn').value || document.getElementById('pName').value,
+        category: document.getElementById('pCategory').value,
+        price: parseFloat(document.getElementById('pPrice').value),
+        emoji: document.getElementById('pEmoji').value || '🧴',
+        skinType: skinTypes.length ? skinTypes : ['all'],
+        budget: ['mid']
+      };
+      localProducts.unshift(newP);
+      localStorage.setItem('lamsa_custom_products', JSON.stringify(localProducts));
+      closeAddModal();
+      renderAdminTable();
+      triggerConfetti();
+      showToast('✓ تم إضافة المنتج بنجاح وأصبح متاحاً في المتجر!');
+    }
+
+    function deleteProduct(idx) {
+      if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+        localProducts.splice(idx, 1);
+        localStorage.setItem('lamsa_custom_products', JSON.stringify(localProducts));
+        renderAdminTable();
+        showToast('✓ تم حذف المنتج');
+      }
+    }
+
+    function saveScent(e) {
+      e.preventDefault();
+      const newScent = {
+        id: 'sc_' + Date.now(),
+        nameAr: document.getElementById('sNameAr').value,
+        note: document.getElementById('sNote').value,
+        nameEn: document.getElementById('sNameEn').value || '',
+        emoji: document.getElementById('sEmoji').value || '🌹'
+      };
+      localScents.push(newScent);
+      localStorage.setItem('lamsa_custom_scents', JSON.stringify(localScents));
+      closeAddScentModal();
+      renderScentsTable();
+      triggerConfetti();
+      showToast('✓ تم إضافة العطر بنجاح وأصبح متاحاً للزبائن في صفحة اعمل برفانك!');
+    }
+
+    function deleteScent(idx) {
+      if (confirm('هل أنت متأكد من حذف هذا العطر؟')) {
+        localScents.splice(idx, 1);
+        localStorage.setItem('lamsa_custom_scents', JSON.stringify(localScents));
+        renderScentsTable();
+        showToast('✓ تم حذف العطر');
+      }
+    }
+
+    function resetScentsToDefault() {
+      if (confirm('هل أنت متأكد من استعادة قائمة العطور الافتراضية؟ سيتم حذف جميع التعديلات.')) {
+        localScents = [...DEFAULT_SCENTS];
+        localStorage.setItem('lamsa_custom_scents', JSON.stringify(localScents));
+        renderScentsTable();
+        showToast('✅ تم استعادة القائمة الافتراضية بنجاح!');
+      }
+    }
+
+    function loadPerfumePrices() {
+      const prices = JSON.parse(localStorage.getItem('lamsa_perfume_prices')) || {
+        '30ml': { edt: 250, edp: 350, ext: 450 },
+        '50ml': { edt: 400, edp: 500, ext: 650 },
+        '100ml': { edt: 600, edp: 750, ext: 950 },
+      };
+
+      document.getElementById('p_30_edt').value = prices['30ml']?.edt || 250;
+      document.getElementById('p_30_edp').value = prices['30ml']?.edp || 350;
+      document.getElementById('p_30_ext').value = prices['30ml']?.ext || 450;
+
+      document.getElementById('p_50_edt').value = prices['50ml']?.edt || 400;
+      document.getElementById('p_50_edp').value = prices['50ml']?.edp || 500;
+      document.getElementById('p_50_ext').value = prices['50ml']?.ext || 650;
+
+      document.getElementById('p_100_edt').value = prices['100ml']?.edt || 600;
+      document.getElementById('p_100_edp').value = prices['100ml']?.edp || 750;
+      document.getElementById('p_100_ext').value = prices['100ml']?.ext || 950;
+    }
+
+    function savePerfumePrices() {
+      const prices = {
+        '30ml': {
+          edt: parseFloat(document.getElementById('p_30_edt').value) || 250,
+          edp: parseFloat(document.getElementById('p_30_edp').value) || 350,
+          ext: parseFloat(document.getElementById('p_30_ext').value) || 450,
+        },
+        '50ml': {
+          edt: parseFloat(document.getElementById('p_50_edt').value) || 400,
+          edp: parseFloat(document.getElementById('p_50_edp').value) || 500,
+          ext: parseFloat(document.getElementById('p_50_ext').value) || 650,
+        },
+        '100ml': {
+          edt: parseFloat(document.getElementById('p_100_edt').value) || 600,
+          edp: parseFloat(document.getElementById('p_100_edp').value) || 750,
+          ext: parseFloat(document.getElementById('p_100_ext').value) || 950,
+        },
+      };
+
+      localStorage.setItem('lamsa_perfume_prices', JSON.stringify(prices));
+      triggerConfetti();
+      showToast('✓ تم حفظ وتحديث أسعار زجاجات العطور فوراً بنجاح! 💰');
+    }
+
+    // Excel Import Handler
+    function handleExcelImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const content = e.target.result;
+          const lines = content.split('\n').filter(line => line.trim());
+          
+          if (lines.length < 2) {
+            showToast('❌ الملف فارغ أو تنسيقه غير صحيح');
+            return;
+          }
+
+          // Skip header line
+          let imported = 0;
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(c => c.trim());
+            
+            if (cols.length >= 3) {
+              const newProduct = {
+                id: 'import_' + Date.now() + '_' + i,
+                name: cols[0] || 'منتج جديد',
+                nameEn: cols[1] || cols[0],
+                category: cols[2] || 'skin',
+                price: parseFloat(cols[3]) || 100,
+                emoji: cols[4] || '🧴',
+                skinType: cols[5] ? cols[5].split('|') : ['all'],
+                budget: cols[6] ? cols[6].split('|') : ['mid']
+              };
+              
+              localProducts.push(newProduct);
+              imported++;
+            }
+          }
+
+          if (imported > 0) {
+            localStorage.setItem('lamsa_custom_products', JSON.stringify(localProducts));
+            renderAdminTable();
+            triggerConfetti();
+            showToast(`✅ تم استيراد ${imported} منتج بنجاح من الإكسيل!`);
+          } else {
+            showToast('❌ لم يتم العثور على بيانات صحيحة في الملف');
+          }
+        } catch (error) {
+          console.error('Excel import error:', error);
+          showToast('❌ حدث خطأ أثناء قراءة الملف. تأكد من تنسيق CSV الصحيح');
+        }
+      };
+      
+      reader.readAsText(file);
+      event.target.value = ''; // Reset file input
+    }
+
+    // Export to CSV
+    function exportProductsToCSV() {
+      let csv = 'الاسم عربي,الاسم EN,القسم,السعر,Emoji,أنواع البشرة,الميزانية\n';
+      
+      localProducts.forEach(p => {
+        csv += `${p.name},${p.nameEn || ''},${p.category},${p.price},${p.emoji || '🧴'},${(p.skinType || []).join('|')},${(p.budget || []).join('|')}\n`;
+      });
+
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'lamsa_products_' + new Date().toISOString().split('T')[0] + '.csv';
+      link.click();
+      
+      showToast('✅ تم تصدير المنتجات إلى ملف CSV بنجاح!');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAdminTable();
+      renderScentsTable();
+      loadPerfumePrices();
+    });
+  </script>
+</body>
+</html>

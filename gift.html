@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صمم هديتك | لمسة LAMSA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .gift-wizard-wrap {
+      max-width: 900px;
+      margin: 40px auto;
+      background: var(--bg-surface);
+      border-radius: var(--radius-xl);
+      padding: 56px 48px;
+      box-shadow: var(--shadow-strong);
+      border: 1px solid var(--border);
+      transition: background-color 0.4s ease, border-color 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .gift-wizard-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--burgundy), var(--gold), var(--burgundy));
+    }
+    .gift-nav-steps {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .gift-step-item {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-light);
+      position: relative;
+      padding: 12px 24px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      transition: all 0.3s ease;
+    }
+    .gift-step-item.active {
+      color: var(--white);
+      background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-light) 100%);
+      border-color: var(--gold);
+      box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+    }
+    .gift-step-divider {
+      color: var(--border);
+      font-weight: 300;
+    }
+    .gift-grid-3x2 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    
+    /* Premium Option Cards */
+    .option-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      box-shadow: var(--shadow-sm);
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .option-card:hover {
+      border-color: var(--gold);
+      background: var(--bg-subtle);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(212, 175, 55, 0.2);
+    }
+    
+    .option-card.selected {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, rgba(92, 14, 20, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2), 0 8px 24px rgba(212, 175, 55, 0.25);
+      transform: translateY(-4px);
+    }
+    
+    .option-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--gold) 0%, #F3E7C4 100%);
+      color: var(--burgundy-dark);
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    }
+    
+    /* Premium Icon Container */
+    .option-icon-premium {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-light) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 2rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(92, 14, 20, 0.25);
+      transition: all 0.3s ease;
+      border: 2px solid var(--gold-border);
+    }
+    
+    .option-card:hover .option-icon-premium {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 12px 32px rgba(212, 175, 55, 0.35);
+    }
+    
+    .option-card.selected .option-icon-premium {
+      background: linear-gradient(135deg, var(--gold) 0%, #F3E7C4 100%);
+      color: var(--burgundy-dark);
+      transform: scale(1.05);
+    }
+    
+    .option-label {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-dark);
+      margin: 0;
+    }
+    
+    .gift-box-preview {
+      background: linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-dark) 100%);
+      color: var(--white);
+      border-radius: var(--radius-xl);
+      padding: 40px 32px;
+      text-align: center;
+      margin-bottom: 40px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 16px 48px rgba(92, 14, 20, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .gift-box-preview::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+      animation: glow-pulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    
+    .gift-icon-large {
+      font-size: 5rem;
+      display: block;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    @media (max-width: 768px) {
+      .gift-wizard-wrap { padding: 32px 20px; margin: 20px auto; }
+      .gift-grid-3x2 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .option-card { padding: 24px 16px; min-height: 120px; }
+      .option-icon-premium { width: 56px; height: 56px; font-size: 1.6rem; }
+      .gift-nav-steps { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay & Cart -->
+  <div class="overlay" id="overlay"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3 data-key="cart_title">السلة</h3>
+      <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <div class="cart-total cart-total-row">
+        <span data-key="cart_total">المجموع</span>
+        <span id="cartTotal">0 ج.م</span>
+      </div>
+      <button class="btn btn-primary btn-full" id="cartCheckout" data-key="cart_whatsapp">اطلبي عبر واتساب 💬</button>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a href="index.html" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <span class="nav-logo-text">LAMSA</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html" data-key="nav_sets">الرئيسية</a>
+        <a href="shop.html" data-key="nav_shop">المتجر</a>
+        <a href="routine.html" data-key="nav_routine">اختارلي روتين</a>
+        <a href="gift.html" class="active" data-key="nav_gift">صمم هديتك</a>
+        <a href="perfume.html" data-key="nav_perfume">اعمل برفانك</a>
+        <a href="about.html" data-key="nav_about">عن لمسة</a>
+        <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="ar">عربي</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
+          🛍️
+          <span class="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Hero Title -->
+  <div class="text-center pt-32 mb-16">
+    <h1 style="color:var(--text-dark); font-size: 2.4rem;" data-key="gift_title">صمم هديتك</h1>
+    <p style="color:var(--text-mid);" data-key="gift_sub">اصنع لحظة لا تُنسى. اختر التفاصيل وسنقوم بتنسيق هدية فاخرة تعبر عن مشاعرك.</p>
+  </div>
+
+  <!-- Wizard Wrapper -->
+  <main class="container">
+    <div class="gift-wizard-wrap">
+      
+      <!-- Stepper Nav -->
+      <div class="gift-nav-steps">
+        <span class="gift-step-item active" id="gStepLabel1">١. المستلم</span>
+        <span class="gift-step-divider">—</span>
+        <span class="gift-step-item" id="gStepLabel2">٢. المناسبة</span>
+        <span class="gift-step-divider">—</span>
+        <span class="gift-step-item" id="gStepLabel3">٣. الميزانية</span>
+      </div>
+
+      <!-- Step 1: For Whom -->
+      <div class="quiz-step active" id="gStep1">
+        <h2 class="text-center mb-32" style="font-size: 2rem; color: var(--text-dark);" data-key="gq1_title">لمن هذه الهدية؟</h2>
+        <div class="gift-grid-3x2">
+          <div class="option-card" onclick="selectGiftOption('forWhom', 'her', this)">
+            <div class="option-icon-premium">♀</div>
+            <div class="option-label" data-key="gq1_her">لها</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('forWhom', 'him', this)">
+            <div class="option-icon-premium">♂</div>
+            <div class="option-label" data-key="gq1_him">له</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('forWhom', 'mom', this)">
+            <div class="option-icon-premium">♡</div>
+            <div class="option-label" data-key="gq1_mom">أمي</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('forWhom', 'friend', this)">
+            <div class="option-icon-premium">👥</div>
+            <div class="option-label" data-key="gq1_friend">صديق / صديقة</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('forWhom', 'wife', this)">
+            <div class="option-icon-premium">💎</div>
+            <div class="option-label" data-key="gq1_wife">زوجتي</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('forWhom', 'bride', this)">
+            <div class="option-icon-premium">👰</div>
+            <div class="option-label" data-key="gq1_bride">عروس</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Occasion -->
+      <div class="quiz-step" id="gStep2">
+        <h2 class="text-center mb-32" style="font-size: 2rem; color: var(--text-dark);" data-key="gq2_title">ما هي المناسبة؟</h2>
+        <div class="gift-grid-3x2">
+          <div class="option-card" onclick="selectGiftOption('occasion', 'bday', this)">
+            <div class="option-icon-premium">🎂</div>
+            <div class="option-label" data-key="gq2_bday">عيد ميلاد</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('occasion', 'engage', this)">
+            <div class="option-icon-premium">💍</div>
+            <div class="option-label" data-key="gq2_engage">خطوبة</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('occasion', 'wedding', this)">
+            <div class="option-icon-premium">♕</div>
+            <div class="option-label" data-key="gq2_wedding">زفاف</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('occasion', 'grad', this)">
+            <div class="option-icon-premium">🎓</div>
+            <div class="option-label" data-key="gq2_grad">تخرج</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('occasion', 'ramadan', this)">
+            <div class="option-icon-premium">☪</div>
+            <div class="option-label" data-key="gq2_ramadan">رمضان / عيد</div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('occasion', 'just', this)">
+            <div class="option-icon-premium">🎀</div>
+            <div class="option-label" data-key="gq2_just">مجرد هدية ذوق</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Budget -->
+      <div class="quiz-step" id="gStep3">
+        <h2 class="text-center mb-32" style="font-size: 2rem; color: var(--text-dark);" data-key="gq3_title">حددي الميزانية المناسبة</h2>
+        <div class="options-grid" style="grid-template-columns: 1fr; gap: 16px;">
+          <div class="option-card" onclick="selectGiftOption('budget', 'low', this)" style="min-height: auto;">
+            <div class="flex-between" style="width: 100%;">
+              <div class="option-icon-premium" style="width: 56px; height: 56px; font-size: 1.5rem;">💚</div>
+              <div style="flex: 1; text-align: right; padding-right: 20px;">
+                <div class="option-label" data-key="gq3_low">أقل من 300 جنيه</div>
+                <div class="option-desc">هدية رمزية جميلة وأنيقة</div>
+              </div>
+            </div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('budget', 'mid', this)" style="min-height: auto;">
+            <div class="flex-between" style="width: 100%;">
+              <div class="option-icon-premium" style="width: 56px; height: 56px; font-size: 1.5rem;">⭐</div>
+              <div style="flex: 1; text-align: right; padding-right: 20px;">
+                <div class="option-label" data-key="gq3_mid">300 - 700 جنيه ★ الأكثر طلباً</div>
+                <div class="option-desc">باقة متكاملة تجمع عطور وعناية وإكسسوارات</div>
+              </div>
+            </div>
+          </div>
+          <div class="option-card" onclick="selectGiftOption('budget', 'high', this)" style="min-height: auto;">
+            <div class="flex-between" style="width: 100%;">
+              <div class="option-icon-premium" style="width: 56px; height: 56px; font-size: 1.5rem;">♛</div>
+              <div style="flex: 1; text-align: right; padding-right: 20px;">
+                <div class="option-label" data-key="gq3_high">أكتر من 700 جنيه</div>
+                <div class="option-desc">باقة VIP فاخرة بعطور حصرية وتغليف ملكي</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Screen -->
+      <div id="giftResult" style="display:none;" class="fade-in-up">
+        <div class="gift-box-preview">
+          <span class="gift-icon-large">🎁</span>
+          <h2 style="color:var(--white); margin-bottom:12px; font-size: 2.2rem; position: relative; z-index: 2;" data-key="gift_result">هديتك جاهزة!</h2>
+          <p style="color:rgba(255,255,255,0.95); font-size: 1.1rem; position: relative; z-index: 2;" data-key="gift_result_sub">سنقوم بتجهيز وتنسيق هذه الهدية الفاخرة بأعلى مستوى من التغليف والأناقة</p>
+        </div>
+
+        <h3 class="mb-24" style="font-size: 1.6rem; color: var(--burgundy);">محتويات الباقة المقترحة:</h3>
+        <div class="grid-2 mb-32" id="giftMatchesGrid"></div>
+
+        <div class="text-center">
+          <p class="mb-24" style="color:var(--burgundy); font-weight:700; font-size: 1.1rem;" data-key="gift_note">✨ جميع الهدايا تشمل كارت إهداء وتغليف شيك مجاناً</p>
+          <button class="btn btn-primary btn-lg" onclick="orderSelectedGift()">اطلبي تجهيز الهدية الآن 💬</button>
+          <button class="btn btn-outline btn-lg mt-8" onclick="restartGift()">إعادة التنسيق 🔄</button>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="quiz-nav mt-32" id="giftNav">
+        <button class="btn btn-outline" id="gBtnBack" onclick="goGiftBack()" style="visibility:hidden;">السابق</button>
+        <button class="btn btn-primary" id="gBtnNext" onclick="goGiftNext()">التالي ←</button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer mt-32">
+    <div class="container text-center">
+      <p data-key="footer_copy">© 2024 لمسة (LAMSA). جميع الحقوق محفوظة.</p>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let gStep = 1;
+    const gAnswers = { forWhom: '', occasion: '', budget: '' };
+    let currentGiftPicks = [];
+
+    function selectGiftOption(field, val, el) {
+      gAnswers[field] = val;
+      el.parentElement.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function updateGiftUI() {
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`gStep${i}`)?.classList.remove('active');
+        document.getElementById(`gStepLabel${i}`)?.classList.toggle('active', i === gStep);
+      }
+      document.getElementById(`gStep${gStep}`)?.classList.add('active');
+
+      document.getElementById('gBtnBack').style.visibility = gStep > 1 ? 'visible' : 'hidden';
+      document.getElementById('gBtnNext').textContent = gStep === 3 ? 'تنسيق الهدية 🎁' : 'التالي ←';
+    }
+
+    function goGiftNext() {
+      if (gStep === 1 && !gAnswers.forWhom) return showToast('يرجى اختيار لمن الهدية');
+      if (gStep === 2 && !gAnswers.occasion) return showToast('يرجى اختيار المناسبة');
+      if (gStep === 3 && !gAnswers.budget) return showToast('يرجى تحديد الميزانية');
+
+      if (gStep < 3) {
+        gStep++;
+        updateGiftUI();
+      } else {
+        showGiftResult();
+      }
+    }
+
+    function goGiftBack() {
+      if (gStep > 1) {
+        gStep--;
+        updateGiftUI();
+      }
+    }
+
+    function showGiftResult() {
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`gStep${i}`).style.display = 'none';
+      }
+      document.getElementById('giftNav').style.display = 'none';
+      document.getElementById('giftResult').style.display = 'block';
+      triggerConfetti();
+
+      currentGiftPicks = window.LAMSA.getGiftProducts(gAnswers);
+      const grid = document.getElementById('giftMatchesGrid');
+      grid.innerHTML = currentGiftPicks.map(p => `
+        <div class="product-card">
+          <div class="product-img-wrap" style="display:flex; align-items:center; justify-content:center; font-size:3.5rem; background:var(--cream);">
+            ${p.emoji}
+          </div>
+          <div class="product-info">
+            <h4 class="product-name">${currentLang === 'ar' ? p.name : p.nameEn}</h4>
+            <div class="product-price">${p.price} ${t[currentLang].currency}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function orderSelectedGift() {
+      const names = currentGiftPicks.map(p => currentLang === 'ar' ? p.name : p.nameEn).join(' + ');
+      const msg = `مرحباً لمسة، أريد طلب باقة هدية:\n- لمن: ${gAnswers.forWhom}\n- المناسبة: ${gAnswers.occasion}\n- الباقة: ${names}`;
+      window.open(`https://wa.me/201080239612?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function restartGift() {
+      gStep = 1;
+      gAnswers.forWhom = '';
+      gAnswers.occasion = '';
+      gAnswers.budget = '';
+      document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`gStep${i}`).style.display = 'block';
+      }
+      document.getElementById('giftResult').style.display = 'none';
+      document.getElementById('giftNav').style.display = 'flex';
+      updateGiftUI();
+    }
+  </script>
+</body>
+</html>
