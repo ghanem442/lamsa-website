@@ -418,6 +418,9 @@ function toggleTheme() {
   applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
 }
 
+// Apply saved theme immediately as soon as main.js loads
+applyTheme(currentTheme);
+
 // ── Apply Language ────────────────────────────
 function applyLang(lang) {
   currentLang = lang;
@@ -425,8 +428,10 @@ function applyLang(lang) {
 
   document.documentElement.lang = lang;
   document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
-  document.body.classList.toggle('lang-en', lang === 'en');
-  document.body.classList.toggle('lang-ar', lang === 'ar');
+  if (document.body) {
+    document.body.classList.toggle('lang-en', lang === 'en');
+    document.body.classList.toggle('lang-ar', lang === 'ar');
+  }
 
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
@@ -445,6 +450,8 @@ function applyLang(lang) {
 
   document.dispatchEvent(new CustomEvent('langChanged', { detail: { lang } }));
 }
+
+
 
 // ── Cart State ────────────────────────────────
 let cart = JSON.parse(localStorage.getItem('lamsa_cart') || '[]');
@@ -896,7 +903,10 @@ function toggleMobileMenu() {
 
 // ── Init ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Apply saved theme & lang
+  // Apply saved theme & lang on DOM load
+  applyTheme(currentTheme);
+  applyLang(currentLang);
+
   // User Auth Badge in Navbar
   const savedUser = JSON.parse(localStorage.getItem('lamsa_user') || 'null');
   const navActions = document.querySelector('.nav-actions');
