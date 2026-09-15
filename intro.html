@@ -253,11 +253,11 @@
 
   // clicking anywhere = "continue to site" hook point
   stage.addEventListener('click', () => {
-    // Redirect directly to auth page
+    // Redirect to main store page
     stage.style.transition = 'opacity 0.6s ease';
     stage.style.opacity = '0';
     setTimeout(() => { 
-      window.location.href = 'auth.html';
+      window.location.href = 'index.html';
     }, 600);
   });
 </script>
