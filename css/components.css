@@ -112,25 +112,9 @@
   color: #3B070B;
 }
 
-/* Theme Toggle Button */
+/* Theme Toggle Button (Permanently Dark Mode) */
 .theme-toggle-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  color: var(--text-dark);
-  transition: var(--transition);
-}
-
-.theme-toggle-btn:hover {
-  transform: rotate(20deg) scale(1.08);
-  border-color: var(--gold);
+  display: none !important;
 }
 
 .cart-count {

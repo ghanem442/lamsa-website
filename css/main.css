@@ -5,16 +5,16 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=El+Messiri:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-/* ── CSS Variables (Light Theme Default) ── */
+/* ── CSS Variables (Default Luxury Dark Mode) ── */
 :root {
-  --bg-page:         #FBF7F7;
-  --bg-surface:      #FFFFFF;
-  --bg-subtle:       #F4EBEB;
-  --bg-card:         #FFFFFF;
-  --bg-nav:          rgba(255, 255, 255, 0.95);
+  --bg-page:         #150406;
+  --bg-surface:      #23090C;
+  --bg-subtle:       #2D0C10;
+  --bg-card:         #24090D;
+  --bg-nav:          rgba(21, 4, 6, 0.95);
   
-  --burgundy:        #5C0E14;
-  --burgundy-light:  #7E1D26;
+  --burgundy:        #7E1D26;
+  --burgundy-light:  #9C242F;
   --burgundy-dark:   #3B070B;
   --burgundy-soft:   #8E2630;
   --burgundy-muted:  #A84B55;
@@ -25,15 +25,15 @@
   --gold-light:      #F5E6BE;
   --gold-border:     rgba(212, 175, 55, 0.35);
   
-  --text-dark:       #181112;
-  --text-mid:        #4F4345;
-  --text-light:      #8A7D7F;
-  --border:          #ECDCDC;
-  --border-light:    rgba(236, 220, 220, 0.6);
+  --text-dark:       #FAF6F6;
+  --text-mid:        #D4C4C6;
+  --text-light:      #A59194;
+  --border:          rgba(212, 175, 55, 0.22);
+  --border-light:    rgba(255, 255, 255, 0.08);
   
-  --shadow-sm:       0 4px 12px rgba(92, 14, 20, 0.05);
-  --shadow:          0 10px 30px rgba(92, 14, 20, 0.08);
-  --shadow-strong:   0 20px 45px rgba(59, 7, 11, 0.18);
+  --shadow-sm:       0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow:          0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-strong:   0 20px 45px rgba(0, 0, 0, 0.7);
   --shadow-gold:     0 8px 25px rgba(212, 175, 55, 0.25);
 
   --font-ar:         'Alexandria', sans-serif;
@@ -50,24 +50,15 @@
   --transition-fast: all 0.2s ease;
 }
 
-/* ── Luxury Dark Mode Theme Variables ── */
-[data-theme="dark"] {
-  --bg-page:         #150406;
-  --bg-surface:      #23090C;
-  --bg-subtle:       #2D0C10;
-  --bg-card:         #24090D;
-  --bg-nav:          rgba(21, 4, 6, 0.95);
-  
-  --text-dark:       #FAF6F6;
-  --text-mid:        #D4C4C6;
-  --text-light:      #A59194;
-  --border:          rgba(212, 175, 55, 0.22);
-  --border-light:    rgba(255, 255, 255, 0.08);
-  
-  --shadow-sm:       0 4px 14px rgba(0, 0, 0, 0.4);
-  --shadow:          0 10px 30px rgba(0, 0, 0, 0.5);
-  --shadow-strong:   0 20px 45px rgba(0, 0, 0, 0.7);
+/* ── Enforce Dark Theme ── */
+[data-theme="dark"],
+[data-theme="light"],
+html,
+body {
+  background-color: var(--bg-page);
+  color: var(--text-dark);
 }
+
 
 /* ── Reset ── */
 *, *::before, *::after {

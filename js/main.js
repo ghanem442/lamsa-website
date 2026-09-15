@@ -398,28 +398,23 @@ const t = {
 
 // ── Current State ─────────────────────────────
 let currentLang = localStorage.getItem('lamsa_lang') || 'ar';
-let currentTheme = localStorage.getItem('lamsa_theme') || 'light';
+let currentTheme = 'dark';
 let activeQuickViewProduct = null;
 let selectedPaymentMethod = 'cod';
 
-// ── Apply Theme ───────────────────────────────
-function applyTheme(theme) {
-  currentTheme = theme;
-  localStorage.setItem('lamsa_theme', theme);
-  document.documentElement.setAttribute('data-theme', theme);
-
-  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
-    btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
-    btn.title = theme === 'dark' ? 'الوضع المضيء' : 'الوضع الليلي';
-  });
+// ── Apply Theme (Permanently Dark Mode) ───────
+function applyTheme(theme = 'dark') {
+  currentTheme = 'dark';
+  localStorage.setItem('lamsa_theme', 'dark');
+  document.documentElement.setAttribute('data-theme', 'dark');
 }
 
 function toggleTheme() {
-  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  applyTheme('dark');
 }
 
-// Apply saved theme immediately as soon as main.js loads
-applyTheme(currentTheme);
+// Apply dark theme immediately on load
+applyTheme('dark');
 
 // ── Apply Language ────────────────────────────
 function applyLang(lang) {
