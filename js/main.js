@@ -195,7 +195,7 @@ const t = {
     footer_brand_desc: 'متجر لمسة — وجهتك الأولى للعناية الفاخرة بالبشرة، الشعر، تركيبات العطور الحصرية، والهدايا المميزة.',
     footer_shop:    'المتجر',
     footer_links:   'روابط مهمة',
-    footer_copy:    '© 2024 لمسة (LAMSA). جميع الحقوق محفوظة.',
+    footer_copy:    '© 2026 لمسة (LAMSA). جميع الحقوق محفوظة.',
 
     currency: 'ج.م',
   },
@@ -390,7 +390,7 @@ const t = {
     footer_brand_desc: 'LAMSA — Your premier destination for luxury skincare, haircare, bespoke perfumes, and signature gifts.',
     footer_shop:    'Shop',
     footer_links:   'Quick Links',
-    footer_copy:    '© 2024 LAMSA. All rights reserved.',
+    footer_copy:    '© 2026 LAMSA. All rights reserved.',
 
     currency: 'EGP',
   }
@@ -851,56 +851,6 @@ function showOrderSuccessModal(orderNum, name, total) {
 function closeSuccessModal(modal) {
   modal.remove();
 }
-
-function triggerConfetti() {
-  // Simple confetti animation effect using CSS
-  const colors = ['#D4AF37', '#5C0E14', '#F5E6BE', '#7E1D26'];
-  const confettiCount = 50;
-  
-  for (let i = 0; i < confettiCount; i++) {
-    const confetti = document.createElement('div');
-    confetti.style.cssText = `
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      background-color: ${colors[Math.floor(Math.random() * colors.length)]};
-      left: ${Math.random() * 100}%;
-      top: -10px;
-      opacity: 1;
-      transform: rotate(${Math.random() * 360}deg);
-      animation: confetti-fall ${2 + Math.random() * 2}s linear forwards;
-      pointer-events: none;
-      z-index: 9999;
-      border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
-    `;
-    
-    document.body.appendChild(confetti);
-    
-    setTimeout(() => confetti.remove(), 4000);
-  }
-  
-  // Add confetti animation keyframe if not exists
-  if (!document.getElementById('confetti-style')) {
-    const style = document.createElement('style');
-    style.id = 'confetti-style';
-    style.textContent = `
-      @keyframes confetti-fall {
-        0% {
-          transform: translateY(0) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(100vh) rotate(720deg);
-          opacity: 0;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-}
-
-// ── Initialize on DOMContentLoaded ────────────
-// (Removed duplicate - see Init section below)
 
 // ── Confetti Explosion ────────────────────────
 function triggerConfetti() {
