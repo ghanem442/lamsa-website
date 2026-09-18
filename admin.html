@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة التحكم | إدارة متجر لمسة</title>
+
+  <!-- Security Check: Admin Auth Guard -->
+  <script>
+    (function() {
+      const user = JSON.parse(localStorage.getItem('lamsa_user') || 'null');
+      if (!user || user.role !== 'admin') {
+        alert('⛔ عذراً، هذه الصفحة مخصصة لإدارة المتجر فقط. يرجى تسجيل الدخول بحساب الأدمن المصرح له.');
+        window.location.href = 'auth.html';
+      }
+    })();
+  </script>
+
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -172,9 +184,9 @@
       </a>
 
       <div class="nav-actions">
-        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
         <a href="shop.html" class="btn btn-outline btn-sm">← المتجر</a>
         <a href="perfume.html" class="btn btn-gold btn-sm">🌹 استوديو البرفان</a>
+        <button onclick="adminLogout()" class="btn btn-outline btn-sm" style="border-color: #D32F2F; color: #FF6B6B;">خروج 🚪</button>
       </div>
     </div>
   </header>
@@ -1349,6 +1361,13 @@
       link.click();
       
       showToast('✅ تم تصدير المنتجات إلى ملف CSV بنجاح!');
+    }
+
+    function adminLogout() {
+      if (confirm('هل ترغب بتسجيل الخروج من لوحة التحكم؟')) {
+        localStorage.removeItem('lamsa_user');
+        window.location.href = 'auth.html';
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {

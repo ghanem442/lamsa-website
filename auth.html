@@ -326,6 +326,12 @@
       }
     }
 
+    // Admin Credentials
+    const ADMIN_CREDENTIALS = {
+      email: 'admin@lamsa.com',
+      password: 'Lamsa@2026'
+    };
+
     // Google Login Simulator (Prepopulates verified profile)
     function handleGoogleLogin() {
       const email = prompt("أدخل بريدك الإلكتروني (Gmail):", "ghanem@gmail.com");
@@ -338,6 +344,7 @@
         name: userName,
         email: email,
         isGoogle: true,
+        role: 'customer',
         avatar: '👑',
         loginTime: new Date().toISOString()
       };
@@ -354,14 +361,40 @@
     // Email / Password Handler
     function handleEmailAuth(e) {
       e.preventDefault();
-      const email = document.getElementById('authEmail').value;
+      const email = document.getElementById('authEmail').value.trim().toLowerCase();
+      const password = document.getElementById('authPassword').value;
       const name = currentAuthMode === 'signup' 
         ? document.getElementById('authName').value 
         : (email.split('@')[0]);
 
+      // Check for Admin Credentials
+      if (email === ADMIN_CREDENTIALS.email) {
+        if (password === ADMIN_CREDENTIALS.password) {
+          const adminObj = {
+            name: 'مدير المتجر (Admin)',
+            email: email,
+            role: 'admin',
+            avatar: '⚡',
+            loginTime: new Date().toISOString()
+          };
+          localStorage.setItem('lamsa_user', JSON.stringify(adminObj));
+          triggerConfetti();
+          showToast(`👑 أهلاً بك يا مدير المتجر! جاري فتح لوحة التحكم...`);
+          setTimeout(() => {
+            window.location.href = 'admin.html';
+          }, 1200);
+          return;
+        } else {
+          showToast('❌ كلمة المرور غير صحيحة لحساب الإدارة!');
+          return;
+        }
+      }
+
+      // Normal Customer Login
       const userObj = {
         name: name,
         email: email,
+        role: 'customer',
         isGoogle: false,
         avatar: '✨',
         loginTime: new Date().toISOString()
