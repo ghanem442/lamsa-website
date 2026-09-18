@@ -790,6 +790,8 @@
     }
 
     function openOrderModal() {
+      if (typeof requireAuth === 'function' && !requireAuth('perfume')) return;
+
       const size = document.getElementById('labSizeSelect').value;
       const conc = document.getElementById('labConcSelect').value;
       const price = document.getElementById('labPriceDisplay').textContent;

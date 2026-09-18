@@ -488,7 +488,23 @@ function getCartCount() {
   return cart.reduce((sum, item) => sum + item.qty, 0);
 }
 
+// ── Auth Guard Helper ─────────────────────────
+function requireAuth(redirectAction = 'checkout') {
+  const user = JSON.parse(localStorage.getItem('lamsa_user') || 'null');
+  if (!user) {
+    sessionStorage.setItem('lamsa_auth_redirect', window.location.href);
+    showToast('🔒 يرجى تسجيل الدخول أو إنشاء حساب لإتمام طلبك ومتابعة الشحن');
+    setTimeout(() => {
+      window.location.href = 'auth.html';
+    }, 1200);
+    return false;
+  }
+  return true;
+}
+
 function orderViaWhatsApp() {
+  if (!requireAuth('whatsapp')) return;
+
   const phone = '201080239612';
   const lang = currentLang;
   let msg = lang === 'ar' ? 'مرحبا لمسة، أود طلب هذه المنتجات:\n' : 'Hello LAMSA, I would like to order:\n';
@@ -660,6 +676,8 @@ function closeQuickView() {
 
 // ── Full Checkout Modal ───────────────────────
 function openCheckoutModal() {
+  if (!requireAuth('checkout')) return;
+
   closeCart();
 
   let modal = document.getElementById('checkoutModal');

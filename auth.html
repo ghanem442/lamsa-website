@@ -419,8 +419,11 @@
       triggerConfetti();
       showToast(`✨ مرحباً بك في لمسة يا ${userName}! جاري تحويلك للمتجر...`);
 
+      const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
+      if (returnUrl) sessionStorage.removeItem('lamsa_auth_redirect');
+
       setTimeout(() => {
-        window.location.href = 'intro.html';
+        window.location.href = returnUrl || 'intro.html';
       }, 1200);
     }
 
@@ -499,8 +502,11 @@
       triggerConfetti();
       showToast(`✓ تم تسجيل الدخول بنجاح! أهلاً بك يا ${name} 🌹`);
 
+      const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
+      if (returnUrl) sessionStorage.removeItem('lamsa_auth_redirect');
+
       setTimeout(() => {
-        window.location.href = 'intro.html';
+        window.location.href = returnUrl || 'intro.html';
       }, 1000);
     }
 
@@ -532,8 +538,12 @@
         localStorage.setItem('lamsa_user', JSON.stringify(pendingUser));
         triggerConfetti();
         showToast('🎉 تم تأكيد البريد بنجاح! جاري تحويلك للمتجر...');
+
+        const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
+        if (returnUrl) sessionStorage.removeItem('lamsa_auth_redirect');
+
         setTimeout(() => {
-          window.location.href = 'intro.html';
+          window.location.href = returnUrl || 'intro.html';
         }, 1200);
       } else {
         showToast('❌ رمز التأكيد غير صحيح! حاول مرة أخرى');
