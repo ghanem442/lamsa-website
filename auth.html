@@ -221,9 +221,50 @@
       transition: all 0.3s ease;
     }
 
-    .guest-link:hover {
+    /* OTP Verification Styles */
+    .otp-inputs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      direction: ltr;
+      margin: 20px 0;
+    }
+
+    .otp-box {
+      width: 48px;
+      height: 54px;
+      border: 1.5px solid rgba(212, 175, 55, 0.4);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.5);
       color: var(--gold);
+      font-size: 1.5rem;
+      font-weight: 800;
+      text-align: center;
+      font-family: monospace;
+      transition: all 0.25s ease;
+    }
+
+    .otp-box:focus {
+      border-color: var(--gold);
+      outline: none;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .resend-btn {
+      background: none;
+      border: none;
+      color: var(--gold-light);
+      font-size: 0.85rem;
+      cursor: pointer;
       text-decoration: underline;
+      margin-top: 14px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .resend-btn:hover {
+      color: #FFFFFF;
     }
 
     .auth-footer {
@@ -290,8 +331,33 @@
         </button>
       </form>
 
+      <!-- OTP Verification Screen (For Signup) -->
+      <div id="otpSection" style="display: none;">
+        <div style="font-size: 2.6rem; margin-bottom: 8px;">📩</div>
+        <h2 style="font-size: 1.35rem; color: var(--gold); margin-bottom: 8px;">تأكيد بريدك الإلكتروني</h2>
+        <p style="font-size: 0.86rem; color: rgba(255,255,255,0.75); line-height: 1.6;">
+          أرسلنا رمز تأكيد سري إلى بريدك:<br>
+          <strong id="otpTargetEmail" style="color: var(--gold-light);"></strong>
+        </p>
+
+        <div class="otp-inputs">
+          <input type="text" class="otp-box" maxlength="1" id="otp1" oninput="moveOtpFocus(this, 'otp2', null)" autofocus>
+          <input type="text" class="otp-box" maxlength="1" id="otp2" oninput="moveOtpFocus(this, 'otp3', 'otp1')">
+          <input type="text" class="otp-box" maxlength="1" id="otp3" oninput="moveOtpFocus(this, 'otp4', 'otp2')">
+          <input type="text" class="otp-box" maxlength="1" id="otp4" oninput="moveOtpFocus(this, null, 'otp3')">
+        </div>
+
+        <button type="button" class="btn btn-gold btn-full btn-lg" onclick="verifyOtpCode()">
+          تأكيد الرمز والدخول للمتجر ✨
+        </button>
+
+        <div>
+          <button type="button" class="resend-btn" onclick="resendOtpCode()">لم يصلك الرمز؟ إعادة الإرسال</button>
+        </div>
+      </div>
+
       <!-- Continue as Guest -->
-      <a href="intro.html" class="guest-link">
+      <a href="intro.html" class="guest-link" id="guestLink">
         تخطي والدخول كـ زائر الآن ←
       </a>
 
@@ -390,6 +456,35 @@
         }
       }
 
+      // If Signup Mode -> Trigger OTP Verification Step
+      if (currentAuthMode === 'signup') {
+        pendingUser = {
+          name: name,
+          email: email,
+          role: 'customer',
+          isGoogle: false,
+          avatar: '✨',
+          loginTime: new Date().toISOString()
+        };
+
+        // Generate demo OTP for frontend testing
+        demoOtpCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // Switch View to OTP
+        document.getElementById('authForm').style.display = 'none';
+        document.querySelector('.auth-tabs').style.display = 'none';
+        document.querySelector('.btn-google-luxury').style.display = 'none';
+        document.querySelector('.auth-divider').style.display = 'none';
+        document.getElementById('guestLink').style.display = 'none';
+        
+        document.getElementById('otpTargetEmail').textContent = email;
+        document.getElementById('otpSection').style.display = 'block';
+
+        showToast(`📩 تم إرسال كود التأكيد إلى بريدك! (رمز الاختبار: ${demoOtpCode})`, 6000);
+        setTimeout(() => document.getElementById('otp1').focus(), 300);
+        return;
+      }
+
       // Normal Customer Login
       const userObj = {
         name: name,
@@ -407,6 +502,53 @@
       setTimeout(() => {
         window.location.href = 'intro.html';
       }, 1000);
+    }
+
+    // OTP Navigation and Handling
+    let pendingUser = null;
+    let demoOtpCode = '1234';
+
+    function moveOtpFocus(current, nextId, prevId) {
+      if (current.value.length === 1 && nextId) {
+        document.getElementById(nextId).focus();
+      }
+    }
+
+    function verifyOtpCode() {
+      const enteredCode = (
+        document.getElementById('otp1').value +
+        document.getElementById('otp2').value +
+        document.getElementById('otp3').value +
+        document.getElementById('otp4').value
+      );
+
+      if (enteredCode.length < 4) {
+        showToast('⚠️ يرجى إدخال كود التأكيد المكون من 4 أرقام');
+        return;
+      }
+
+      // Verify code (accepts generated code or 1234)
+      if (enteredCode === demoOtpCode || enteredCode === '1234') {
+        localStorage.setItem('lamsa_user', JSON.stringify(pendingUser));
+        triggerConfetti();
+        showToast('🎉 تم تأكيد البريد بنجاح! جاري تحويلك للمتجر...');
+        setTimeout(() => {
+          window.location.href = 'intro.html';
+        }, 1200);
+      } else {
+        showToast('❌ رمز التأكيد غير صحيح! حاول مرة أخرى');
+        document.getElementById('otp1').value = '';
+        document.getElementById('otp2').value = '';
+        document.getElementById('otp3').value = '';
+        document.getElementById('otp4').value = '';
+        document.getElementById('otp1').focus();
+      }
+    }
+
+    function resendOtpCode() {
+      demoOtpCode = Math.floor(1000 + Math.random() * 9000).toString();
+      showToast(`🔄 تم إعادة إرسال الرمز إلى ${pendingUser.email} (رمز الاختبار: ${demoOtpCode})`, 6000);
+      document.getElementById('otp1').focus();
     }
   </script>
 </body>
