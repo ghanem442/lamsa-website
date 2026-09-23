@@ -488,7 +488,68 @@ function getCartCount() {
   return cart.reduce((sum, item) => sum + item.qty, 0);
 }
 
+// ── WhatsApp Helper ───────────────────────────
+// IMPORTANT: call openWhatsApp() directly from a click/submit handler (never inside
+// setTimeout) — browsers block popups that are not triggered by a user gesture,
+// and mobile Safari does so very aggressively.
+// Store settings live in js/config.js (load it BEFORE this file).
+const LAMSA_CFG = window.LAMSA_CONFIG || (console.error('LAMSA_CONFIG missing: add <script src="js/config.js"> before js/main.js'),
+  { whatsappNumber: '', phoneDisplay: '', shipping: { defaultFee: 0, cities: [] } });
+const WHATSAPP_NUMBER = LAMSA_CFG.whatsappNumber;
+
+function getShippingFee(city) {
+  const c = LAMSA_CFG.shipping.cities.find(x => x.name === city);
+  return c ? c.fee : LAMSA_CFG.shipping.defaultFee;
+}
+
+function formatShipping(fee) {
+  return fee === 0 ? 'مجاناً' : `${fee} ج.م`;
+}
+
+// Fills every [data-wa-link] href and [data-phone-text] text from config.js
+function applySiteConfig() {
+  document.querySelectorAll('[data-wa-link]').forEach(a => {
+    a.href = `https://wa.me/${LAMSA_CFG.whatsappNumber}`;
+  });
+  document.querySelectorAll('[data-phone-text]').forEach(el => {
+    el.textContent = LAMSA_CFG.phoneDisplay;
+  });
+}
+
+function buildWhatsAppUrl(msg) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+}
+
+function openWhatsApp(msg) {
+  const url = buildWhatsAppUrl(msg);
+  const win = window.open(url, '_blank');
+  return { url, opened: !!win };
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+// Shown only when the browser blocked the automatic WhatsApp popup.
+function showWhatsAppFallback(url) {
+  const modal = document.createElement('div');
+  modal.className = 'luxury-modal-backdrop active';
+  modal.innerHTML = `
+    <div class="luxury-modal-box" style="max-width:440px; text-align:center;">
+      <span style="font-size:3rem; display:block; margin-bottom:12px;">💬</span>
+      <h2 style="color:var(--burgundy); margin-bottom:12px;">آخر خطوة: أرسل الرسالة</h2>
+      <p style="color:var(--text-mid); margin-bottom:20px;">المتصفح منع فتح واتساب تلقائياً. اضغط الزر لفتح المحادثة وإرسال الرسالة.</p>
+      <a class="btn btn-primary btn-lg" href="${url}" target="_blank" rel="noopener"
+         onclick="this.closest('.luxury-modal-backdrop').remove()">افتح واتساب 💬</a>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
 // ── Auth Guard Helper ─────────────────────────
+// Not used for checkout anymore: ordering as a guest is allowed until real
+// backend authentication exists (front-end-only login gave no real protection).
 function requireAuth(redirectAction = 'checkout') {
   const user = JSON.parse(localStorage.getItem('lamsa_user') || 'null');
   if (!user) {
@@ -503,16 +564,17 @@ function requireAuth(redirectAction = 'checkout') {
 }
 
 function orderViaWhatsApp() {
-  if (!requireAuth('whatsapp')) return;
+  if (cart.length === 0) return;
 
-  const phone = '201080239612';
   const lang = currentLang;
   let msg = lang === 'ar' ? 'مرحبا لمسة، أود طلب هذه المنتجات:\n' : 'Hello LAMSA, I would like to order:\n';
   cart.forEach(item => {
-    msg += `• ${item.name} × ${item.qty} — ${item.price * item.qty} ${t[lang].currency}\n`;
+    msg += `• ${lang === 'ar' ? item.name : (item.nameEn || item.name)} × ${item.qty} — ${item.price * item.qty} ${t[lang].currency}\n`;
   });
   msg += `\n${lang === 'ar' ? 'المجموع' : 'Total'}: ${getCartTotal()} ${t[lang].currency}`;
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+
+  const { url, opened } = openWhatsApp(msg);
+  if (!opened) showWhatsAppFallback(url);
 }
 
 function updateCartUI() {
@@ -676,7 +738,7 @@ function closeQuickView() {
 
 // ── Full Checkout Modal ───────────────────────
 function openCheckoutModal() {
-  if (!requireAuth('checkout')) return;
+  if (cart.length === 0) return;
 
   closeCart();
 
@@ -690,7 +752,8 @@ function openCheckoutModal() {
 
   const lang = currentLang;
   const subtotal = getCartTotal();
-  const shipping = 35; // Default shipping in EGP
+  const cities = LAMSA_CFG.shipping.cities;
+  const shipping = getShippingFee(cities.length ? cities[0].name : '');
   const grandTotal = subtotal + shipping;
 
   modal.innerHTML = `
@@ -725,14 +788,8 @@ function openCheckoutModal() {
         <div class="grid-2">
           <div class="input-group">
             <label>المحافظة *</label>
-            <select class="form-select" id="coCity" required>
-              <option value="القاهرة">القاهرة</option>
-              <option value="الجيزة">الجيزة</option>
-              <option value="الإسكندرية">الإسكندرية</option>
-              <option value="المنصورة / الدقهلية">المنصورة / الدقهلية</option>
-              <option value="طنطا / الغربية">طنطا / الغربية</option>
-              <option value="الشرقية">الشرقية</option>
-              <option value="باقي المحافظات">باقي المحافظات</option>
+            <select class="form-select" id="coCity" required onchange="updateCheckoutTotals()">
+              ${cities.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('')}
             </select>
           </div>
 
@@ -770,12 +827,12 @@ function openCheckoutModal() {
           </div>
           <div class="flex-between mb-8" style="font-size:0.95rem; color:var(--text-mid);">
             <span>مصاريف الشحن والتوصيل:</span>
-            <span>${shipping} ج.م</span>
+            <span id="coShipping">${formatShipping(shipping)}</span>
           </div>
           <div class="divider" style="margin:10px 0;"></div>
           <div class="flex-between" style="font-size:1.2rem; font-weight:800; color:var(--burgundy);">
             <span>المجموع النهائي:</span>
-            <span>${grandTotal} ج.م</span>
+            <span id="coGrandTotal">${grandTotal} ج.م</span>
           </div>
         </div>
 
@@ -787,6 +844,16 @@ function openCheckoutModal() {
   `;
 
   modal.classList.add('active');
+}
+
+// Recalculates shipping + grand total when the customer changes the governorate
+function updateCheckoutTotals() {
+  const city = document.getElementById('coCity')?.value;
+  const shipping = getShippingFee(city);
+  const shipEl = document.getElementById('coShipping');
+  const totalEl = document.getElementById('coGrandTotal');
+  if (shipEl) shipEl.textContent = formatShipping(shipping);
+  if (totalEl) totalEl.textContent = `${getCartTotal() + shipping} ج.م`;
 }
 
 function selectPayment(method, el) {
@@ -801,12 +868,12 @@ function closeCheckoutModal() {
 
 function submitOrder(e) {
   e.preventDefault();
-  const name = document.getElementById('coName').value;
-  const phone = document.getElementById('coPhone').value;
-  const whatsapp = document.getElementById('coWhatsapp').value || phone;
+  const name = document.getElementById('coName').value.trim();
+  const phone = document.getElementById('coPhone').value.trim();
+  const whatsapp = document.getElementById('coWhatsapp').value.trim();
   const city = document.getElementById('coCity').value;
-  const area = document.getElementById('coArea').value;
-  const address = document.getElementById('coAddress').value;
+  const area = document.getElementById('coArea').value.trim();
+  const address = document.getElementById('coAddress').value.trim();
 
   const paymentMap = {
     cod: '💵 كاش عند الاستلام',
@@ -816,13 +883,14 @@ function submitOrder(e) {
 
   const orderNum = 'LMS-' + Math.floor(100000 + Math.random() * 900000);
   const subtotal = getCartTotal();
-  const shipping = 35;
+  const shipping = getShippingFee(city);
   const total = subtotal + shipping;
 
   let msg = `🛍️ *طلب جديد من متجر لمسة (LAMSA)*\n`;
   msg += `🔖 *رقم الطلب:* ${orderNum}\n`;
   msg += `👤 *الاسم:* ${name}\n`;
   msg += `📞 *الهاتف:* ${phone}\n`;
+  if (whatsapp && whatsapp !== phone) msg += `💬 *واتساب إضافي:* ${whatsapp}\n`;
   msg += `📍 *العنوان:* ${city} - ${area} - ${address}\n`;
   msg += `💳 *طريقة الدفع:* ${paymentMap[selectedPaymentMethod]}\n\n`;
   msg += `📦 *المنتجات المطلوبة:*\n`;
@@ -832,37 +900,48 @@ function submitOrder(e) {
   });
 
   msg += `\n💰 *المجموع:* ${subtotal} ج.م`;
-  msg += `\n🚚 *الشحن:* ${shipping} ج.م`;
+  msg += `\n🚚 *الشحن (${city}):* ${formatShipping(shipping)}`;
   msg += `\n✨ *الإجمالي المطلوب:* ${total} ج.م`;
 
-  // Clear cart and close modal
-  cart = [];
-  saveCart();
+  // Open WhatsApp RIGHT NOW, inside the submit event (a real user gesture),
+  // so popup blockers allow it. The cart is only cleared once we know the
+  // customer actually reached WhatsApp, so an order can never be lost silently.
+  const { url, opened } = openWhatsApp(msg);
+
   closeCheckoutModal();
-  triggerConfetti();
-
-  // Show Confirmation Receipt
-  showOrderSuccessModal(orderNum, name, total);
-
-  // Open WhatsApp with order details
-  setTimeout(() => {
-    window.open(`https://wa.me/201080239612?text=${encodeURIComponent(msg)}`, '_blank');
-  }, 1200);
+  showOrderSuccessModal(orderNum, name, total, url, opened);
+  if (opened) finalizeOrder();
 }
 
-function showOrderSuccessModal(orderNum, name, total) {
-  let modal = document.createElement('div');
+// Clears the cart after the order was handed to WhatsApp (safe to call twice).
+function finalizeOrder() {
+  if (cart.length === 0) return;
+  cart = [];
+  saveCart();
+  triggerConfetti();
+}
+
+function showOrderSuccessModal(orderNum, name, total, url, opened) {
+  const modal = document.createElement('div');
   modal.className = 'luxury-modal-backdrop active';
   modal.innerHTML = `
     <div class="luxury-modal-box" style="max-width:480px; text-align:center;">
-      <span style="font-size:4rem; display:block; margin-bottom:16px;">✅</span>
-      <h2 style="color:var(--burgundy); margin-bottom:12px;">تم استلام طلبك بنجاح!</h2>
+      <span style="font-size:4rem; display:block; margin-bottom:16px;">📨</span>
+      <h2 style="color:var(--burgundy); margin-bottom:12px;">طلبك جاهز للإرسال</h2>
       <p style="color:var(--text-mid); margin-bottom:20px;">رقم الطلب: <strong>${orderNum}</strong></p>
-      <p style="color:var(--text-mid); margin-bottom:20px;">عزيزتي <strong>${name}</strong>، شكراً لثقتك في لمسة! سيتم التواصل معك قريباً لتأكيد الطلب والشحن.</p>
+      <p style="color:var(--text-mid); margin-bottom:20px;">
+        عزيزتي <strong>${escapeHtml(name)}</strong>، ${opened
+          ? 'أرسلي رسالة الطلب من واتساب علشان نأكد معاكِ ونجهز الشحن.'
+          : 'آخر خطوة: اضغطي على الزر لإرسال الطلب على واتساب علشان يوصلنا ونأكده معاكِ.'}
+      </p>
       <div style="background:var(--bg-subtle); padding:16px; border-radius:var(--radius-lg); margin-bottom:24px;">
         <div style="font-size:1.3rem; font-weight:800; color:var(--burgundy);">المبلغ الإجمالي: ${total} ج.م</div>
       </div>
-      <button class="btn btn-primary btn-lg" onclick="closeSuccessModal(this.parentElement.parentElement)">تمام 🎉</button>
+      <a class="btn btn-primary btn-lg" href="${url}" target="_blank" rel="noopener"
+         style="display:block; margin-bottom:12px;" onclick="finalizeOrder()">
+        ${opened ? 'لو واتساب ما فتحش اضغطي هنا 💬' : 'أرسلي الطلب عبر واتساب 💬'}
+      </a>
+      <button class="btn btn-lg" onclick="closeSuccessModal(this.parentElement.parentElement)">إغلاق</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -919,6 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Apply saved theme & lang on DOM load
   applyTheme(currentTheme);
   applyLang(currentLang);
+  applySiteConfig();
 
   // User Auth Badge in Navbar
   const savedUser = JSON.parse(localStorage.getItem('lamsa_user') || 'null');

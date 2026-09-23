@@ -413,6 +413,7 @@
   </footer>
 
   <script src="js/data.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/main.js"></script>
   <script>
     let gStep = 1;
@@ -482,7 +483,8 @@
     function orderSelectedGift() {
       const names = currentGiftPicks.map(p => currentLang === 'ar' ? p.name : p.nameEn).join(' + ');
       const msg = `مرحباً لمسة، أريد طلب باقة هدية:\n- لمن: ${gAnswers.forWhom}\n- المناسبة: ${gAnswers.occasion}\n- الباقة: ${names}`;
-      window.open(`https://wa.me/201080239612?text=${encodeURIComponent(msg)}`, '_blank');
+      const { url, opened } = openWhatsApp(msg);
+      if (!opened) showWhatsAppFallback(url);
     }
 
     function restartGift() {

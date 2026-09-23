@@ -471,6 +471,7 @@
 
   <!-- Add Chart.js for charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/main.js"></script>
   <script>
     // Sub-categories mapping (same as shop.html)
@@ -709,7 +710,6 @@
       updateDashboard();
     }
 
-    let adminProducts = JSON.parse(localStorage.getItem('adminProducts') || '[]');
 
     function switchTab(tab) {
       document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1104,7 +1104,6 @@
   </div>
 
   <script src="js/data.js"></script>
-  <script src="js/main.js"></script>
   <script>
     let localProducts = JSON.parse(localStorage.getItem('lamsa_custom_products')) || window.LAMSA.PRODUCTS;
     
@@ -1144,7 +1143,7 @@
           <td><span class="badge badge-popular">${p.category}</span></td>
           <td><strong style="color:var(--gold); font-size:1.1rem;">${p.price} ج.م</strong></td>
           <td><span style="font-size:0.88rem;">${p.skinType ? p.skinType.join(', ') : 'عام'}</span></td>
-          <td><span style="font-size:0.88rem;">${p.budget ? p.budget.join(', ') : 'الكل'}</span></td>
+          <td><span style="font-size:0.88rem;">${p.budget ? [].concat(p.budget).join(', ') : 'الكل'}</span></td>
           <td>
             <button class="action-btn-sm btn-delete" onclick="deleteProduct(${idx})">🗑️ حذف</button>
           </td>
@@ -1351,7 +1350,7 @@
       let csv = 'الاسم عربي,الاسم EN,القسم,السعر,Emoji,أنواع البشرة,الميزانية\n';
       
       localProducts.forEach(p => {
-        csv += `${p.name},${p.nameEn || ''},${p.category},${p.price},${p.emoji || '🧴'},${(p.skinType || []).join('|')},${(p.budget || []).join('|')}\n`;
+        csv += `${p.name},${p.nameEn || ''},${p.category},${p.price},${p.emoji || '🧴'},${(p.skinType || []).join('|')},${[].concat(p.budget || []).join('|')}\n`;
       });
 
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });

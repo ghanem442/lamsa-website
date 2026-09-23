@@ -381,7 +381,7 @@
         <span id="cartTotal">0 ج.م</span>
       </div>
       <button class="btn btn-primary btn-full mb-8" id="cartCheckout" data-key="cart_checkout">إتمام الطلب والشحن 🚀</button>
-      <button class="btn btn-outline btn-full" id="cartQuickWhatsApp" onclick="orderViaWhatsApp()" data-key="cart_whatsapp">طلب سريع عبر واتساب 💬</button>
+      <button class="btn btn-outline btn-full" id="cartQuickWhatsApp" data-key="cart_whatsapp">طلب سريع عبر واتساب 💬</button>
     </div>
   </div>
 
@@ -626,6 +626,7 @@
   </footer>
 
   <script src="js/data.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/main.js"></script>
   <script>
     // ── Olfactory Notes Database ──────────────────────────
@@ -790,8 +791,6 @@
     }
 
     function openOrderModal() {
-      if (typeof requireAuth === 'function' && !requireAuth('perfume')) return;
-
       const size = document.getElementById('labSizeSelect').value;
       const conc = document.getElementById('labConcSelect').value;
       const price = document.getElementById('labPriceDisplay').textContent;
@@ -831,13 +830,15 @@
                   `💰 *السعر التقديري:* ${price}\n` +
                   `📝 *ملاحظات خاصة:* ${notes || 'لا يوجد'}`;
 
-      triggerConfetti();
-      showToast('✓ تم تجهيز وصفة عطرك الفاخر بنجاح! جاري فتح الواتساب...');
+      // Must open synchronously (user gesture) or the browser blocks the popup.
+      const { url, opened } = openWhatsApp(msg);
       closeOrderModal();
-
-      setTimeout(() => {
-        window.open(`https://wa.me/201080239612?text=${encodeURIComponent(msg)}`, '_blank');
-      }, 1200);
+      triggerConfetti();
+      if (opened) {
+        showToast('✓ تم تجهيز وصفة عطرك! أرسل الرسالة من واتساب لتأكيد الطلب');
+      } else {
+        showWhatsAppFallback(url);
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {

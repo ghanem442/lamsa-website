@@ -99,7 +99,7 @@
         <span id="cartTotal">0 ج.م</span>
       </div>
       <button class="btn btn-primary btn-full mb-8" id="cartCheckout" data-key="cart_checkout">إتمام الطلب والشحن 🚀</button>
-      <button class="btn btn-outline btn-full" id="cartQuickWhatsApp" onclick="orderViaWhatsApp()" data-key="cart_whatsapp">طلب سريع عبر واتساب 💬</button>
+      <button class="btn btn-outline btn-full" id="cartQuickWhatsApp" data-key="cart_whatsapp">طلب سريع عبر واتساب 💬</button>
     </div>
   </div>
 
@@ -208,7 +208,7 @@
           <div>
             <div style="font-size:0.85rem; color:var(--text-light);" data-key="contact_phone">رقم الهاتف / واتساب</div>
             <div style="font-weight:700; font-size:1.1rem; color:var(--text-dark);">
-              <a href="https://wa.me/201080239612" target="_blank" style="color:var(--gold);">01080239612 (اضغط للمحادثة 💬)</a>
+              <a href="#" data-wa-link target="_blank" style="color:var(--gold);"><span data-phone-text></span> (اضغط للمحادثة 💬)</a>
             </div>
           </div>
         </div>
@@ -359,7 +359,7 @@
       <p style="color: rgba(255,255,255,0.9); margin-bottom: 24px; font-size: 1.05rem;">
         تواصلي معنا مباشرة عبر واتساب وسنكون سعداء بمساعدتك!
       </p>
-      <a href="https://wa.me/201080239612" target="_blank" class="btn" style="background: var(--gold); color: var(--burgundy); padding: 14px 40px; font-weight: 700;">
+      <a href="#" data-wa-link target="_blank" class="btn" style="background: var(--gold); color: var(--burgundy); padding: 14px 40px; font-weight: 700;">
         تحدث معنا الآن 💬
       </a>
     </div>
@@ -373,6 +373,7 @@
   </footer>
 
   <script src="js/data.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/main.js"></script>
   <script>
     function handleContactSubmit(e) {
@@ -409,25 +410,17 @@ ${message}
 _تم الإرسال عبر موقع LAMSA_
       `.trim();
       
-      // رقم الواتساب (نفس الرقم المستخدم في الموقع)
-      const whatsappNumber = '201080239612';
-      const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
-      
-      // إظهار رسالة نجاح
-      showToast('✅ جاري فتح واتساب... يرجى إرسال الرسالة من التطبيق');
-      
-      // إظهار confetti
+      // فتح واتساب مباشرة داخل حدث الإرسال (المتصفح يمنع النوافذ المفتوحة داخل setTimeout)
+      const { url, opened } = openWhatsApp(whatsappMessage);
+
       triggerConfetti();
-      
-      // فتح WhatsApp
-      setTimeout(() => {
-        window.open(whatsappURL, '_blank');
-      }, 500);
-      
-      // إعادة تعيين النموذج بعد ثانيتين
-      setTimeout(() => {
+      if (opened) {
+        showToast('✅ جاري فتح واتساب... يرجى إرسال الرسالة من التطبيق');
         document.getElementById('contactForm').reset();
-      }, 2000);
+      } else {
+        // النموذج بيفضل كما هو لحد ما العميل يضغط على زر واتساب
+        showWhatsAppFallback(url);
+      }
     }
 
     // FAQ Toggle Function
