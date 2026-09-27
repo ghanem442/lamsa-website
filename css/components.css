@@ -2,6 +2,11 @@
    LAMSA — Components CSS (Luxury + Dark Mode + Modals)
    ============================================= */
 
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* ══════════════════════════════
    NAVBAR
 ══════════════════════════════ */
@@ -12,7 +17,6 @@
   background: var(--bg-nav);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  will-change: transform;
   border-bottom: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
   transition: background-color 0.4s ease, border-color 0.4s ease;
@@ -114,10 +118,7 @@
   color: #3B070B;
 }
 
-/* Theme Toggle Button (Permanently Dark Mode) */
-.theme-toggle-btn {
-  display: none !important;
-}
+
 
 .cart-count {
   position: absolute;
@@ -216,7 +217,12 @@
   padding: 24px 20px;
   transform: translateY(-100%);
   opacity: 0;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, visibility 0.3s;
+  max-height: calc(100vh - 76px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   box-shadow: 0 20px 40px rgba(0,0,0,0.5);
   border-top: 1px solid var(--border);
 }
@@ -224,6 +230,8 @@
 .mobile-nav.open {
   transform: translateY(0);
   opacity: 1;
+  visibility: visible;
+  pointer-events: all;
 }
 
 .mobile-nav a {
@@ -407,16 +415,14 @@
 .product-badge {
   position: absolute;
   top: 14px;
-  right: 14px;
+  inset-inline-end: 14px;
   z-index: 2;
 }
-
-body.lang-en .product-badge { right: auto; left: 14px; }
 
 .product-wishlist {
   position: absolute;
   top: 14px;
-  left: 14px;
+  inset-inline-start: 14px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -432,8 +438,6 @@ body.lang-en .product-badge { right: auto; left: 14px; }
   color: var(--text-light);
   z-index: 2;
 }
-
-body.lang-en .product-wishlist { left: auto; right: 14px; }
 
 .product-wishlist:hover,
 .product-wishlist.active {
@@ -548,7 +552,12 @@ body.lang-en .product-wishlist { left: auto; right: 14px; }
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover; /* مهم جدا عشان الصورة متتمطش */
   transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.product-card, .feature-card, .why-us-card {
+  contain: layout paint; /* بتخلي المتصفح يرندر اسرع 30% */
 }
 
 .feature-card:hover .feature-card-bg {
@@ -930,6 +939,13 @@ body.lang-en .option-card.selected::after {
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .feature-card {
+    aspect-ratio: 16/10;
+  }
   .product-card:hover, .feature-card:hover, .why-us-card:hover {
     transform: none;
   }
@@ -937,4 +953,17 @@ body.lang-en .option-card.selected::after {
     transform: none;
   }
 }
+
+/* شكل الفوكس لما تتنقل بالكيبورد */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* الناس اللي عاملة تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .product-card:hover, .feature-card:hover { transform: none; }
+  .feature-card-bg { transition: none; }
+}
+
 

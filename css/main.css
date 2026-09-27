@@ -3,7 +3,6 @@
    Ultra Modern Fonts: Alexandria + El Messiri + Cormorant Garamond
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap');
 
 /* ── CSS Variables (Default Luxury Dark Mode) ── */
 :root {
@@ -50,13 +49,16 @@
   --transition-fast: all 0.2s ease;
 }
 
-/* ── Enforce Dark Theme ── */
-[data-theme="dark"],
-[data-theme="light"],
-html,
-body {
-  background-color: var(--bg-page);
-  color: var(--text-dark);
+html {
+  color-scheme: dark;
+  scrollbar-gutter: stable;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+*:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
 
@@ -445,7 +447,9 @@ ul { list-style: none; }
   background: var(--bg-surface);
   z-index: 1000;
   box-shadow: -10px 0 40px rgba(0,0,0,0.3);
-  transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: left;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   direction: rtl;
@@ -498,6 +502,8 @@ body.lang-en .cart-sidebar.open { right: 0; left: auto; }
   flex: 1;
   overflow-y: auto;
   padding: 24px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
 }
 
 .cart-item {
@@ -593,7 +599,7 @@ body.lang-en .cart-sidebar.open { right: 0; left: auto; }
 
 .hero {
   position: relative;
-  min-height: 88vh;
+  min-height: 88svh;
   background: radial-gradient(circle at top center, #7E1D26 0%, #5C0E14 45%, #2A0609 100%);
   color: var(--white);
   display: flex;
@@ -728,4 +734,12 @@ body.lang-en .cart-sidebar.open { right: 0; left: auto; }
     margin-top: -35px;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 
