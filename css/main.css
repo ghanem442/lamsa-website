@@ -568,3 +568,164 @@ body.lang-en .cart-sidebar.open { right: 0; left: auto; }
   .container { padding: 0 16px; }
   .grid-4 { grid-template-columns: 1fr 1fr; gap: 12px; }
 }
+
+/* ── Home Page Unique Styles & WhatsApp Float ── */
+.whatsapp-float {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  background: #25D366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+  z-index: 999;
+  animation: pulseWhats 2s infinite;
+}
+@keyframes pulseWhats {
+  0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+}
+
+.hero {
+  position: relative;
+  min-height: 88vh;
+  background: radial-gradient(circle at top center, #7E1D26 0%, #5C0E14 45%, #2A0609 100%);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 70px 24px;
+  overflow: hidden;
+  border-bottom: 2px solid var(--gold-border);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.12) 0%, transparent 40%);
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-logo-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 35px rgba(212, 175, 55, 0.45);
+  object-fit: cover;
+  background: #3B070B;
+  transition: transform 0.6s ease;
+}
+.hero-logo-img:hover {
+  transform: scale(1.05) rotate(3deg);
+}
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 22px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: var(--radius-xl);
+  color: var(--gold-light);
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.hero h1 {
+  color: var(--white);
+  font-size: clamp(2.8rem, 6.5vw, 4.6rem);
+  margin-bottom: 18px;
+  text-shadow: 0 6px 30px rgba(0,0,0,0.4);
+  font-weight: 700;
+}
+.hero p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.15rem;
+  margin-bottom: 40px;
+  line-height: 1.9;
+  max-width: 680px;
+  margin-inline: auto;
+}
+.hero-btns {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.features-section {
+  margin-top: -70px;
+  position: relative;
+  z-index: 10;
+  padding-bottom: 40px;
+}
+
+.store-about-box {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 56px;
+  box-shadow: var(--shadow-strong);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+  border: 1px solid var(--border-light);
+}
+.store-photo-mockup {
+  background: radial-gradient(circle at center, #5C0E14 0%, #2A0609 100%);
+  border-radius: var(--radius-lg);
+  aspect-ratio: 4/3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  border: 2px solid var(--gold-border);
+  box-shadow: 0 16px 40px rgba(42, 6, 9, 0.35);
+  text-align: center;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+.store-photo-mockup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(rgba(212, 175, 55, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.store-photo-mockup span {
+  font-size: 4rem;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .whatsapp-float { bottom: 15px; right: 15px; width: 55px; height: 55px; }
+  .store-about-box {
+    grid-template-columns: 1fr;
+    padding: 28px 20px;
+  }
+  .features-section {
+    margin-top: -35px;
+  }
+}
+
