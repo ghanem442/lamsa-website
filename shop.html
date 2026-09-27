@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>المتجر | لمسة LAMSA</title>
+  <title>المتجر | لمسة LAMSA - جميع منتجات العناية والعطور</title>
+  <meta name="description" content="تسوقي كل منتجات لمسة - عناية بالبشرة والشعر، عطور حصرية، هدايا فاخرة وأجهزة تجميل. شحن داخل الإسكندرية.">
+  <meta name="theme-color" content="#5C0E14">
+  <meta property="og:title" content="متجر لمسة | LAMSA Shop">
+  <meta property="og:image" content="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -71,6 +78,18 @@
       .routine-banner-card { flex-direction: column; text-align: center; padding: 24px; }
       .filter-bar { flex-direction: column; align-items: stretch; }
     }
+    body { font-family: 'Tajawal', sans-serif; }
+    .whatsapp-float {
+      position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px;
+      background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 25px rgba(37,211,102,0.4); z-index: 999; animation: pulseWhats 2s infinite;
+    }
+    @keyframes pulseWhats {
+      0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(37,211,102,0); }
+      100% { box-shadow: 0 0 0 0 rgba(37,211,102,0); }
+    }
+    @media (max-width: 768px) { .whatsapp-float { bottom: 15px; right: 15px; width: 55px; height: 55px; } }
   </style>
 </head>
 <body>
@@ -400,8 +419,8 @@
       list.forEach((p, index) => {
         html += `
           <div class="product-card" onclick="openQuickView('${p.id}')">
-            <div class="product-img-wrap" style="display: flex; align-items: center; justify-content: center; min-height: 200px; ${p.image ? `background: url(${p.image}) center/cover no-repeat;` : ''}">
-              ${!p.image && p.emoji ? `<span style="font-size: 3rem;">${p.emoji}</span>` : ''}
+            <div class="product-img-wrap" style="display: flex; align-items: center; justify-content: center; min-height: 200px; overflow:hidden;">
+              ${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;">` : (p.emoji ? `<span style="font-size: 3rem;">${p.emoji}</span>` : '')}
               ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'مميز'}</span>` : ''}
               <button class="product-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active')">🤍</button>
             </div>
@@ -453,5 +472,9 @@
       document.addEventListener('langChanged', () => renderShop());
     });
   </script>
+
+  <a href="https://wa.me/201080239612" target="_blank" class="whatsapp-float" aria-label="واتساب">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/></svg>
+  </a>
 </body>
 </html>
