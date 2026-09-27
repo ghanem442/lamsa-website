@@ -93,7 +93,26 @@ body.lang-en .meme-easter-egg {
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
-/* Card 3D tilt effect on hover */
-.feature-card, .product-card, .option-card {
-  will-change: transform;
+/* Performance - GPU Acceleration */
+.feature-card, .product-card {
+  transform: translateZ(0);
 }
+
+/* خفف الانيميشن على الموبايل + احترام اعدادات المستخدم */
+@media (max-width: 768px) {
+  .floating-anim, .pulse-glow, .meme-easter-egg span.meme-icon {
+    animation: none !important;
+  }
+  .meme-easter-egg {
+    bottom: 90px; /* عشان ميغطيش على زر الواتساب */
+    right: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
