@@ -3,7 +3,7 @@
    Ultra Modern Fonts: Alexandria + El Messiri + Cormorant Garamond
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=El+Messiri:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap');
 
 /* ── CSS Variables (Default Luxury Dark Mode) ── */
 :root {
@@ -36,8 +36,8 @@
   --shadow-strong:   0 20px 45px rgba(0, 0, 0, 0.7);
   --shadow-gold:     0 8px 25px rgba(212, 175, 55, 0.25);
 
-  --font-ar:         'Alexandria', sans-serif;
-  --font-title:      'El Messiri', 'Alexandria', sans-serif;
+  --font-ar:         'Tajawal', sans-serif;
+  --font-title:      'Tajawal', sans-serif;
   --font-en:         'Plus Jakarta Sans', sans-serif;
   --font-serif:      'Cormorant Garamond', serif;
 
@@ -555,11 +555,13 @@ body.lang-en .cart-sidebar.open { right: 0; left: auto; }
 }
 
 @media (max-width: 768px) {
-  .section { padding: 60px 0; }
-  .grid-3, .grid-2 { grid-template-columns: 1fr; }
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .section { padding: 50px 0; }
+  .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 20px; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .cart-sidebar { width: 100%; left: -100%; }
   body.lang-en .cart-sidebar { right: -100%; left: auto; }
+  .btn-lg { padding: 14px 28px; font-size: 0.95rem; }
+  h1 { line-height: 1.3; }
 }
 
 @media (max-width: 480px) {
