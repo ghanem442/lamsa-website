@@ -1064,6 +1064,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Universal Admin link in Desktop Nav Links
+  const navLinks = document.querySelector('.nav-links');
+  if (navLinks && !document.getElementById('navAdminItem')) {
+    const aItem = document.createElement('a');
+    aItem.id = 'navAdminItem';
+    aItem.href = 'admin.html';
+    aItem.style.color = 'var(--gold)';
+    aItem.style.fontWeight = '700';
+    aItem.innerHTML = '👑 لوحة الإدارة';
+    navLinks.appendChild(aItem);
+  }
+
+  // Universal Admin link in Mobile Nav
+  const mobileNav = document.getElementById('mobileNav');
+  if (mobileNav && !document.getElementById('mobileAdminLink')) {
+    const mLink = document.createElement('a');
+    mLink.id = 'mobileAdminLink';
+    mLink.href = 'admin.html';
+    mLink.style.color = 'var(--gold)';
+    mLink.style.fontWeight = '700';
+    mLink.innerHTML = '👑 لوحة الإدارة (Admin)';
+    mobileNav.appendChild(mLink);
+  }
+
   // Lang buttons
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => applyLang(btn.dataset.lang));
