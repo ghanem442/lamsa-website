@@ -903,45 +903,71 @@ function submitOrder(e) {
   msg += `\n🚚 *الشحن (${city}):* ${formatShipping(shipping)}`;
   msg += `\n✨ *الإجمالي المطلوب:* ${total} ج.م`;
 
-  // Open WhatsApp RIGHT NOW, inside the submit event (a real user gesture),
-  // so popup blockers allow it. The cart is only cleared once we know the
-  // customer actually reached WhatsApp, so an order can never be lost silently.
-  const { url, opened } = openWhatsApp(msg);
+  // Save Order for Admin Dashboard
+  const orderRecord = {
+    id: orderNum,
+    date: new Date().toISOString(),
+    customer: name,
+    phone: phone,
+    whatsapp: whatsapp || phone,
+    city: city,
+    area: area,
+    address: address,
+    paymentMethod: paymentMap[selectedPaymentMethod],
+    items: cart.map(item => ({
+      name: item.name,
+      qty: item.qty,
+      price: item.price
+    })),
+    subtotal: subtotal,
+    shipping: shipping,
+    total: total,
+    status: 'جديد ⏳'
+  };
 
-  closeCheckoutModal();
-  showOrderSuccessModal(orderNum, name, total, url, opened);
-  if (opened) finalizeOrder();
-}
+  try {
+    const existingOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
+    existingOrders.push(orderRecord);
+    localStorage.setItem('adminOrders', JSON.stringify(existingOrders));
+  } catch (err) {
+    console.warn('Failed to save order to localStorage:', err);
+  }
 
-// Clears the cart after the order was handed to WhatsApp (safe to call twice).
-function finalizeOrder() {
-  if (cart.length === 0) return;
+  // Clear Cart
   cart = [];
   saveCart();
   triggerConfetti();
+
+  closeCheckoutModal();
+  showOrderSuccessModal(orderNum, name, phone, total);
 }
 
-function showOrderSuccessModal(orderNum, name, total, url, opened) {
+function showOrderSuccessModal(orderNum, name, phone, total) {
   const modal = document.createElement('div');
   modal.className = 'luxury-modal-backdrop active';
   modal.innerHTML = `
-    <div class="luxury-modal-box" style="max-width:480px; text-align:center;">
-      <span style="font-size:4rem; display:block; margin-bottom:16px;">📨</span>
-      <h2 style="color:var(--burgundy); margin-bottom:12px;">طلبك جاهز للإرسال</h2>
-      <p style="color:var(--text-mid); margin-bottom:20px;">رقم الطلب: <strong>${orderNum}</strong></p>
-      <p style="color:var(--text-mid); margin-bottom:20px;">
-        عزيزتي <strong>${escapeHtml(name)}</strong>، ${opened
-          ? 'أرسلي رسالة الطلب من واتساب علشان نأكد معاكِ ونجهز الشحن.'
-          : 'آخر خطوة: اضغطي على الزر لإرسال الطلب على واتساب علشان يوصلنا ونأكده معاكِ.'}
-      </p>
-      <div style="background:var(--bg-subtle); padding:16px; border-radius:var(--radius-lg); margin-bottom:24px;">
-        <div style="font-size:1.3rem; font-weight:800; color:var(--burgundy);">المبلغ الإجمالي: ${total} ج.م</div>
+    <div class="luxury-modal-box" style="max-width:520px; text-align:center;">
+      <span style="font-size:3.8rem; display:block; margin-bottom:12px;">✅</span>
+      <h2 style="color:var(--gold); margin-bottom:10px; font-size:1.6rem;">تم استلام طلبك بنجاح!</h2>
+      <p style="color:var(--text-mid); margin-bottom:16px;">رقم الطلب الخاص بك: <strong style="color:var(--gold); font-size:1.1rem;">#${orderNum}</strong></p>
+      
+      <div style="background:var(--bg-subtle); padding:18px; border-radius:var(--radius-lg); margin-bottom:20px; border:1px solid var(--border); text-align:right;">
+        <p style="color:var(--text-dark); line-height:1.8; font-size:0.95rem; margin-bottom:8px;">
+          عزيزي/عزيزتي <strong>${escapeHtml(name)}</strong>، شكراً لثقتك في <strong>متجر لمسة (LAMSA)</strong> 🌹
+        </p>
+        <p style="color:var(--text-mid); line-height:1.7; font-size:0.9rem;">
+          📞 <strong>الخطوة التالية:</strong> سيقوم أحد ممثلي خدمة العملاء بالاتصال بك هاتفياً على رقمك (<strong>${escapeHtml(phone)}</strong>) لتأكيد بيانات الشحن وتجهيز الأوردر فوراً.
+        </p>
+        <div class="divider" style="margin:12px 0;"></div>
+        <div class="flex-between" style="font-weight:700; color:var(--burgundy); font-size:1.05rem;">
+          <span>المبلغ الإجمالي عند الاستلام:</span>
+          <span>${total} ج.م</span>
+        </div>
       </div>
-      <a class="btn btn-primary btn-lg" href="${url}" target="_blank" rel="noopener"
-         style="display:block; margin-bottom:12px;" onclick="finalizeOrder()">
-        ${opened ? 'لو واتساب ما فتحش اضغطي هنا 💬' : 'أرسلي الطلب عبر واتساب 💬'}
-      </a>
-      <button class="btn btn-lg" onclick="closeSuccessModal(this.parentElement.parentElement)">إغلاق</button>
+
+      <button class="btn btn-primary btn-lg btn-full" onclick="closeSuccessModal(this.parentElement.parentElement)">
+        متابعة التسوق في لمسة 🛍️
+      </button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -1006,18 +1032,36 @@ document.addEventListener('DOMContentLoaded', () => {
   if (navActions && !document.getElementById('navUserBtn')) {
     const userBtn = document.createElement('a');
     userBtn.id = 'navUserBtn';
-    userBtn.href = 'auth.html';
+    userBtn.href = (savedUser && savedUser.role === 'admin') ? 'admin.html' : 'auth.html';
     userBtn.className = 'nav-icon-btn';
     userBtn.style.fontSize = '1.05rem';
     userBtn.style.textDecoration = 'none';
     if (savedUser) {
-      userBtn.innerHTML = `<span>${savedUser.avatar || '👤'}</span>`;
-      userBtn.title = `أهلاً بك يا ${savedUser.name} (اضغط لتغيير الحساب)`;
+      if (savedUser.role === 'admin') {
+        userBtn.innerHTML = `<span style="font-size:1.15rem;">👑</span>`;
+        userBtn.title = 'لوحة إدارة المتجر (Admin)';
+      } else {
+        userBtn.innerHTML = `<span>${savedUser.avatar || '👤'}</span>`;
+        userBtn.title = `أهلاً بك يا ${savedUser.name} (اضغط لتغيير الحساب)`;
+      }
     } else {
       userBtn.innerHTML = `<span>👤</span>`;
       userBtn.title = 'تسجيل الدخول / حسابي';
     }
     navActions.prepend(userBtn);
+
+    // If admin is logged in, show direct admin link in navbar
+    if (savedUser && savedUser.role === 'admin' && !document.getElementById('navAdminLink')) {
+      const adminLink = document.createElement('a');
+      adminLink.id = 'navAdminLink';
+      adminLink.href = 'admin.html';
+      adminLink.className = 'btn btn-gold btn-sm';
+      adminLink.style.padding = '4px 10px';
+      adminLink.style.fontSize = '0.8rem';
+      adminLink.style.borderRadius = '12px';
+      adminLink.innerHTML = '👑 لوحة الإدارة';
+      navActions.prepend(adminLink);
+    }
   }
 
   // Lang buttons
