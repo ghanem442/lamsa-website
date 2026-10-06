@@ -361,13 +361,6 @@
         تخطي والدخول كـ زائر الآن ←
       </a>
 
-      <!-- Quick Admin Direct Access -->
-      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(212, 175, 55, 0.25);">
-        <a href="admin.html?admin=true" class="btn btn-gold btn-full btn-sm" style="font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-          👑 الدخول المباشر إلى لوحة تحكم الإدارة (Admin)
-        </a>
-      </div>
-
     </div>
   </div>
 
@@ -377,6 +370,7 @@
 
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script>
     let currentAuthMode = 'login';
@@ -400,118 +394,80 @@
       }
     }
 
-    // NOTE: Admin login is intentionally NOT handled here.
-    // Admin authentication must be verified by the backend (e.g. POST /api/auth/login
-    // returning a JWT / session cookie). Never store credentials in front-end code.
-
-    // Google Login Simulator (Prepopulates verified profile)
+    // Google Login Simulator (will be replaced with real OAuth in later task)
     function handleGoogleLogin() {
-      const email = prompt("أدخل بريدك الإلكتروني (Gmail):", "ghanem@gmail.com");
-      if (!email) return;
-
-      const defaultName = email.split('@')[0];
-      const userName = prompt("اسمك الكريم للترحيب بك:", defaultName) || defaultName;
-
-      const userObj = {
-        name: userName,
-        email: email,
-        isGoogle: true,
-        role: 'customer',
-        avatar: '👑',
-        loginTime: new Date().toISOString()
-      };
-
-      localStorage.setItem('lamsa_user', JSON.stringify(userObj));
-      triggerConfetti();
-      showToast(`✨ مرحباً بك في لمسة يا ${userName}! جاري تحويلك للمتجر...`);
-
-      const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
-      if (returnUrl) sessionStorage.removeItem('lamsa_auth_redirect');
-
-      setTimeout(() => {
-        window.location.href = returnUrl || 'intro.html';
-      }, 1200);
+      showToast('⚠️ تسجيل الدخول عبر Google سيتم إضافته قريباً');
     }
 
-    // Email / Password Handler
-    function handleEmailAuth(e) {
+    // Email / Password Handler - Uses Backend API
+    async function handleEmailAuth(e) {
       e.preventDefault();
-      const email = document.getElementById('authEmail').value.trim().toLowerCase();
+      const email = document.getElementById('authEmail').value.trim();
       const password = document.getElementById('authPassword').value;
-      const name = currentAuthMode === 'signup' 
-        ? document.getElementById('authName').value 
-        : (email.split('@')[0]);
+      const submitBtn = document.getElementById('submitAuthBtn');
+      
+      // Disable button during request
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ جاري المعالجة...';
 
-      // ── Admin Login Check ──
-      if (email === 'admin@lamsa.com' && password === 'Lamsa@2026') {
-        const adminObj = {
-          name: 'مدير المتجر (Admin)',
-          email: 'admin@lamsa.com',
-          role: 'admin',
-          avatar: '👑',
-          loginTime: new Date().toISOString()
-        };
-        localStorage.setItem('lamsa_user', JSON.stringify(adminObj));
-        triggerConfetti();
-        showToast('👑 أهلاً بك يا مدير المتجر! جاري فتح لوحة التحكم...');
-        setTimeout(() => {
-          window.location.href = 'admin.html';
-        }, 1000);
-        return;
-      }
-
-      // If Signup Mode -> Trigger OTP Verification Step
-      if (currentAuthMode === 'signup') {
-        pendingUser = {
-          name: name,
-          email: email,
-          role: 'customer',
-          isGoogle: false,
-          avatar: '✨',
-          loginTime: new Date().toISOString()
-        };
-
-        // Generate demo OTP for frontend testing
-        demoOtpCode = Math.floor(1000 + Math.random() * 9000).toString();
-
-        // Switch View to OTP
-        document.getElementById('authForm').style.display = 'none';
-        document.querySelector('.auth-tabs').style.display = 'none';
-        document.querySelector('.btn-google-luxury').style.display = 'none';
-        document.querySelector('.auth-divider').style.display = 'none';
-        document.getElementById('guestLink').style.display = 'none';
+      try {
+        let response;
         
-        document.getElementById('otpTargetEmail').textContent = email;
-        document.getElementById('otpSection').style.display = 'block';
+        if (currentAuthMode === 'signup') {
+          // Register new account
+          const name = document.getElementById('authName').value.trim();
+          response = await LAMSA_API.register({ name, email, password });
+        } else {
+          // Login
+          response = await LAMSA_API.login({ email, password });
+        }
 
-        showToast(`📩 تم إرسال كود التأكيد إلى بريدك! (رمز الاختبار: ${demoOtpCode})`, 6000);
-        setTimeout(() => document.getElementById('otp1').focus(), 300);
-        return;
+        if (response.ok && response.data.success) {
+          const { user, token } = response.data.data;
+          
+          // Store token and user info
+          localStorage.setItem('lamsa_token', token);
+          localStorage.setItem('lamsa_user', JSON.stringify({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            avatar: user.role === 'admin' ? '👑' : '✨',
+            loginTime: new Date().toISOString()
+          }));
+
+          triggerConfetti();
+          
+          // Redirect based on role
+          const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
+          sessionStorage.removeItem('lamsa_auth_redirect');
+          
+          if (user.role === 'admin') {
+            showToast('👑 أهلاً بك يا مدير المتجر! جاري فتح لوحة التحكم...');
+            setTimeout(() => window.location.href = 'admin.html', 1000);
+          } else {
+            showToast(`✓ تم تسجيل الدخول بنجاح! أهلاً بك يا ${user.name} 🌹`);
+            setTimeout(() => window.location.href = returnUrl || 'intro.html', 1000);
+          }
+        } else {
+          // Show error message from backend
+          showToast('⚠️ ' + (response.data.message || 'حدث خطأ. الرجاء المحاولة مرة أخرى'));
+          submitBtn.disabled = false;
+          submitBtn.textContent = currentAuthMode === 'signup' 
+            ? 'إنشاء حساب جديد والدخول ✨' 
+            : 'تسجيل الدخول للمتجر ←';
+        }
+      } catch (error) {
+        console.error('[Auth] Error:', error);
+        showToast('⚠️ حدث خطأ في الاتصال. الرجاء المحاولة مرة أخرى');
+        submitBtn.disabled = false;
+        submitBtn.textContent = currentAuthMode === 'signup' 
+          ? 'إنشاء حساب جديد والدخول ✨' 
+          : 'تسجيل الدخول للمتجر ←';
       }
-
-      // Normal Customer Login
-      const userObj = {
-        name: name,
-        email: email,
-        role: 'customer',
-        isGoogle: false,
-        avatar: '✨',
-        loginTime: new Date().toISOString()
-      };
-
-      localStorage.setItem('lamsa_user', JSON.stringify(userObj));
-      triggerConfetti();
-      showToast(`✓ تم تسجيل الدخول بنجاح! أهلاً بك يا ${name} 🌹`);
-
-      const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
-      if (returnUrl) sessionStorage.removeItem('lamsa_auth_redirect');
-
-      setTimeout(() => {
-        window.location.href = returnUrl || 'intro.html';
-      }, 1000);
     }
 
-    // OTP Navigation and Handling
+    // OTP Navigation and Handling (disabled for now - will be enabled in later task)
     let pendingUser = null;
     let demoOtpCode = '1234';
 
@@ -522,22 +478,24 @@
     }
 
     function verifyOtpCode() {
-      const enteredCode = (
-        document.getElementById('otp1').value +
-        document.getElementById('otp2').value +
-        document.getElementById('otp3').value +
-        document.getElementById('otp4').value
-      );
+      showToast('⚠️ التحقق بالرمز سيتم إضافته قريباً');
+    }
 
-      if (enteredCode.length < 4) {
-        showToast('⚠️ يرجى إدخال كود التأكيد المكون من 4 أرقام');
-        return;
+    function resendOtpCode() {
+      showToast('⚠️ إعادة الإرسال ستتم إضافتها قريباً');
+    }
+
+    // Confetti effect
+    function triggerConfetti() {
+      if (typeof confetti !== 'undefined') {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
       }
-
-      // Verify code (accepts generated code or 1234)
-      if (enteredCode === demoOtpCode || enteredCode === '1234') {
-        localStorage.setItem('lamsa_user', JSON.stringify(pendingUser));
-        triggerConfetti();
+    }
+  </script>
         showToast('🎉 تم تأكيد البريد بنجاح! جاري تحويلك للمتجر...');
 
         const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');

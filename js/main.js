@@ -1113,8 +1113,6 @@ document.addEventListener('DOMContentLoaded', () => {
     closeCart();
     closeQuickView();
     closeCheckoutModal();
-    const mobileNav = document.getElementById('mobileNav');
-    const menuToggle = document.getElementById('menuToggle');
     mobileNav?.classList.remove('open');
     menuToggle?.classList.remove('active');
     document.getElementById('overlay')?.classList.remove('active');
@@ -1122,7 +1120,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mobile menu toggle
   const menuToggle = document.getElementById('menuToggle');
-  const mobileNav = document.getElementById('mobileNav');
   menuToggle?.addEventListener('click', () => {
     menuToggle.classList.toggle('active');
     mobileNav?.classList.toggle('open');

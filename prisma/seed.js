@@ -6,6 +6,14 @@ require('dotenv').config();
 
 const prisma = new PrismaClient();
 
+// Forbidden placeholder passwords
+const FORBIDDEN_PASSWORDS = [
+  'ChangeThisPassword@2026',
+  'admin',
+  'password',
+  '123456',
+];
+
 // Extract PRODUCTS from js/data.js safely
 function parseProductsFromDataJs() {
   const dataJsPath = path.join(__dirname, '..', 'js', 'data.js');
@@ -26,11 +34,45 @@ function parseProductsFromDataJs() {
 async function main() {
   console.log('🌱 Starting database seed...');
 
-  // 1. Seed or Upsert Admin User from environment variables
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@lamsa.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'ChangeThisPassword@2026';
+  // Validate required environment variables
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
   const adminName = process.env.ADMIN_NAME || 'LAMSA Admin';
 
+  if (!adminEmail) {
+    console.error('\n❌ ADMIN_EMAIL is required in .env file for seeding.');
+    console.error('   Please set ADMIN_EMAIL in your .env file.\n');
+    process.exit(1);
+  }
+
+  if (!adminPassword) {
+    console.error('\n❌ ADMIN_PASSWORD is required in .env file for seeding.');
+    console.error('   Please set ADMIN_PASSWORD in your .env file.\n');
+    process.exit(1);
+  }
+
+  if (adminPassword.length < 10) {
+    console.error('\n❌ ADMIN_PASSWORD must be at least 10 characters long.');
+    console.error(`   Current length: ${adminPassword.length}\n`);
+    process.exit(1);
+  }
+
+  if (FORBIDDEN_PASSWORDS.includes(adminPassword)) {
+    console.error('\n❌ ADMIN_PASSWORD contains a forbidden default value!');
+    console.error(`   "${adminPassword}" is not allowed.`);
+    console.error('   Please set a strong, unique password (at least 10 characters) in .env\n');
+    process.exit(1);
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(adminEmail)) {
+    console.error('\n❌ ADMIN_EMAIL must be a valid email address.');
+    console.error(`   Provided: ${adminEmail}\n`);
+    process.exit(1);
+  }
+
+  // 1. Seed or Upsert Admin User from environment variables
   const passwordHash = await bcrypt.hash(adminPassword, 10);
 
   const adminUser = await prisma.user.upsert({

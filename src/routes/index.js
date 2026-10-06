@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const productRoutes = require('./product.routes');
+const authRoutes = require('./auth.routes');
 
 /**
  * GET /api/health
@@ -14,5 +16,9 @@ router.get('/health', (req, res) => {
     version: '1.0.0'
   });
 });
+
+// Mount routes
+router.use('/auth', authRoutes);
+router.use('/products', productRoutes);
 
 module.exports = router;
