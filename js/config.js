@@ -18,17 +18,24 @@ window.LAMSA_CONFIG = {
     // "name" is what the customer sees, "fee" is the shipping cost in EGP.
     // (All fees are 35 for now = the previous flat rate. Set your real prices here.)
     cities: [
-      { name: 'القاهرة',              fee: 35 },
-      { name: 'الجيزة',               fee: 35 },
-      { name: 'الإسكندرية',           fee: 35 },
-      { name: 'المنصورة / الدقهلية',  fee: 35 },
-      { name: 'طنطا / الغربية',       fee: 35 },
-      { name: 'الشرقية',              fee: 35 },
-      { name: 'باقي المحافظات',       fee: 35 }
+      { name: 'القاهرة', fee: 35 },
+      { name: 'الجيزة', fee: 35 },
+      { name: 'الإسكندرية', fee: 35 },
+      { name: 'المنصورة / الدقهلية', fee: 35 },
+      { name: 'طنطا / الغربية', fee: 35 },
+      { name: 'الشرقية', fee: 35 },
+      { name: 'باقي المحافظات', fee: 35 }
     ]
   }
 };
 
-// Local display format (e.g. 01080239612), derived from the number above.
-window.LAMSA_CONFIG.phoneDisplay =
-  '0' + window.LAMSA_CONFIG.whatsappNumber.replace(/^20/, '');
+// Local display format (e.g. 01080239612), derived safely
+const _num = window.LAMSA_CONFIG.whatsappNumber.replace(/\D/g, '');
+window.LAMSA_CONFIG.phoneDisplay = _num.startsWith('20') ? '0' + _num.slice(2) : _num;
+
+// حماية: لو حد لعب في الملف والرقم باظ
+window.LAMSA_CONFIG.whatsappNumber = _num;
+
+// تجميد الإعدادات عشان مفيش كود تاني يغيرها بالغلط
+Object.freeze(window.LAMSA_CONFIG);
+Object.freeze(window.LAMSA_CONFIG.shipping);

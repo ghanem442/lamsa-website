@@ -4,10 +4,22 @@
   "description": "LAMSA Beauty & Perfume Store Website",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed": "node prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "@prisma/client": "5.22.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "debug": "^4.4.3",
+    "dotenv": "^18.0.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "prisma": "5.22.0",
+    "zod": "^4.6.5"
   },
   "engines": {
     "node": ">=18.0.0"

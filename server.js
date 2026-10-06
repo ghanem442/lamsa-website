@@ -1,22 +1,19 @@
-const express = require('express');
-const path = require('path');
+const app = require('./src/app');
+const env = require('./src/config/env');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT || 3000;
 
-// Serve all static files from root directory
-app.use(express.static(path.join(__dirname)));
-
-// Root route: Start from intro page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'intro.html'));
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✨ LAMSA Store & API live at http://localhost:${PORT}`);
+  console.log(`🩺 Health check: http://localhost:${PORT}/api/health`);
 });
 
-// Direct access to all main pages
-app.get('/index', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'shop.html')));
-app.get('/auth', (req, res) => res.sendFile(path.join(__dirname, 'auth.html')));
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✨ LAMSA Store is running live on port ${PORT}`);
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+  });
 });
+
+module.exports = server;

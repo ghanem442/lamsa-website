@@ -1,0 +1,137 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  customer
+  admin
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  shipped
+  delivered
+  cancelled
+}
+
+enum PaymentMethod {
+  cod
+  instapay
+  voda
+}
+
+model User {
+  id             String           @id @default(uuid())
+  name           String
+  email          String           @unique
+  passwordHash   String           @map("password_hash")
+  phone          String?
+  role           Role             @default(customer)
+  isVerified     Boolean          @default(false) @map("is_verified")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  orders         Order[]
+  customPerfumes CustomPerfume[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  nameAr      String      @map("name_ar")
+  nameEn      String      @map("name_en")
+  category    String
+  subCategory String?     @map("sub_category")
+  price       Float
+  stockQty    Int         @default(100) @map("stock_qty")
+  imageUrl    String?     @map("image_url")
+  emoji       String?
+  badge       String?     // "popular" | "new"
+  skinTypes   Json?       @map("skin_types") // ["oily", "dry", ...]
+  concerns    Json?       @map("concerns")   // ["acne", "dark_spots", ...]
+  hairTypes   Json?       @map("hair_types") // ["dry", "damaged", ...]
+  budgetTier  Json?       @map("budget_tier")
+  forWhom     Json?       @map("for_whom")
+  occasion    Json?       @map("occasion")
+  family      String?     // scent family: "oud", "floral", etc.
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  orderNumber   String        @unique @map("order_number")
+  userId        String?       @map("user_id")
+  customerName  String        @map("customer_name")
+  phone         String
+  whatsapp      String?
+  city          String
+  area          String?
+  address       String
+  paymentMethod PaymentMethod @default(cod) @map("payment_method")
+  orderStatus   OrderStatus   @default(pending) @map("order_status")
+  subtotal      Float
+  shippingFee   Float         @default(35) @map("shipping_fee")
+  totalAmount   Float         @map("total_amount")
+  notes         String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items         OrderItem[]
+  customPerfume CustomPerfume?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String   @map("order_id")
+  productId  String?  @map("product_id")
+  quantity   Int      @default(1)
+  unitPrice  Float    @map("unit_price")
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+model CustomPerfume {
+  id              String   @id @default(uuid())
+  userId          String?  @map("user_id")
+  orderId         String?  @unique @map("order_id")
+  customName      String?  @map("custom_name")
+  topNote         String?  @map("top_note")
+  heartNote       String?  @map("heart_note")
+  baseNote        String?  @map("base_note")
+  size            String   // "30ml" | "50ml" | "100ml"
+  concentration   String   // "edt" | "edp" | "extrait"
+  calculatedPrice Float    @map("calculated_price")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  order           Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@map("custom_perfumes")
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
