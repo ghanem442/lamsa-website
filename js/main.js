@@ -451,6 +451,169 @@ function applyLang(lang) {
 // ── Cart State ────────────────────────────────
 let cart = JSON.parse(localStorage.getItem('lamsa_cart') || '[]');
 
+// ── Favorites Management ──────────────────────
+function getFavorites() {
+  try {
+    return JSON.parse(localStorage.getItem('lamsa_favorites') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveFavorites(favorites) {
+  localStorage.setItem('lamsa_favorites', JSON.stringify(favorites));
+}
+
+function isFavorite(productId) {
+  const favorites = getFavorites();
+  return favorites.some(f => String(f.id) === String(productId));
+}
+
+function toggleFavorite(productId, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+
+  // Find product in current products or fallback to LAMSA.PRODUCTS
+  let product = null;
+  if (window.currentProducts && window.currentProducts.length) {
+    product = window.currentProducts.find(p => String(p.id) === String(productId));
+  }
+  if (!product && window.LAMSA && window.LAMSA.PRODUCTS) {
+    product = window.LAMSA.PRODUCTS.find(p => String(p.id) === String(productId));
+  }
+
+  if (!product) {
+    console.warn('[Favorites] Product not found:', productId);
+    return;
+  }
+
+  let favorites = getFavorites();
+  const existingIndex = favorites.findIndex(f => String(f.id) === String(productId));
+
+  if (existingIndex >= 0) {
+    // Remove from favorites
+    favorites.splice(existingIndex, 1);
+    if (event && event.target) {
+      event.target.classList.remove('active');
+    }
+    showToast(currentLang === 'ar' ? '🤍 تمت الإزالة من المفضلة' : '🤍 Removed from favorites');
+  } else {
+    // Add to favorites
+    favorites.push({
+      id: product.id,
+      name: product.name,
+      nameEn: product.nameEn,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      emoji: product.emoji,
+      category: product.category,
+    });
+    if (event && event.target) {
+      event.target.classList.add('active');
+    }
+    showToast(currentLang === 'ar' ? '❤️ تمت الإضافة للمفضلة' : '❤️ Added to favorites');
+  }
+
+  saveFavorites(favorites);
+  
+  // Update favorites count in header if it exists
+  updateFavoritesCount();
+}
+
+function updateFavoritesCount() {
+  const favorites = getFavorites();
+  const countEl = document.getElementById('favoritesCount');
+  if (countEl) {
+    countEl.textContent = favorites.length;
+    countEl.style.display = favorites.length > 0 ? 'flex' : 'none';
+  }
+}
+
+// ── Favorites Sidebar ─────────────────────────
+function openFavorites() {
+  document.getElementById('favoritesSidebar')?.classList.add('open');
+  document.getElementById('overlay')?.classList.add('active');
+  renderFavorites();
+}
+
+function closeFavorites() {
+  document.getElementById('favoritesSidebar')?.classList.remove('open');
+  document.getElementById('overlay')?.classList.remove('active');
+}
+
+function renderFavorites() {
+  const favorites = getFavorites();
+  const body = document.getElementById('favoritesBody');
+  
+  if (!body) return;
+  
+  if (favorites.length === 0) {
+    body.innerHTML = `
+      <div style="padding: 60px 20px; text-align: center; color: var(--text-mid);">
+        <div style="font-size: 3rem; margin-bottom: 12px;">🤍</div>
+        <p style="font-size: 1.1rem; margin-bottom: 8px;">قائمة المفضلة فارغة</p>
+        <p style="font-size: 0.9rem;">اضغط على ❤️ في أي منتج لإضافته هنا</p>
+      </div>
+    `;
+    return;
+  }
+  
+  body.innerHTML = favorites.map(item => `
+    <div class="cart-item" style="cursor: pointer;" onclick="openQuickView('${item.id}')">
+      <div class="cart-item-img">
+        ${item.imageUrl 
+          ? `<img src="${item.imageUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">` 
+          : `<span style="font-size: 2rem;">${item.emoji || '🧴'}</span>`
+        }
+      </div>
+      <div class="cart-item-info">
+        <h4 class="cart-item-name">${item.name}</h4>
+        <div class="cart-item-price">${item.price} ج.م</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="cart-item-remove" onclick="event.stopPropagation(); removeFavorite('${item.id}')" title="إزالة">
+          🗑️
+        </button>
+        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); addFavoriteToCart('${item.id}')" style="padding: 6px 10px; font-size: 0.75rem; white-space: nowrap;">
+          🛍️
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function removeFavorite(productId) {
+  let favorites = getFavorites();
+  favorites = favorites.filter(f => String(f.id) !== String(productId));
+  saveFavorites(favorites);
+  renderFavorites();
+  updateFavoritesCount();
+  
+  // Update heart buttons on the page
+  document.querySelectorAll('.product-wishlist').forEach(btn => {
+    const card = btn.closest('.product-card');
+    if (card && card.onclick) {
+      const onclickStr = card.onclick.toString();
+      if (onclickStr.includes(productId)) {
+        btn.classList.remove('active');
+      }
+    }
+  });
+  
+  showToast(currentLang === 'ar' ? '🤍 تمت الإزالة من المفضلة' : '🤍 Removed from favorites');
+}
+
+function addFavoriteToCart(productId) {
+  const favorites = getFavorites();
+  const product = favorites.find(f => String(f.id) === String(productId));
+  
+  if (product && typeof addToCart === 'function') {
+    addToCart(product, 1);
+  }
+}
+
+// ── Cart Functions ────────────────────────────
 function saveCart() {
   localStorage.setItem('lamsa_cart', JSON.stringify(cart));
   updateCartUI();
@@ -656,8 +819,23 @@ function closeCart() {
 
 // ── Quick View Modal ──────────────────────────
 function openQuickView(productId) {
-  const product = window.LAMSA.PRODUCTS.find(p => p.id === productId);
-  if (!product) return;
+  // Try to find product in current products (API-loaded) first, then fall back to static data
+  let product = null;
+  
+  if (window.currentProducts && window.currentProducts.length) {
+    product = window.currentProducts.find(p => String(p.id) === String(productId));
+  }
+  
+  // Fallback to static data.js
+  if (!product && window.LAMSA && window.LAMSA.PRODUCTS) {
+    product = window.LAMSA.PRODUCTS.find(p => String(p.id) === String(productId));
+  }
+  
+  if (!product) {
+    console.warn('[QuickView] Product not found:', productId);
+    return;
+  }
+  
   activeQuickViewProduct = product;
 
   let modal = document.getElementById('quickViewModal');
@@ -680,7 +858,10 @@ function openQuickView(productId) {
       
       <div class="quickview-grid">
         <div class="quickview-img-box">
-          ${product.emoji || '🧴'}
+          ${product.imageUrl 
+            ? `<img src="${product.imageUrl}" alt="${name}" style="width:100%; height:100%; object-fit:contain; border-radius:var(--radius-lg);">` 
+            : `<span style="font-size:4rem;">${product.emoji || '🧴'}</span>`
+          }
         </div>
 
         <div>
@@ -1102,6 +1283,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cartToggle')?.addEventListener('click', openCart);
   document.getElementById('cartClose')?.addEventListener('click', closeCart);
   
+  // Favorites toggle
+  document.getElementById('favoritesToggle')?.addEventListener('click', openFavorites);
+  document.getElementById('favoritesClose')?.addEventListener('click', closeFavorites);
+  
+  // Update favorites count on page load
+  updateFavoritesCount();
+  
   // Cart WhatsApp button
   document.getElementById('cartCheckout')?.addEventListener('click', openCheckoutModal);
   
@@ -1111,6 +1299,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Overlay click - close everything
   document.getElementById('overlay')?.addEventListener('click', () => {
     closeCart();
+    closeFavorites();
     closeQuickView();
     closeCheckoutModal();
     mobileNav?.classList.remove('open');

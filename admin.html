@@ -416,21 +416,51 @@
       <div class="admin-header-card">
         <div>
           <h2 style="font-size: 1.5rem; margin-bottom: 6px; color: var(--burgundy);">لوحة إدارة مخزون المتجر</h2>
-          <p style="color: var(--text-mid); font-size: 0.9rem;">أضف منتجات جديدة أو استورد ملف إكسيل لتظهر فوراً لجميع العملاء في المتجر.</p>
+          <p style="color: var(--text-mid); font-size: 0.9rem;">أضف منتجات جديدة أو استورد ملف CSV لتظهر فوراً لجميع العملاء في المتجر.</p>
         </div>
 
         <div class="flex gap-10 flex-wrap">
           <button class="btn btn-primary" onclick="openAddModal()">➕ إضافة منتج جديد</button>
-          <button class="btn btn-gold" onclick="document.getElementById('excelFileInput').click()">📊 استيراد إكسيل المحل</button>
-          <button class="btn btn-outline" onclick="exportProductsToCSV()">💾 تصدير CSV</button>
-          <input type="file" id="excelFileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="handleExcelImport(event)">
+          <button class="btn btn-gold" onclick="document.getElementById('csvImportInput').click()">📥 استيراد CSV</button>
+          <button class="btn btn-outline" onclick="exportProductsToCSV()">📤 تصدير CSV</button>
+          <button class="btn btn-outline" onclick="downloadCSVTemplate()">📋 تحميل قالب CSV</button>
+          <input type="file" id="csvImportInput" accept=".csv" style="display: none;" onchange="handleCSVImport(event)">
+        </div>
+      </div>
+
+      <!-- Filters Card -->
+      <div class="admin-header-card" style="padding: 16px 24px;">
+        <div style="flex: 1; min-width: 280px;">
+          <input 
+            type="text" 
+            id="adminSearchInput" 
+            placeholder="بحث عن منتج..." 
+            style="width: 100%; padding: 10px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);"
+            oninput="loadProducts()"
+          />
+        </div>
+        <div>
+          <select id="adminCategoryFilter" style="padding: 10px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border); font-family: inherit; background: var(--bg-surface); color: var(--text-dark);" onchange="loadProducts()">
+            <option value="">كل الأقسام</option>
+            <option value="skin">البشرة</option>
+            <option value="hair">الشعر</option>
+            <option value="body">الجسم</option>
+            <option value="deodorant">مزيل العرق</option>
+            <option value="makeup">المكياج</option>
+            <option value="tools">الأدوات</option>
+            <option value="perfumes">العطور</option>
+            <option value="gifts">الهدايا</option>
+            <option value="accessories">إكسسوارات</option>
+            <option value="devices">أجهزة</option>
+          </select>
         </div>
       </div>
 
       <!-- Products Table -->
       <div class="table-card">
-        <div style="padding: 20px 24px; border-bottom: 1px solid var(--border);">
+        <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
           <h3 style="color: var(--burgundy); font-size: 1.15rem;">قائمة المنتجات المتاحة بالمتجر (<span id="statTotalCount">0</span>)</h3>
+          <button id="loadMoreBtn" class="btn btn-outline" onclick="loadMoreProducts()" style="display: none;">تحميل المزيد</button>
         </div>
         <div style="overflow-x: auto;">
           <table>
@@ -438,8 +468,9 @@
               <tr>
                 <th>المنتج</th>
                 <th>القسم</th>
-                <th>السعر للعميل</th>
-                <th>نوع البشرة / الاستخدام</th>
+                <th>القسم الفرعي</th>
+                <th>السعر</th>
+                <th>المخزون</th>
                 <th>إجراءات</th>
               </tr>
             </thead>
@@ -576,21 +607,62 @@
         <div class="grid-2">
           <div class="input-group">
             <label>القسم *</label>
-            <select class="form-select" id="pCategory" required>
-              <option value="skin">العناية بالبشرة</option>
-              <option value="hair">العناية بالشعر</option>
-              <option value="body">العناية بالجسم</option>
-              <option value="perfumes">العطور والبرفانات</option>
-              <option value="gifts">الهدايا والباكدجات</option>
-              <option value="accessories">الإكسسوارات والمجوهرات</option>
-              <option value="devices">أجهزة التجميل والشعر</option>
+            <select class="form-select" id="pCategory" required onchange="updateSubCategoryDropdown()">
+              <option value="skin">البشرة</option>
+              <option value="hair">الشعر</option>
+              <option value="body">الجسم</option>
+              <option value="deodorant">مزيل العرق</option>
+              <option value="makeup">المكياج</option>
+              <option value="tools">الأدوات</option>
+              <option value="perfumes">العطور</option>
+              <option value="gifts">الهدايا</option>
+              <option value="accessories">إكسسوارات</option>
+              <option value="devices">أجهزة</option>
             </select>
           </div>
 
           <div class="input-group">
+            <label>القسم الفرعي</label>
+            <select class="form-select" id="pSubCategory">
+              <option value="">لا يوجد</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
             <label>سعر البيع (ج.م) *</label>
             <input type="number" class="form-input" id="pPrice" required placeholder="مثال: 250">
           </div>
+
+          <div class="input-group">
+            <label>الكمية في المخزون *</label>
+            <input type="number" class="form-input" id="pStock" required placeholder="مثال: 100" value="100">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>رابط الصورة (URL)</label>
+          <input type="text" class="form-input" id="pImageUrl" placeholder="https://example.com/image.jpg">
+        </div>
+
+        <div class="input-group">
+          <label>أو ارفع صورة من جهازك</label>
+          <input type="file" class="form-input" id="pImageFile" accept="image/*" onchange="uploadProductImage(event)">
+          <div id="imagePreview" style="display: none; margin-top: 10px;">
+            <img id="previewImg" src="" alt="معاينة" style="max-width: 200px; border-radius: 8px; border: 1px solid var(--border);">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>شارة (Badge - اختياري)</label>
+          <select class="form-select" id="pBadge">
+            <option value="">بدون شارة</option>
+            <option value="new">جديد</option>
+            <option value="sale">تخفيض</option>
+            <option value="bestseller">الأكثر مبيعاً</option>
+            <option value="featured">مميز</option>
+          </select>
         </div>
 
         <div class="input-group">
@@ -636,7 +708,9 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/subcategories.js"></script>
   <script>
     // ══════════════════════════════════════════════════
     // AUTHENTICATION & ACCESS CONTROL
@@ -647,6 +721,48 @@
         localStorage.removeItem('lamsa_token');
         window.location.href = 'auth.html';
       }
+    }
+
+    // ══════════════════════════════════════════════════
+    // TOAST NOTIFICATION
+    // ══════════════════════════════════════════════════
+    function showToast(msg, duration = 3000) {
+      let toast = document.getElementById('adminToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'adminToast';
+        toast.style.cssText = `
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          background: var(--burgundy);
+          color: white;
+          padding: 16px 24px;
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow);
+          font-weight: 600;
+          font-size: 0.95rem;
+          z-index: 10000;
+          opacity: 0;
+          transform: translateY(20px);
+          transition: all 0.3s ease;
+        `;
+        document.body.appendChild(toast);
+      }
+      
+      toast.textContent = msg;
+      
+      // Show toast
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      });
+      
+      // Hide after duration
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+      }, duration);
     }
 
     // ══════════════════════════════════════════════════
@@ -816,7 +932,7 @@
 
     function updateDashboard() {
       const orders = getOrders();
-      const products = JSON.parse(localStorage.getItem('lamsa_custom_products')) || window.LAMSA?.PRODUCTS || [];
+      const products = currentProducts; // Use products from API
       const totalSales = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
       
       const todayStr = new Date().toDateString();
@@ -889,115 +1005,378 @@
     }
 
     // ══════════════════════════════════════════════════
-    // PRODUCTS MANAGEMENT
+    // PRODUCTS MANAGEMENT (Connected to Real API)
     // ══════════════════════════════════════════════════
-    let localProducts = JSON.parse(localStorage.getItem('lamsa_custom_products')) || (window.LAMSA?.PRODUCTS || []);
+    let currentProducts = [];
+    let editingProductId = null;
+    let currentPage = 1;
+    let totalProducts = 0;
+    let hasMore = false;
+
+    // Update subcategory dropdown based on selected category
+    function updateSubCategoryDropdown() {
+      const category = document.getElementById('pCategory').value;
+      const subCatSelect = document.getElementById('pSubCategory');
+      
+      subCatSelect.innerHTML = '<option value="">لا يوجد</option>';
+      
+      if (category && window.LAMSA_SUBCATEGORIES && window.LAMSA_SUBCATEGORIES[category]) {
+        window.LAMSA_SUBCATEGORIES[category].forEach(sub => {
+          const option = document.createElement('option');
+          option.value = sub.id;
+          option.textContent = sub.name;
+          subCatSelect.appendChild(option);
+        });
+      }
+    }
+
+    // Load products from API with pagination and filters
+    async function loadProducts(append = false) {
+      try {
+        if (!append) {
+          currentPage = 1;
+        }
+        
+        const search = document.getElementById('adminSearchInput')?.value.trim() || '';
+        const category = document.getElementById('adminCategoryFilter')?.value || '';
+        
+        const response = await LAMSA_API.adminGetProducts({
+          page: currentPage,
+          limit: 50,
+          search: search || undefined,
+          category: category || undefined
+        });
+        
+        if (response.ok && response.data.success) {
+          if (append) {
+            currentProducts = [...currentProducts, ...response.data.data];
+          } else {
+            currentProducts = response.data.data;
+          }
+          
+          totalProducts = response.data.pagination?.total || 0;
+          hasMore = currentProducts.length < totalProducts;
+          
+          renderAdminTable();
+          updateDashboard();
+          
+          // Show/hide load more button
+          const loadMoreBtn = document.getElementById('loadMoreBtn');
+          if (loadMoreBtn) {
+            loadMoreBtn.style.display = hasMore ? 'inline-block' : 'none';
+          }
+        } else {
+          showToast('⚠️ فشل تحميل المنتجات: ' + (response.data.message || 'خطأ غير معروف'));
+          console.error('[Admin] Load products failed:', response);
+        }
+      } catch (error) {
+        showToast('⚠️ خطأ في الاتصال بالسيرفر');
+        console.error('[Admin] Load products error:', error);
+      }
+    }
+
+    function loadMoreProducts() {
+      currentPage++;
+      loadProducts(true);
+    }
 
     function renderAdminTable() {
-      localProducts = JSON.parse(localStorage.getItem('lamsa_custom_products')) || (window.LAMSA?.PRODUCTS || []);
       const tbody = document.getElementById('adminProductsTable');
-      document.getElementById('statTotalCount').textContent = localProducts.length;
+      document.getElementById('statTotalCount').textContent = totalProducts;
 
-      if (!localProducts.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">لا توجد منتجات مسجلة</td></tr>';
+      if (!currentProducts.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-mid);">لا توجد منتجات. اضغط "➕ إضافة منتج جديد" لإضافة أول منتج.</td></tr>';
         return;
       }
 
-      tbody.innerHTML = localProducts.map((p, idx) => `
+      // Get Arabic labels for subcategories
+      tbody.innerHTML = currentProducts.map((p) => {
+        let subCatLabel = p.subCategory || '—';
+        if (p.subCategory && p.category && window.getSubCategoryName) {
+          const arabicName = window.getSubCategoryName(p.subCategory, p.category);
+          if (arabicName) {
+            subCatLabel = arabicName;
+          }
+        }
+        
+        return `
         <tr>
           <td>
             <div style="display:flex; align-items:center; gap:12px;">
-              <span style="font-size:1.8rem;">${p.emoji || '🧴'}</span>
+              ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:50px; height:50px; object-fit:cover; border-radius:8px;">` : `<span style="font-size:1.8rem;">${p.emoji || '🧴'}</span>`}
               <div>
-                <strong style="color:var(--text-dark);">${p.name}</strong>
+                <strong style="color:var(--text-dark);">${p.nameAr}</strong>
                 ${p.nameEn ? `<div style="font-size:0.8rem; color:var(--text-light);">${p.nameEn}</div>` : ''}
               </div>
             </div>
           </td>
           <td><span class="badge badge-popular">${p.category}</span></td>
+          <td>${subCatLabel}</td>
           <td><strong style="color:var(--gold); font-size:1.05rem;">${p.price} ج.م</strong></td>
-          <td><span style="font-size:0.88rem;">${p.skinType ? (Array.isArray(p.skinType) ? p.skinType.join(', ') : p.skinType) : 'عام'}</span></td>
+          <td><span style="font-size:0.88rem;">${p.stockQty || 0}</span></td>
           <td>
-            <button class="action-btn-sm btn-delete" onclick="deleteProduct(${idx})">🗑️ حذف</button>
+            <button class="action-btn-sm" style="background:#3498db; margin-left:8px;" onclick="openEditModal('${p.id}')">✏️ تعديل</button>
+            <button class="action-btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ حذف</button>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
-    function openAddModal() { document.getElementById('addModal').classList.add('active'); }
-    function closeAddModal() { document.getElementById('addModal').classList.remove('active'); document.getElementById('productForm').reset(); }
+    function openAddModal() {
+      editingProductId = null;
+      document.getElementById('modalTitle').textContent = '➕ إضافة منتج جديد';
+      document.getElementById('productForm').reset();
+      updateSubCategoryDropdown();
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('addModal').classList.add('active');
+    }
 
-    function saveProduct(e) {
+    function openEditModal(productId) {
+      editingProductId = productId;
+      const product = currentProducts.find(p => p.id === productId);
+      
+      if (!product) {
+        showToast('⚠️ المنتج غير موجود');
+        return;
+      }
+
+      document.getElementById('modalTitle').textContent = '✏️ تعديل منتج';
+      document.getElementById('pName').value = product.nameAr;
+      document.getElementById('pNameEn').value = product.nameEn || '';
+      document.getElementById('pCategory').value = product.category;
+      updateSubCategoryDropdown();
+      document.getElementById('pSubCategory').value = product.subCategory || '';
+      document.getElementById('pPrice').value = product.price;
+      document.getElementById('pStock').value = product.stockQty || 0;
+      document.getElementById('pEmoji').value = product.emoji || '';
+      document.getElementById('pBadge').value = product.badge || '';
+      document.getElementById('pImageUrl').value = product.imageUrl || '';
+
+      // Show image preview if exists
+      if (product.imageUrl) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = `<img src="${product.imageUrl}" style="max-width:200px; border-radius:8px;">`;
+        preview.style.display = 'block';
+      }
+
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      editingProductId = null;
+      document.getElementById('addModal').classList.remove('active');
+      document.getElementById('productForm').reset();
+      document.getElementById('imagePreview').style.display = 'none';
+    }
+
+    async function saveProduct(e) {
       e.preventDefault();
-      const newP = {
-        id: 'cust_' + Date.now(),
-        name: document.getElementById('pName').value.trim(),
+      
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ جاري الحفظ...';
+
+      // Validate Image URL
+      const imageUrlInput = document.getElementById('pImageUrl').value.trim();
+      if (imageUrlInput && !imageUrlInput.match(/^https?:\/\/.+/i)) {
+        showToast('⚠️ رابط الصورة يجب أن يبدأ بـ http:// أو https://');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        return;
+      }
+
+      const productData = {
+        nameAr: document.getElementById('pName').value.trim(),
         nameEn: document.getElementById('pNameEn').value.trim() || document.getElementById('pName').value.trim(),
         category: document.getElementById('pCategory').value,
+        subCategory: document.getElementById('pSubCategory').value || null,
         price: parseFloat(document.getElementById('pPrice').value),
-        emoji: document.getElementById('pEmoji').value.trim() || '🧴',
-        skinType: ['all'],
-        budget: ['mid']
+        stockQty: parseInt(document.getElementById('pStock').value, 10),
+        emoji: document.getElementById('pEmoji').value.trim() || null,
+        badge: document.getElementById('pBadge').value || null,
+        imageUrl: imageUrlInput || null,
       };
-      localProducts.unshift(newP);
-      localStorage.setItem('lamsa_custom_products', JSON.stringify(localProducts));
-      closeAddModal();
-      renderAdminTable();
-      alert('✅ تم إضافة المنتج بنجاح وأصبح متاحاً بالمتجر!');
-    }
 
-    function deleteProduct(idx) {
-      if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-        localProducts.splice(idx, 1);
-        localStorage.setItem('lamsa_custom_products', JSON.stringify(localProducts));
-        renderAdminTable();
+      try {
+        let response;
+        
+        if (editingProductId) {
+          // Update existing product
+          response = await LAMSA_API.adminUpdateProduct(editingProductId, productData);
+        } else {
+          // Create new product
+          response = await LAMSA_API.adminCreateProduct(productData);
+        }
+
+        if (response.ok && response.data.success) {
+          showToast('✅ ' + response.data.message);
+          closeAddModal();
+          await loadProducts(); // Reload from server
+        } else {
+          showToast('⚠️ ' + (response.data.message || 'فشل حفظ المنتج'));
+          console.error('[Admin] Save product failed:', response);
+        }
+      } catch (error) {
+        showToast('⚠️ خطأ في الاتصال بالسيرفر');
+        console.error('[Admin] Save product error:', error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     }
 
-    function exportProductsToCSV() {
-      let csv = 'الاسم عربي,الاسم EN,القسم,السعر,Emoji\n';
-      localProducts.forEach(p => {
-        csv += `${p.name},${p.nameEn || ''},${p.category},${p.price},${p.emoji || '🧴'}\n`;
-      });
-      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'lamsa_products_' + new Date().toISOString().split('T')[0] + '.csv';
-      link.click();
+    async function deleteProduct(productId) {
+      if (!confirm('هل أنت متأكد من حذف هذا المنتج؟ لن يمكن التراجع عن هذا الإجراء.')) {
+        return;
+      }
+
+      try {
+        const response = await LAMSA_API.adminDeleteProduct(productId);
+        
+        if (response.ok && response.data.success) {
+          showToast('✅ ' + response.data.message);
+          await loadProducts(); // Reload from server
+        } else {
+          showToast('⚠️ ' + (response.data.message || 'فشل حذف المنتج'));
+          console.error('[Admin] Delete product failed:', response);
+        }
+      } catch (error) {
+        showToast('⚠️ خطأ في الاتصال بالسيرفر');
+        console.error('[Admin] Delete product error:', error);
+      }
     }
 
-    function handleExcelImport(event) {
+    // Upload image to Cloudinary
+    async function uploadProductImage(event) {
       const file = event.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const lines = e.target.result.split('\n').filter(l => l.trim());
-          let count = 0;
-          for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(',').map(c => c.trim());
-            if (cols.length >= 3) {
-              localProducts.push({
-                id: 'imp_' + Date.now() + '_' + i,
-                name: cols[0],
-                nameEn: cols[1] || cols[0],
-                category: cols[2] || 'skin',
-                price: parseFloat(cols[3]) || 150,
-                emoji: cols[4] || '🧴'
-              });
-              count++;
-            }
-          }
-          if (count > 0) {
-            localStorage.setItem('lamsa_custom_products', JSON.stringify(localProducts));
-            renderAdminTable();
-            alert(`✅ تم استيراد ${count} منتج بنجاح!`);
-          }
-        } catch (err) {
-          alert('حدث خطأ أثناء قراءة الملف.');
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showToast('⚠️ الرجاء اختيار صورة فقط (JPG, PNG, WebP)');
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('⚠️ حجم الصورة كبير جداً. الحد الأقصى 5MB');
+        return;
+      }
+
+      const uploadBtn = event.target.previousElementSibling;
+      const originalText = uploadBtn.textContent;
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = '⏳ جاري الرفع...';
+
+      try {
+        const response = await LAMSA_API.adminUploadImage(file);
+        
+        if (response.ok && response.data.success) {
+          const imageUrl = response.data.data.url;
+          document.getElementById('pImageUrl').value = imageUrl;
+          
+          // Show preview
+          const preview = document.getElementById('imagePreview');
+          preview.innerHTML = `<img src="${imageUrl}" style="max-width:200px; border-radius:8px;">`;
+          preview.style.display = 'block';
+          
+          showToast('✅ تم رفع الصورة بنجاح');
+        } else {
+          showToast('⚠️ ' + (response.data.message || 'فشل رفع الصورة'));
+          console.error('[Admin] Upload image failed:', response);
         }
-      };
-      reader.readAsText(file);
+      } catch (error) {
+        showToast('⚠️ خطأ في رفع الصورة');
+        console.error('[Admin] Upload image error:', error);
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = originalText;
+        event.target.value = ''; // Reset file input
+      }
+    }
+
+    // Export products to CSV
+    async function exportProductsToCSV() {
+      try {
+        showToast('⏳ جاري تصدير المنتجات...');
+        const response = await LAMSA_API.adminExportCSV();
+        
+        if (response.ok) {
+          showToast('✅ تم تصدير المنتجات بنجاح');
+        } else {
+          showToast('⚠️ فشل تصدير المنتجات');
+          console.error('[Admin] Export CSV failed:', response);
+        }
+      } catch (error) {
+        showToast('⚠️ خطأ في تصدير المنتجات');
+        console.error('[Admin] Export CSV error:', error);
+      }
+    }
+
+    // Download CSV template
+    async function downloadCSVTemplate() {
+      try {
+        showToast('⏳ جاري تنزيل القالب...');
+        const response = await LAMSA_API.adminDownloadCSVTemplate();
+        
+        if (response.ok) {
+          showToast('✅ تم تنزيل القالب بنجاح');
+        } else {
+          showToast('⚠️ فشل تنزيل القالب');
+        }
+      } catch (error) {
+        showToast('⚠️ خطأ في تنزيل القالب');
+        console.error('[Admin] Download template error:', error);
+      }
+    }
+
+    // Import products from CSV
+    async function handleCSVImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.csv')) {
+        showToast('⚠️ الرجاء اختيار ملف CSV فقط');
+        return;
+      }
+
+      showToast('⏳ جاري الاستيراد...');
+
+      try {
+        const response = await LAMSA_API.adminImportCSV(file);
+        
+        if (response.ok && response.data.success) {
+          const data = response.data.data;
+          
+          // Build detailed message
+          let message = response.data.message;
+          
+          // Show errors if any
+          if (data.errors && data.errors.length > 0) {
+            console.group('❌ أخطاء الاستيراد');
+            data.errors.forEach(err => {
+              console.error(`الصف ${err.row}: ${err.error}`);
+            });
+            console.groupEnd();
+            
+            message += `\n\n⚠️ تحقق من Console (F12) لمشاهدة تفاصيل الأخطاء`;
+          }
+          
+          showToast(message, 5000);
+          await loadProducts(); // Reload from server
+        } else {
+          showToast('⚠️ ' + (response.data.message || 'فشل استيراد الملف'));
+          console.error('[Admin] Import CSV failed:', response);
+        }
+      } catch (error) {
+        showToast('⚠️ خطأ في استيراد الملف');
+        console.error('[Admin] Import CSV error:', error);
+      } finally {
+        // Reset file input
+        event.target.value = '';
+      }
     }
 
     // ══════════════════════════════════════════════════
@@ -1113,6 +1492,7 @@
     // INITIALIZATION
     // ══════════════════════════════════════════════════
     function initAdminDashboard() {
+      loadProducts(); // Load products from server API
       renderAllOrders();
       updateDashboard();
     }

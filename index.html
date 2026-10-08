@@ -45,6 +45,18 @@
     </div>
   </div>
 
+  <!-- Favorites Sidebar -->
+  <div class="cart-sidebar" id="favoritesSidebar">
+    <div class="cart-header">
+      <h3>المفضلة ❤️</h3>
+      <button class="cart-close" id="favoritesClose">✕</button>
+    </div>
+    <div class="cart-body" id="favoritesBody"></div>
+    <div class="cart-footer" style="padding: 16px; text-align: center; color: var(--text-mid); font-size: 0.9rem;">
+      💡 اضغط على المنتج لمشاهدة التفاصيل
+    </div>
+  </div>
+
   <!-- Mobile Nav -->
   <div class="mobile-nav" id="mobileNav">
     <a href="index.html" class="active" data-key="nav_sets">الرئيسية</a>
@@ -64,7 +76,7 @@
       </button>
 
       <a href="index.html" class="nav-logo">
-        <img src="assets/logo.png" alt="LAMSA - لمسة" loading="lazy" decoding="async" style="width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <img src="assets/logo.png" alt="LAMSA - لمسة" loading="lazy" decoding="async" style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
         <span class="nav-logo-text">LAMSA</span>
       </a>
 
@@ -79,10 +91,16 @@
       </nav>
 
       <div class="nav-actions">
+        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
         <div class="lang-toggle">
           <button class="lang-btn active" data-lang="ar">عربي</button>
           <button class="lang-btn" data-lang="en">EN</button>
         </div>
+        <a href="admin.html" class="admin-crown-btn" id="adminCrownBtn" data-tooltip="لوحة الإدارة" style="display: none;">👑</a>
+        <button class="nav-icon-btn" id="favoritesToggle" aria-label="المفضلة">
+          🤍
+          <span class="cart-count" id="favoritesCount">0</span>
+        </button>
         <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
           🛍️
           <span class="cart-count">0</span>
@@ -331,14 +349,24 @@
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/subcategories.js"></script>
   <script src="js/main.js"></script>
   <script>
     function addToCartById(id) {
-      if (window.LAMSA && window.LAMSA.PRODUCTS) {
-        const product = window.LAMSA.PRODUCTS.find(p => p.id === id);
-        if (product && typeof addToCart === 'function') {
-          addToCart(product);
-        }
+      // Try to find in current products (API-loaded) first, then fall back to static data
+      let product = null;
+      
+      if (window.currentProducts && window.currentProducts.length) {
+        product = window.currentProducts.find(p => String(p.id) === String(id));
+      }
+      
+      // Fallback to static data.js
+      if (!product && window.LAMSA && window.LAMSA.PRODUCTS) {
+        product = window.LAMSA.PRODUCTS.find(p => String(p.id) === String(id));
+      }
+      
+      if (product && typeof addToCart === 'function') {
+        addToCart(product);
       }
     }
 
@@ -348,15 +376,18 @@
         
         if (response.ok && response.data) {
           const picks = response.data.data || [];
+          window.currentProducts = picks; // Make available globally for modals
           const grid = document.getElementById('picksGrid');
           
           if (grid && picks.length) {
-            grid.innerHTML = picks.map(p => `
+            grid.innerHTML = picks.map(p => {
+              const isInFavorites = typeof isFavorite === 'function' ? isFavorite(p.id) : false;
+              return `
               <div class="product-card" onclick="openQuickView('${p.id}')">
                 <div class="product-img-wrap">
                   ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;">` : (p.emoji ? `<span style="font-size: 3rem;">${p.emoji}</span>` : '')}
                   ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'الأكثر طلباً'}</span>` : ''}
-                  <button class="product-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active')" aria-label="المفضلة">🤍</button>
+                  <button class="product-wishlist ${isInFavorites ? 'active' : ''}" onclick="toggleFavorite('${p.id}', event)" aria-label="المفضلة">🤍</button>
                 </div>
                 <div class="product-info">
                   <div>
@@ -369,7 +400,8 @@
                   </div>
                 </div>
               </div>
-            `).join('');
+              `;
+            }).join('');
           }
         } else {
           // Fallback to data.js
@@ -384,14 +416,17 @@
 
     function loadFeaturedFallback() {
       const picks = window.LAMSA.PRODUCTS.filter(p => p.badge === 'popular' || p.badge === 'new').slice(0, 3);
+      window.currentProducts = picks; // Make available globally
       const grid = document.getElementById('picksGrid');
       if (grid && picks.length) {
-        grid.innerHTML = picks.map(p => `
+        grid.innerHTML = picks.map(p => {
+          const isInFavorites = typeof isFavorite === 'function' ? isFavorite(p.id) : false;
+          return `
           <div class="product-card" onclick="openQuickView('${p.id}')">
             <div class="product-img-wrap">
               ${p.emoji}
               ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'الأكثر طلباً'}</span>` : ''}
-              <button class="product-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active')" aria-label="المفضلة">🤍</button>
+              <button class="product-wishlist ${isInFavorites ? 'active' : ''}" onclick="toggleFavorite('${p.id}', event)" aria-label="المفضلة">🤍</button>
             </div>
             <div class="product-info">
               <div>
@@ -404,13 +439,31 @@
               </div>
             </div>
           </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       loadFeaturedProducts();
     });
+  </script>
+  
+  <script>
+    // Show admin crown icon only for admins
+    (function() {
+      try {
+        const user = JSON.parse(localStorage.getItem('lamsa_user') || '{}');
+        if (user.role === 'admin') {
+          const crownBtn = document.getElementById('adminCrownBtn');
+          if (crownBtn) {
+            crownBtn.style.display = 'flex';
+          }
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+    })();
   </script>
 
   <a href="https://wa.me/201080239612" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="واتساب">

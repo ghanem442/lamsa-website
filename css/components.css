@@ -22,25 +22,42 @@
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
+.navbar .container {
+  max-width: 1600px;
+  padding: 0 16px;
+}
+
 .nav-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 76px;
-  gap: 24px;
+  height: 70px;
+  gap: 8px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.nav-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-inner {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 /* Logo */
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   flex-shrink: 0;
 }
 
 .nav-logo-text {
-  font-size: 1.65rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--burgundy);
   letter-spacing: 0.04em;
@@ -55,15 +72,16 @@
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0px;
   flex: 1;
   justify-content: center;
+  max-width: 650px;
 }
 
 .nav-links a {
-  padding: 8px 16px;
-  border-radius: var(--radius-xl);
-  font-size: 0.92rem;
+  padding: 5px 7px;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
   font-weight: 500;
   color: var(--text-mid);
   transition: var(--transition-fast);
@@ -87,13 +105,13 @@
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .nav-icon-btn {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--bg-subtle);
   border: 1px solid var(--border);
@@ -101,7 +119,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: var(--text-dark);
   transition: var(--transition-fast);
   position: relative;
@@ -118,6 +136,51 @@
   color: #3B070B;
 }
 
+/* Admin Crown Icon */
+.admin-crown-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--burgundy), var(--gold));
+  border: 2px solid var(--gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  color: var(--white);
+  transition: var(--transition-fast);
+  position: relative;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.admin-crown-btn:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.4);
+}
+
+.admin-crown-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -32px;
+  right: 50%;
+  transform: translateX(50%);
+  background: var(--burgundy);
+  color: var(--white);
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 1001;
+}
+
+.admin-crown-btn:hover::after {
+  opacity: 1;
+}
 
 
 .cart-count {
@@ -151,15 +214,15 @@
   align-items: center;
   background: var(--bg-subtle);
   border-radius: var(--radius-xl);
-  padding: 4px;
+  padding: 3px;
   gap: 2px;
   border: 1px solid var(--border-light);
 }
 
 .lang-btn {
-  padding: 5px 14px;
+  padding: 4px 10px;
   border-radius: var(--radius-xl);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
   border: none;
@@ -263,7 +326,7 @@
   color: #3B070B !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   .nav-links { display: none; }
   .menu-toggle { display: flex; }
   .mobile-nav { display: block; }
@@ -443,11 +506,25 @@
 .product-wishlist.active {
   color: var(--burgundy);
   transform: scale(1.12);
+  background: linear-gradient(135deg, rgba(128, 0, 32, 0.1), rgba(184, 134, 11, 0.1));
+  border-color: var(--burgundy);
+}
+
+.product-wishlist.active::before {
+  content: '❤️';
+  position: absolute;
+  font-size: 1rem;
+}
+
+.product-wishlist.active {
+  color: transparent;
 }
 
 [data-theme="dark"] .product-wishlist:hover,
 [data-theme="dark"] .product-wishlist.active {
   color: var(--gold);
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.15), rgba(255, 215, 0, 0.1));
+  border-color: var(--gold);
 }
 
 .product-info {

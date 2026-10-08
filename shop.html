@@ -113,6 +113,18 @@
     </div>
   </div>
 
+  <!-- Favorites Sidebar -->
+  <div class="cart-sidebar" id="favoritesSidebar">
+    <div class="cart-header">
+      <h3>المفضلة ❤️</h3>
+      <button class="cart-close" id="favoritesClose">✕</button>
+    </div>
+    <div class="cart-body" id="favoritesBody"></div>
+    <div class="cart-footer" style="padding: 16px; text-align: center; color: var(--text-mid); font-size: 0.9rem;">
+      💡 اضغط على المنتج لمشاهدة التفاصيل
+    </div>
+  </div>
+
   <!-- Mobile Nav -->
   <div class="mobile-nav" id="mobileNav">
     <a href="index.html" data-key="nav_sets">الرئيسية</a>
@@ -132,7 +144,7 @@
       </button>
 
       <a href="index.html" class="nav-logo">
-        <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+        <img src="assets/logo.png" alt="LAMSA" style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
         <span class="nav-logo-text">LAMSA</span>
       </a>
 
@@ -152,6 +164,11 @@
           <button class="lang-btn active" data-lang="ar">عربي</button>
           <button class="lang-btn" data-lang="en">EN</button>
         </div>
+        <a href="admin.html" class="admin-crown-btn" id="adminCrownBtn" data-tooltip="لوحة الإدارة" style="display: none;">👑</a>
+        <button class="nav-icon-btn" id="favoritesToggle" aria-label="المفضلة">
+          🤍
+          <span class="cart-count" id="favoritesCount">0</span>
+        </button>
         <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
           🛍️
           <span class="cart-count">0</span>
@@ -266,6 +283,7 @@
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/subcategories.js"></script>
   <script src="js/main.js"></script>
   <script>
     let activeCat = 'all';
@@ -274,51 +292,8 @@
     let searchQuery = '';
     let allProducts = []; // Cache for API products
 
-    // Sub-categories mapping
-    const SUB_CATEGORIES = {
-      hair: [
-        { id: 'shampoo', name: 'شامبو' },
-        { id: 'conditioner', name: 'بلسم' },
-        { id: 'hair-cream', name: 'كريم شعر' },
-        { id: 'hair-gel', name: 'جل' },
-        { id: 'hair-oil', name: 'زيت شعر' },
-        { id: 'oil-alternative', name: 'بديل زيت' },
-        { id: 'protein', name: 'بروتين' },
-        { id: 'hair-mask', name: 'ماسك شعر' }
-      ],
-      body: [
-        { id: 'shower-gel', name: 'شاور جل' },
-        { id: 'body-lotion', name: 'مرطب جسم' },
-        { id: 'body-scrub', name: 'مقشر جسم' },
-        { id: 'body-butter', name: 'زبدة الجسم' }
-      ],
-      deodorant: [
-        { id: 'body-splash', name: 'بودي سبلاش' },
-        { id: 'spray', name: 'سبراي' },
-        { id: 'roll-on', name: 'رول أون' },
-        { id: 'stick', name: 'استيك' }
-      ],
-      makeup: [
-        { id: 'foundation', name: 'فاونديشن' },
-        { id: 'lipstick', name: 'أحمر شفاه' },
-        { id: 'mascara', name: 'ماسكارا' },
-        { id: 'eyeshadow', name: 'ظلال عيون' },
-        { id: 'blush', name: 'بلاشر' },
-        { id: 'eyeliner', name: 'آيلاينر' }
-      ],
-      skin: [
-        { id: 'cleanser', name: 'غسول' },
-        { id: 'toner', name: 'تونر' },
-        { id: 'serum', name: 'سيروم' },
-        { id: 'moisturizer', name: 'مرطب' },
-        { id: 'sunscreen', name: 'واقي شمس' },
-        { id: 'face-mask', name: 'ماسك وجه' }
-      ],
-      perfumes: [
-        { id: 'ready-made', name: 'عطور جاهزة 🌹' },
-        { id: 'custom', name: 'تركيبة خاصة ✨' }
-      ]
-    };
+    // Use shared subcategories from subcategories.js
+    const SUB_CATEGORIES = window.LAMSA_SUBCATEGORIES;
 
     function filterCategory(cat) {
       activeCat = cat;
@@ -330,13 +305,22 @@
       // Show sub-categories if available
       const subCatContainer = document.getElementById('subCatPills');
       if (SUB_CATEGORIES[cat]) {
+        // Filter products by category to count available subcategories
+        const categoryProducts = allProducts.filter(p => p.category === cat);
+        
+        // Build pills HTML with "all" button
+        let pillsHTML = '<button class="cat-tab active" style="font-size: 0.85rem; padding: 6px 14px;" onclick="filterSubCategory(\'all\')">الكل</button>';
+        
+        // Only show pills that have products
+        SUB_CATEGORIES[cat].forEach(sub => {
+          const hasProducts = categoryProducts.some(p => p.subCategory === sub.id);
+          if (hasProducts) {
+            pillsHTML += `<button class="cat-tab" style="font-size: 0.85rem; padding: 6px 14px;" onclick="filterSubCategory('${sub.id}')">${sub.name}</button>`;
+          }
+        });
+        
         subCatContainer.style.display = 'flex';
-        subCatContainer.innerHTML = `
-          <button class="cat-tab active" style="font-size: 0.85rem; padding: 6px 14px;" onclick="filterSubCategory('all')">الكل</button>
-          ${SUB_CATEGORIES[cat].map(sub => `
-            <button class="cat-tab" style="font-size: 0.85rem; padding: 6px 14px;" onclick="filterSubCategory('${sub.id}')">${sub.name}</button>
-          `).join('')}
-        `;
+        subCatContainer.innerHTML = pillsHTML;
       } else {
         subCatContainer.style.display = 'none';
         subCatContainer.innerHTML = '';
@@ -354,14 +338,17 @@
       loadProducts(); // Reload from API
     }
 
+    // ══════════════════════════════════════════════════
+    // SHOP RENDERING
+    // ══════════════════════════════════════════════════
     function handleSearch() {
       searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-      renderShop();
+      renderShop().catch(err => console.error('[Shop] Render error:', err));
     }
 
     function handleSort() {
       currentSort = document.getElementById('sortSelect').value;
-      renderShop();
+      renderShop().catch(err => console.error('[Shop] Render error:', err));
     }
 
     async function renderShop() {
@@ -412,12 +399,13 @@
 
       let html = '';
       list.forEach((p, index) => {
+        const isInFavorites = isFavorite(p.id);
         html += `
           <div class="product-card" onclick="openQuickView('${p.id}')">
             <div class="product-img-wrap" style="display: flex; align-items: center; justify-content: center; min-height: 200px; overflow:hidden;">
               ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;">` : (p.emoji ? `<span style="font-size: 3rem;">${p.emoji}</span>` : '')}
               ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'مميز'}</span>` : ''}
-              <button class="product-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active')">🤍</button>
+              <button class="product-wishlist ${isInFavorites ? 'active' : ''}" onclick="toggleFavorite('${p.id}', event)">🤍</button>
             </div>
             <div class="product-info">
               <div class="product-category">${p.category}</div>
@@ -459,17 +447,20 @@
 
         if (response.ok && response.data) {
           allProducts = response.data.data || [];
+          window.currentProducts = allProducts; // Make available globally for modals/cart
           await renderShop();
         } else {
           // Fallback to data.js if API fails
           console.warn('[Shop] API failed, using fallback data');
           allProducts = window.LAMSA?.PRODUCTS || [];
+          window.currentProducts = allProducts;
           await renderShop();
         }
       } catch (error) {
         console.error('[Shop] Error loading products:', error);
         // Fallback to data.js
         allProducts = window.LAMSA?.PRODUCTS || [];
+        window.currentProducts = allProducts;
         await renderShop();
       }
     }
@@ -488,11 +479,30 @@
 
       document.getElementById('sortSelect')?.addEventListener('change', (e) => {
         currentSort = e.target.value;
-        renderShop(); // Sort locally
+        renderShop().catch(err => console.error('[Shop] Render error:', err)); // Sort locally
       });
 
-      document.addEventListener('langChanged', () => renderShop());
+      document.addEventListener('langChanged', () => {
+        renderShop().catch(err => console.error('[Shop] Render error:', err));
+      });
     });
+  </script>
+  
+  <script>
+    // Show admin crown icon only for admins
+    (function() {
+      try {
+        const user = JSON.parse(localStorage.getItem('lamsa_user') || '{}');
+        if (user.role === 'admin') {
+          const crownBtn = document.getElementById('adminCrownBtn');
+          if (crownBtn) {
+            crownBtn.style.display = 'flex';
+          }
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+    })();
   </script>
 
   <a href="https://wa.me/201080239612" target="_blank" class="whatsapp-float" aria-label="واتساب">
