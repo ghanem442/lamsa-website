@@ -959,6 +959,7 @@ function openCheckoutModal() {
           <div class="input-group">
             <label>رقم الهاتف الأساسي *</label>
             <input type="tel" class="form-input" id="coPhone" required placeholder="01xxxxxxxxx">
+            <small style="color:var(--text-light); font-size:0.85rem; display:block; margin-top:4px;">سنتواصل معك على هذا الرقم لتأكيد الطلب</small>
           </div>
           <div class="input-group">
             <label>رقم واتساب إضافي</label>
@@ -983,6 +984,11 @@ function openCheckoutModal() {
         <div class="input-group">
           <label>العنوان بالتفصيل (الشارع، العمارة، الشقة) *</label>
           <input type="text" class="form-input" id="coAddress" required placeholder="رقم العمارة واسم الشارع والشقة...">
+        </div>
+
+        <div class="input-group">
+          <label>ملاحظات إضافية (اختياري)</label>
+          <textarea class="form-textarea" id="coNotes" placeholder="مثال: التوصيل بعد الساعة 6 مساءً" rows="2"></textarea>
         </div>
 
         <label style="font-weight:700; margin-bottom:8px; display:block;">طريقة الدفع المفضلة:</label>
@@ -1018,7 +1024,7 @@ function openCheckoutModal() {
         </div>
 
         <button type="submit" class="btn btn-primary btn-full btn-lg" style="font-size:1.1rem;">
-          تأكيد الطلب وإرسال الفاتورة عبر واتساب 💬
+          تأكيد الطلب ✅
         </button>
       </form>
     </div>
@@ -1047,111 +1053,166 @@ function closeCheckoutModal() {
   document.getElementById('checkoutModal')?.classList.remove('active');
 }
 
-function submitOrder(e) {
+async function submitOrder(e) {
   e.preventDefault();
+  
   const name = document.getElementById('coName').value.trim();
   const phone = document.getElementById('coPhone').value.trim();
   const whatsapp = document.getElementById('coWhatsapp').value.trim();
   const city = document.getElementById('coCity').value;
   const area = document.getElementById('coArea').value.trim();
   const address = document.getElementById('coAddress').value.trim();
+  const notes = document.getElementById('coNotes')?.value.trim() || '';
 
-  const paymentMap = {
-    cod: '💵 كاش عند الاستلام',
-    instapay: '⚡ إنستاباي (InstaPay)',
-    voda: '📱 محفظة فودافون كاش'
-  };
-
-  const orderNum = 'LMS-' + Math.floor(100000 + Math.random() * 900000);
-  const subtotal = getCartTotal();
-  const shipping = getShippingFee(city);
-  const total = subtotal + shipping;
-
-  let msg = `🛍️ *طلب جديد من متجر لمسة (LAMSA)*\n`;
-  msg += `🔖 *رقم الطلب:* ${orderNum}\n`;
-  msg += `👤 *الاسم:* ${name}\n`;
-  msg += `📞 *الهاتف:* ${phone}\n`;
-  if (whatsapp && whatsapp !== phone) msg += `💬 *واتساب إضافي:* ${whatsapp}\n`;
-  msg += `📍 *العنوان:* ${city} - ${area} - ${address}\n`;
-  msg += `💳 *طريقة الدفع:* ${paymentMap[selectedPaymentMethod]}\n\n`;
-  msg += `📦 *المنتجات المطلوبة:*\n`;
-
-  cart.forEach(item => {
-    msg += `• ${item.name} × ${item.qty} = ${item.price * item.qty} ج.م\n`;
-  });
-
-  msg += `\n💰 *المجموع:* ${subtotal} ج.م`;
-  msg += `\n🚚 *الشحن (${city}):* ${formatShipping(shipping)}`;
-  msg += `\n✨ *الإجمالي المطلوب:* ${total} ج.م`;
-
-  // Save Order for Admin Dashboard
-  const orderRecord = {
-    id: orderNum,
-    date: new Date().toISOString(),
-    customer: name,
-    phone: phone,
-    whatsapp: whatsapp || phone,
-    city: city,
-    area: area,
-    address: address,
-    paymentMethod: paymentMap[selectedPaymentMethod],
-    items: cart.map(item => ({
-      name: item.name,
-      qty: item.qty,
-      price: item.price
-    })),
-    subtotal: subtotal,
-    shipping: shipping,
-    total: total,
-    status: 'جديد ⏳'
-  };
-
-  try {
-    const existingOrders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
-    existingOrders.push(orderRecord);
-    localStorage.setItem('adminOrders', JSON.stringify(existingOrders));
-  } catch (err) {
-    console.warn('Failed to save order to localStorage:', err);
+  // Disable submit button to prevent double-submission
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري إرسال الطلب...';
   }
 
-  // Clear Cart
-  cart = [];
-  saveCart();
-  triggerConfetti();
+  try {
+    // Prepare order data for API
+    const orderData = {
+      customerName: name,
+      customerPhone: phone,
+      governorate: city,
+      address: `${area} - ${address}`,
+      notes: notes + (whatsapp && whatsapp !== phone ? ` | واتساب: ${whatsapp}` : ''),
+      paymentMethod: selectedPaymentMethod, // cod, instapay, or voda
+      items: cart.map(item => ({
+        productId: item.id, // Can be UUID or old string id like sk1
+        quantity: item.qty
+      }))
+    };
 
-  closeCheckoutModal();
-  showOrderSuccessModal(orderNum, name, phone, total);
+    // Call API to create order
+    // After api.js fix, createOrder returns data directly on 2xx, throws on error
+    const data = await LAMSA_API.createOrder(orderData);
+    
+    // data.order contains { orderNumber, total, items, ... }
+    const order = data.order;
+    
+    // Clear cart ONLY after successful order creation
+    cart = [];
+    saveCart();
+    triggerConfetti();
+    closeCheckoutModal();
+    
+    // Show success modal with real order number from server
+    showOrderSuccessModal(order.orderNumber, name, phone, order.total);
+  } catch (error) {
+    console.error('Order submission error:', error);
+    
+    // Show clear Arabic error message in modal instead of alert
+    let errorMessage = 'عذراً، حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.';
+    
+    if (error.message) {
+      // Server returned a specific error (rate limit, out of stock, validation, etc.)
+      errorMessage = error.message;
+    } else if (!navigator.onLine) {
+      errorMessage = 'لا يوجد اتصال بالإنترنت. يرجى التحقق من الاتصال والمحاولة مرة أخرى.';
+    }
+    
+    // Show error in modal instead of alert
+    closeCheckoutModal(); // Close checkout modal first
+    showErrorModal(errorMessage);
+  } finally {
+    // Re-enable submit button
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'تأكيد الطلب ✅';
+    }
+  }
 }
 
 function showOrderSuccessModal(orderNum, name, phone, total) {
   const modal = document.createElement('div');
   modal.className = 'luxury-modal-backdrop active';
   modal.innerHTML = `
-    <div class="luxury-modal-box" style="max-width:520px; text-align:center;">
-      <span style="font-size:3.8rem; display:block; margin-bottom:12px;">✅</span>
-      <h2 style="color:var(--gold); margin-bottom:10px; font-size:1.6rem;">تم استلام طلبك بنجاح!</h2>
-      <p style="color:var(--text-mid); margin-bottom:16px;">رقم الطلب الخاص بك: <strong style="color:var(--gold); font-size:1.1rem;">#${orderNum}</strong></p>
+    <div class="luxury-modal-box" style="max-width:560px; text-align:center;">
+      <span style="font-size:4rem; display:block; margin-bottom:16px;">✅</span>
+      <h2 style="color:var(--gold); margin-bottom:12px; font-size:1.7rem;">تم استلام طلبك بنجاح!</h2>
       
-      <div style="background:var(--bg-subtle); padding:18px; border-radius:var(--radius-lg); margin-bottom:20px; border:1px solid var(--border); text-align:right;">
-        <p style="color:var(--text-dark); line-height:1.8; font-size:0.95rem; margin-bottom:8px;">
-          عزيزي/عزيزتي <strong>${escapeHtml(name)}</strong>، شكراً لثقتك في <strong>متجر لمسة (LAMSA)</strong> 🌹
+      <div style="background:var(--bg-subtle); padding:16px; border-radius:var(--radius-lg); margin-bottom:20px; border:2px solid var(--gold-border); display:flex; align-items:center; justify-content:center; gap:12px;">
+        <span style="color:var(--text-mid); font-size:0.9rem;">رقم الطلب:</span>
+        <strong style="color:var(--burgundy); font-size:1.3rem; font-family:monospace;">${orderNum}</strong>
+        <button onclick="copyOrderNumber('${orderNum}')" style="padding:6px 12px; border-radius:var(--radius-md); border:1px solid var(--border); background:white; color:var(--burgundy); cursor:pointer; font-weight:600; font-size:0.85rem;" title="نسخ رقم الطلب">
+          📋 نسخ
+        </button>
+      </div>
+      
+      <div style="background:var(--bg-surface); padding:20px; border-radius:var(--radius-lg); margin-bottom:20px; border:1px solid var(--border); text-align:right;">
+        <p style="color:var(--burgundy); font-weight:700; font-size:1.05rem; margin-bottom:14px; text-align:center;">
+          📞 سيتواصل معك فريق لمسة على رقم الموبايل لتأكيد الطلب
         </p>
-        <p style="color:var(--text-mid); line-height:1.7; font-size:0.9rem;">
-          📞 <strong>الخطوة التالية:</strong> سيقوم أحد ممثلي خدمة العملاء بالاتصال بك هاتفياً على رقمك (<strong>${escapeHtml(phone)}</strong>) لتأكيد بيانات الشحن وتجهيز الأوردر فوراً.
-        </p>
-        <div class="divider" style="margin:12px 0;"></div>
-        <div class="flex-between" style="font-weight:700; color:var(--burgundy); font-size:1.05rem;">
-          <span>المبلغ الإجمالي عند الاستلام:</span>
+        <div class="divider" style="margin:14px 0;"></div>
+        <div style="margin-bottom:10px;">
+          <span style="color:var(--text-mid); font-size:0.9rem;">👤 الاسم:</span>
+          <strong style="color:var(--text-dark); margin-inline-start:8px;">${escapeHtml(name)}</strong>
+        </div>
+        <div style="margin-bottom:14px;">
+          <span style="color:var(--text-mid); font-size:0.9rem;">📱 الهاتف:</span>
+          <strong style="color:var(--text-dark); margin-inline-start:8px;">${escapeHtml(phone)}</strong>
+        </div>
+        <div class="divider" style="margin:14px 0;"></div>
+        <div class="flex-between" style="font-weight:700; color:var(--burgundy); font-size:1.1rem;">
+          <span>المبلغ الإجمالي:</span>
           <span>${total} ج.م</span>
         </div>
       </div>
 
       <button class="btn btn-primary btn-lg btn-full" onclick="closeSuccessModal(this.parentElement.parentElement)">
-        متابعة التسوق في لمسة 🛍️
+        متابعة التسوق 🛍️
       </button>
     </div>
   `;
   document.body.appendChild(modal);
+}
+
+function copyOrderNumber(orderNum) {
+  navigator.clipboard.writeText(orderNum).then(() => {
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '✓ تم النسخ';
+    btn.style.background = 'var(--gold)';
+    btn.style.color = 'white';
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.background = 'white';
+      btn.style.color = 'var(--burgundy)';
+    }, 2000);
+  }).catch(err => {
+    alert('رقم الطلب: ' + orderNum);
+  });
+}
+
+function showErrorModal(errorMessage) {
+  const modal = document.createElement('div');
+  modal.className = 'luxury-modal-backdrop active';
+  modal.innerHTML = `
+    <div class="luxury-modal-box" style="max-width:520px; text-align:center;">
+      <span style="font-size:4rem; display:block; margin-bottom:16px;">⚠️</span>
+      <h2 style="color:#D32F2F; margin-bottom:16px; font-size:1.6rem;">فشل إنشاء الطلب</h2>
+      
+      <div style="background:var(--bg-subtle); padding:20px; border-radius:var(--radius-lg); margin-bottom:24px; border:2px solid #FFCDD2; text-align:right;">
+        <p style="color:var(--text-dark); line-height:1.8; font-size:1rem;">
+          ${escapeHtml(errorMessage)}
+        </p>
+      </div>
+
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button class="btn btn-primary btn-lg" onclick="closeErrorModal(this.parentElement.parentElement.parentElement)">
+          حاول مرة أخرى 🔄
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function closeErrorModal(modal) {
+  modal.remove();
 }
 
 function closeSuccessModal(modal) {

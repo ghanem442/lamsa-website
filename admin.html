@@ -5,50 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة التحكم | إدارة متجر لمسة (LAMSA)</title>
 
-  <!-- Auth Guard: Check if admin is logged in -->
-  <script>
-    (async function() {
-      const token = localStorage.getItem('lamsa_token');
-      const user = JSON.parse(localStorage.getItem('lamsa_user') || '{}');
-      
-      // If no token or not admin role, redirect to login
-      if (!token || user.role !== 'admin') {
-        alert('⚠️ يجب تسجيل الدخول كمدير للوصول إلى لوحة التحكم');
-        window.location.href = 'auth.html';
-        return;
-      }
-      
-      // Verify token with backend
-      try {
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error('Invalid token');
-        }
-        
-        const data = await response.json();
-        
-        // Verify admin role from backend
-        if (data.data.role !== 'admin') {
-          alert('⚠️ ليس لديك صلاحية الوصول إلى لوحة التحكم');
-          localStorage.removeItem('lamsa_token');
-          localStorage.removeItem('lamsa_user');
-          window.location.href = 'auth.html';
-        }
-      } catch (error) {
-        console.error('[Admin] Auth check failed:', error);
-        alert('⚠️ انتهت صلاحية الجلسة. الرجاء تسجيل الدخول مرة أخرى');
-        localStorage.removeItem('lamsa_token');
-        localStorage.removeItem('lamsa_user');
-        window.location.href = 'auth.html';
-      }
-    })();
-  </script>
-
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -312,9 +268,8 @@
             <h2 style="color: var(--burgundy); font-size: 1.4rem; margin-bottom: 4px;">🛒 جميع طلبات العملاء</h2>
             <p style="color: var(--text-light); font-size: 0.9rem;">اضغط على زر الهاتف 📞 للاتصال بالعميل فوراً وتأكيد العنوان وموعد التوصيل.</p>
           </div>
-          <div class="flex gap-10">
-            <button class="btn btn-sm btn-outline" onclick="renderAllOrders()">🔄 تحديث الطلبات</button>
-            <button class="btn btn-sm btn-gold" onclick="addSampleOrder()">➕ طلب تجريبي</button>
+          <div>
+            <button class="btn btn-sm btn-outline" onclick="loadOrdersFromAPI()">🔄 تحديث الطلبات</button>
           </div>
         </div>
 
@@ -711,6 +666,7 @@
   <script src="js/api.js"></script>
   <script src="js/data.js"></script>
   <script src="js/subcategories.js"></script>
+  <script src="js/admin-orders.js"></script>
   <script>
     // ══════════════════════════════════════════════════
     // AUTHENTICATION & ACCESS CONTROL
@@ -793,170 +749,41 @@
     }
 
     // ══════════════════════════════════════════════════
-    // ORDERS MANAGEMENT
+    // ORDERS MANAGEMENT (Now using API via admin-orders.js)
     // ══════════════════════════════════════════════════
-    function getOrders() {
-      try {
-        return JSON.parse(localStorage.getItem('adminOrders') || '[]');
-      } catch (e) {
-        return [];
-      }
-    }
+    // Orders functions are now in admin-orders.js and loaded from API
+    
+    // Removed legacy renderAllOrders - now defined in js/admin-orders.js
 
-    function saveOrders(orders) {
-      localStorage.setItem('adminOrders', JSON.stringify(orders));
-    }
 
-    function renderAllOrders() {
-      const orders = getOrders();
-      const tbody = document.getElementById('allOrdersTable');
-      document.getElementById('tabOrderCount').textContent = orders.length;
-
-      if (orders.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="10" style="text-align: center; padding: 48px 20px; color: var(--text-light);">
-              <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
-              <strong>لا توجد طلبات واردة حالياً</strong>
-              <div style="font-size: 0.88rem; margin-top: 6px;">عندما يقوم أي عميل بطلب أوردر من الموقع سيظهر هنا فوراً.</div>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = orders.slice().reverse().map((o, idx) => {
-        const rawIdx = orders.length - 1 - idx;
-        const phone = o.phone || '';
-        const cleanPhone = phone.replace(/^0/, '');
-        const waLink = `https://wa.me/20${cleanPhone}`;
-        const itemsText = (o.items || []).map(i => `<div style="font-size:0.85rem;">• ${i.name} × ${i.qty || 1}</div>`).join('');
-        const dateStr = o.date ? new Date(o.date).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-        const status = o.status || 'جديد ⏳';
-
-        let badgeClass = 'status-new';
-        if (status.includes('تأكيد')) badgeClass = 'status-confirmed';
-        else if (status.includes('شحن') || status.includes('توصيل')) badgeClass = 'status-shipping';
-        else if (status.includes('مكتمل') || status.includes('تسليم')) badgeClass = 'status-done';
-        else if (status.includes('ملغي')) badgeClass = 'status-canceled';
-
-        return `
-          <tr>
-            <td><strong style="color:var(--burgundy); font-family:monospace;">${o.id || '#'+(idx+1)}</strong></td>
-            <td style="white-space:nowrap; font-size:0.85rem;">${dateStr}</td>
-            <td><strong>${o.customer || 'عميل'}</strong></td>
-            <td>
-              <div style="display:flex; flex-direction:column; gap:4px;">
-                <a href="tel:${phone}" class="action-btn-sm btn-call" title="اتصال مباشر بالهاتف">
-                  📞 ${phone}
-                </a>
-                <a href="${waLink}" target="_blank" class="action-btn-sm btn-wa" title="مراسلة واتساب">
-                  💬 محادثة واتساب
-                </a>
-              </div>
-            </td>
-            <td style="font-size:0.88rem;">
-              <div><strong>${o.city || '—'}</strong></div>
-              <div style="color:var(--text-light); font-size:0.82rem;">${o.area ? o.area + ' - ' : ''}${o.address || ''}</div>
-            </td>
-            <td>${itemsText || '—'}</td>
-            <td><strong style="color:var(--gold); font-size:1.05rem;">${o.total || 0} ج.م</strong></td>
-            <td style="font-size:0.85rem;">${o.paymentMethod || 'كاش عند الاستلام'}</td>
-            <td>
-              <select onchange="updateOrderStatus(${rawIdx}, this.value)" style="padding: 4px 8px; border-radius: 8px; font-family: inherit; font-size: 0.85rem; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-dark);">
-                <option value="جديد ⏳" ${status.includes('جديد') ? 'selected' : ''}>جديد ⏳</option>
-                <option value="تم التأكيد هاتفياً 📞" ${status.includes('هاتفياً') ? 'selected' : ''}>تم التأكيد هاتفياً 📞</option>
-                <option value="قيد التجهيز والشحن 🚚" ${status.includes('شحن') ? 'selected' : ''}>قيد التجهيز والشحن 🚚</option>
-                <option value="تم التسليم بنجاح ✅" ${status.includes('تسليم') ? 'selected' : ''}>تم التسليم بنجاح ✅</option>
-                <option value="تم الإلغاء ❌" ${status.includes('إلغاء') ? 'selected' : ''}>تم الإلغاء ❌</option>
-              </select>
-            </td>
-            <td>
-              <button class="action-btn-sm btn-delete" onclick="deleteOrder(${rawIdx})">🗑️ حذف</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function updateOrderStatus(idx, newStatus) {
-      const orders = getOrders();
-      if (orders[idx]) {
-        orders[idx].status = newStatus;
-        saveOrders(orders);
-        renderAllOrders();
-      }
-    }
-
-    function deleteOrder(idx) {
-      if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-        const orders = getOrders();
-        orders.splice(idx, 1);
-        saveOrders(orders);
-        renderAllOrders();
-        updateDashboard();
-      }
-    }
-
-    function addSampleOrder() {
-      const sample = {
-        id: 'LMS-' + Math.floor(100000 + Math.random() * 900000),
-        date: new Date().toISOString(),
-        customer: 'مريم أحمد (تجريبي)',
-        phone: '01012345678',
-        city: 'القاهرة',
-        area: 'المعادي',
-        address: 'شارع 9 عمارة 12 الدور الثالث',
-        paymentMethod: '💵 كاش عند الاستلام',
-        items: [
-          { name: 'سيروم الهيالورونيك الفاخر', qty: 1, price: 350 },
-          { name: 'عطر مسك الورد 50 مل', qty: 1, price: 500 }
-        ],
-        subtotal: 850,
-        shipping: 50,
-        total: 900,
-        status: 'جديد ⏳'
-      };
-      const orders = getOrders();
-      orders.push(sample);
-      saveOrders(orders);
-      renderAllOrders();
-      updateDashboard();
-      alert('✅ تم إضافة طلب تجريبي جديد بنجاح!');
-    }
+    // Remove old localStorage-based functions
+    // getOrders(), saveOrders(), updateOrderStatus(), deleteOrder(), addSampleOrder()
+    // are replaced by API-based functions in admin-orders.js
 
     // ══════════════════════════════════════════════════
     // DASHBOARD & ANALYTICS
     // ══════════════════════════════════════════════════
+    // DASHBOARD & ANALYTICS (Now using API stats)
+    // ══════════════════════════════════════════════════
     let salesChartInstance = null;
 
-    function updateDashboard() {
-      const orders = getOrders();
-      const products = currentProducts; // Use products from API
-      const totalSales = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    async function updateDashboard() {
+      // Load stats from API
+      await loadOrdersStats();
       
-      const todayStr = new Date().toDateString();
-      const todayOrders = orders.filter(o => new Date(o.date).toDateString() === todayStr);
-      const todaySales = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-
-      const curMonth = new Date().getMonth();
-      const curYear = new Date().getFullYear();
-      const monthOrders = orders.filter(o => {
-        const d = new Date(o.date);
-        return d.getMonth() === curMonth && d.getFullYear() === curYear;
-      });
-      const monthSales = monthOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-
-      document.getElementById('totalOrders').textContent = orders.length;
-      document.getElementById('totalSales').textContent = totalSales.toFixed(0) + ' ج.م';
+      // Update products count from API
+      const products = currentProducts;
       document.getElementById('dashTotalProducts').textContent = products.length;
-      document.getElementById('totalVisitors').textContent = localStorage.getItem('siteVisitors') || '142';
-      document.getElementById('todayOrders').textContent = todayOrders.length;
-      document.getElementById('todaySales').textContent = todaySales.toFixed(0) + ' ج.م';
-      document.getElementById('monthOrders').textContent = monthOrders.length;
-      document.getElementById('monthSales').textContent = monthSales.toFixed(0) + ' ج.م';
+      
+      // Remove or update visitors counter (no real tracking yet)
+      const visitorsEl = document.getElementById('totalVisitors');
+      if (visitorsEl) {
+        visitorsEl.textContent = '—'; // Or remove this stat entirely
+        visitorsEl.parentElement.querySelector('div:last-child').textContent = 'عداد الزوار (قريباً)';
+      }
 
-      renderSalesChart(orders);
+      // Render sales chart (using ordersCache from admin-orders.js)
+      renderSalesChart(window.ordersCache || []);
     }
 
     function renderSalesChart(orders) {
@@ -973,7 +800,7 @@
         last7Days.push(d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }));
 
         const dayTotal = orders
-          .filter(o => new Date(o.date).toDateString() === dStr)
+          .filter(o => new Date(o.createdAt).toDateString() === dStr && o.status === 'delivered')
           .reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         salesData.push(dayTotal);
       }
@@ -1040,38 +867,35 @@
         const search = document.getElementById('adminSearchInput')?.value.trim() || '';
         const category = document.getElementById('adminCategoryFilter')?.value || '';
         
-        const response = await LAMSA_API.adminGetProducts({
+        // After Task 5 fix: API returns data directly on success, throws on error
+        const data = await LAMSA_API.adminGetProducts({
           page: currentPage,
           limit: 50,
           search: search || undefined,
           category: category || undefined
         });
         
-        if (response.ok && response.data.success) {
-          if (append) {
-            currentProducts = [...currentProducts, ...response.data.data];
-          } else {
-            currentProducts = response.data.data;
-          }
-          
-          totalProducts = response.data.pagination?.total || 0;
-          hasMore = currentProducts.length < totalProducts;
-          
-          renderAdminTable();
-          updateDashboard();
-          
-          // Show/hide load more button
-          const loadMoreBtn = document.getElementById('loadMoreBtn');
-          if (loadMoreBtn) {
-            loadMoreBtn.style.display = hasMore ? 'inline-block' : 'none';
-          }
+        // data is {success, data: [...products], pagination: {...}}
+        if (append) {
+          currentProducts = [...currentProducts, ...(data.data || [])];
         } else {
-          showToast('⚠️ فشل تحميل المنتجات: ' + (response.data.message || 'خطأ غير معروف'));
-          console.error('[Admin] Load products failed:', response);
+          currentProducts = data.data || [];
+        }
+        
+        totalProducts = data.pagination?.total || 0;
+        hasMore = currentProducts.length < totalProducts;
+        
+        renderAdminTable();
+        updateDashboard();
+        
+        // Show/hide load more button
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) {
+          loadMoreBtn.style.display = hasMore ? 'inline-block' : 'none';
         }
       } catch (error) {
-        showToast('⚠️ خطأ في الاتصال بالسيرفر');
-        console.error('[Admin] Load products error:', error);
+        showToast('⚠️ خطأ في تحميل المنتجات: ' + (error.message || 'خطأ غير معروف'));
+        console.error('[Admin] Load products error:', error.message || error);
       }
     }
 
@@ -1491,15 +1315,53 @@
     // ══════════════════════════════════════════════════
     // INITIALIZATION
     // ══════════════════════════════════════════════════
-    function initAdminDashboard() {
-      loadProducts(); // Load products from server API
-      renderAllOrders();
-      updateDashboard();
+    // INITIALIZATION
+    // ══════════════════════════════════════════════════
+    async function initAdminDashboard() {
+      await loadProducts(); // Load products from server API
+      await initializeOrdersManagement(); // Load orders and stats from API (defined in admin-orders.js)
+      await updateDashboard();
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       initAdminDashboard();
     });
+
+    // ══════════════════════════════════════════════════
+    // AUTH GUARD: Check if admin is logged in
+    // ══════════════════════════════════════════════════
+    (async function() {
+      const token = localStorage.getItem('lamsa_token');
+      const user = JSON.parse(localStorage.getItem('lamsa_user') || '{}');
+      
+      // If no token or not admin role, redirect to login
+      if (!token || user.role !== 'admin') {
+        alert('⚠️ يجب تسجيل الدخول كمدير للوصول إلى لوحة التحكم');
+        window.location.href = 'auth.html';
+        return;
+      }
+      
+      // Verify token with backend using the API helper
+      try {
+        // After Task 5 fix: LAMSA_API.getMe() returns data directly on success
+        const data = await LAMSA_API.getMe();
+        
+        // Server returns: { success: true, data: { id, name, email, role, ... } }
+        // Verify admin role from backend
+        if (data.data.role !== 'admin') {
+          alert('⚠️ ليس لديك صلاحية الوصول إلى لوحة التحكم');
+          localStorage.removeItem('lamsa_token');
+          localStorage.removeItem('lamsa_user');
+          window.location.href = 'auth.html';
+        }
+      } catch (error) {
+        console.error('[Admin] Auth check failed:', error.message || error);
+        alert('⚠️ انتهت صلاحية الجلسة. الرجاء تسجيل الدخول مرة أخرى');
+        localStorage.removeItem('lamsa_token');
+        localStorage.removeItem('lamsa_user');
+        window.location.href = 'auth.html';
+      }
+    })();
   </script>
 </body>
 </html>

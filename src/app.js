@@ -7,6 +7,12 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// Trust proxy setting (for rate limiting behind proxies/load balancers)
+// When hosting behind nginx, cloudflare, or any reverse proxy, this ensures
+// each customer gets their own rate limit based on their real IP, not the proxy IP
+const trustProxy = process.env.TRUST_PROXY || 'loopback';
+app.set('trust proxy', trustProxy);
+
 // CORS configuration
 const corsOptions = {
   origin: env.CORS_ORIGIN === '*' ? '*' : env.CORS_ORIGIN.split(',').map(s => s.trim()),

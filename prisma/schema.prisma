@@ -97,14 +97,19 @@ model Order {
 }
 
 model OrderItem {
-  id         String   @id @default(uuid())
-  orderId    String   @map("order_id")
-  productId  String?  @map("product_id")
-  quantity   Int      @default(1)
-  unitPrice  Float    @map("unit_price")
+  id            String   @id @default(uuid())
+  orderId       String   @map("order_id")
+  productId     String?  @map("product_id")
+  quantity      Int      @default(1)
+  unitPrice     Float    @map("unit_price")
+  
+  // Snapshot fields (preserved even if product is deleted/edited)
+  productName   String   @map("product_name")
+  productImage  String?  @map("product_image")
+  productEmoji  String?  @map("product_emoji")
 
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@map("order_items")
 }

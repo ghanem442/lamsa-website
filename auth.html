@@ -411,55 +411,54 @@
       submitBtn.textContent = '⏳ جاري المعالجة...';
 
       try {
-        let response;
+        let data;
         
         if (currentAuthMode === 'signup') {
           // Register new account
           const name = document.getElementById('authName').value.trim();
-          response = await LAMSA_API.register({ name, email, password });
+          data = await LAMSA_API.register({ name, email, password });
         } else {
           // Login
-          response = await LAMSA_API.login({ email, password });
+          data = await LAMSA_API.login({ email, password });
         }
 
-        if (response.ok && response.data.success) {
-          const { user, token } = response.data.data;
-          
-          // Store token and user info
-          localStorage.setItem('lamsa_token', token);
-          localStorage.setItem('lamsa_user', JSON.stringify({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            avatar: user.role === 'admin' ? '👑' : '✨',
-            loginTime: new Date().toISOString()
-          }));
+        // After Task 5 fix: API returns data directly on success, throws on error
+        // Server returns: { success: true, message: "...", data: { user, token } }
+        const { user, token } = data.data;
+        
+        // Store token and user info in the SAME keys that admin.html and main.js read
+        localStorage.setItem('lamsa_token', token);
+        localStorage.setItem('lamsa_user', JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.role === 'admin' ? '👑' : '✨',
+          loginTime: new Date().toISOString()
+        }));
 
-          triggerConfetti();
-          
-          // Redirect based on role
-          const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
-          sessionStorage.removeItem('lamsa_auth_redirect');
-          
+        triggerConfetti();
+        
+        // Show server's success message
+        showToast(`✓ ${data.message || 'تم تسجيل الدخول بنجاح'}`);
+        
+        // Redirect based on role
+        const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
+        sessionStorage.removeItem('lamsa_auth_redirect');
+        
+        setTimeout(() => {
           if (user.role === 'admin') {
-            showToast('👑 أهلاً بك يا مدير المتجر! جاري فتح لوحة التحكم...');
-            setTimeout(() => window.location.href = 'admin.html', 1000);
+            window.location.href = 'admin.html';
           } else {
-            showToast(`✓ تم تسجيل الدخول بنجاح! أهلاً بك يا ${user.name} 🌹`);
-            setTimeout(() => window.location.href = returnUrl || 'intro.html', 1000);
+            window.location.href = returnUrl || 'shop.html';
           }
-        } else {
-          // Show error message from backend
-          showToast('⚠️ ' + (response.data.message || 'حدث خطأ. الرجاء المحاولة مرة أخرى'));
-          submitBtn.disabled = false;
-          submitBtn.textContent = currentAuthMode === 'signup' 
-            ? 'إنشاء حساب جديد والدخول ✨' 
-            : 'تسجيل الدخول للمتجر ←';
-        }
+        }, 800);
+        
       } catch (error) {
-        console.error('[Auth] Error:', error);
-        showToast('⚠️ حدث خطأ في الاتصال. الرجاء المحاولة مرة أخرى');
+        // error.message contains the server's Arabic error message or network error
+        console.error('[Auth] Login/Register failed:', error.message || error);
+        showToast('⚠️ ' + (error.message || 'حدث خطأ في الاتصال'));
+        
         submitBtn.disabled = false;
         submitBtn.textContent = currentAuthMode === 'signup' 
           ? 'إنشاء حساب جديد والدخول ✨' 

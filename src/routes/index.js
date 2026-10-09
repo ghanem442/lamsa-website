@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const productRoutes = require('./product.routes');
 const authRoutes = require('./auth.routes');
+const orderRoutes = require('./order.routes');
 const adminRoutes = require('./admin.routes');
 
 /**
@@ -21,6 +22,7 @@ router.get('/health', (req, res) => {
 // Mount routes
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
+router.use('/orders', orderRoutes);
 router.use('/admin', adminRoutes);
 
 module.exports = router;

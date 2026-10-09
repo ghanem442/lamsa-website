@@ -104,4 +104,5 @@ module.exports = {
   authenticate,
   requireAdmin,
   optionalAuth,
+  authenticateOptional: optionalAuth, // Alias
 };

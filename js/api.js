@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LAMSA API Client Wrapper (Vanilla JS)
  * Handles API calls to backend endpoints with fallback safety
  */
@@ -29,15 +29,26 @@
     try {
       const response = await fetch(`${API_BASE}${endpoint}`, config);
       const data = await response.json();
-      return { ok: response.ok, status: response.status, data };
+      
+      // Treat any 2xx status as success
+      if (response.ok) {
+        return data; // Return data directly on success
+      } else {
+        // For error responses, throw the error message from server
+        throw new Error(data.message || `HTTP ${response.status}`);
+      }
     } catch (err) {
+      // Network errors or JSON parse errors
+      if (err.message && err.message !== 'Failed to fetch') {
+        throw err; // Re-throw server error messages
+      }
       console.warn(`[API] Network error requesting ${endpoint}:`, err);
-      return { ok: false, status: 0, error: err };
+      throw new Error('فشل الاتصال بالسيرفر. يرجى التحقق من الاتصال بالإنترنت.');
     }
   }
 
   const api = {
-    // ── Authentication ──
+    // â”€â”€ Authentication â”€â”€
     async register(userData) {
       return await request('/api/auth/register', {
         method: 'POST',
@@ -56,7 +67,7 @@
       return await request('/api/auth/me');
     },
 
-    // ── Products ──
+    // â”€â”€ Products â”€â”€
     async getProducts(params = {}) {
       const query = new URLSearchParams();
       if (params.category && params.category !== 'all') query.set('category', params.category);
@@ -78,12 +89,12 @@
       return await request(`/api/products/${id}`);
     },
 
-    // ── Health ──
+    // â”€â”€ Health â”€â”€
     async checkHealth() {
       return await request('/api/health');
     },
 
-    // ── Admin: Products ──
+    // â”€â”€ Admin: Products â”€â”€
     async adminGetProducts(params = {}) {
       const query = new URLSearchParams();
       if (params.page) query.set('page', params.page);
@@ -228,7 +239,58 @@
         return { ok: false, status: 0, error: err };
       }
     },
+
+    // ══════════════════════════════════════════════════
+    // ORDERS
+    // ══════════════════════════════════════════════════
+    
+    async createOrder(orderData) {
+      return await request('/api/orders', {
+        method: 'POST',
+        body: JSON.stringify(orderData)
+      });
+    },
+
+    async getOrder(orderId) {
+      return await request(`/api/orders/${orderId}`);
+    },
+
+    async getOrderByNumberAndPhone(orderNumber, phone) {
+      return await request(`/api/orders/lookup?orderNumber=${orderNumber}&phone=${phone}`);
+    },
+
+    // ══════════════════════════════════════════════════
+    // ADMIN ORDERS
+    // ══════════════════════════════════════════════════
+    
+    async adminGetOrders(params = {}) {
+      const query = new URLSearchParams(params).toString();
+      return await request(`/api/admin/orders${query ? '?' + query : ''}`, {
+        cache: 'no-store' // Force fresh data, never use browser cache
+      });
+    },
+
+    async adminGetOrder(orderId) {
+      return await request(`/api/admin/orders/${orderId}`, {
+        cache: 'no-store'
+      });
+    },
+
+    async adminUpdateOrderStatus(orderId, status) {
+      return await request(`/api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+        cache: 'no-store'
+      });
+    },
+
+    async adminGetOrdersStats() {
+      return await request('/api/admin/orders/stats', {
+        cache: 'no-store'
+      });
+    },
   };
 
   window.LAMSA_API = api;
 })(window);
+
