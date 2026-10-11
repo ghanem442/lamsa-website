@@ -63,6 +63,7 @@ async function getAllOrders(req, res, next) {
                 }
               }
             },
+            customPerfume: true,
             user: {
               select: {
                 name: true,
@@ -103,6 +104,7 @@ async function getAllOrders(req, res, next) {
         unitPrice: item.unitPrice,
         product: item.product
       })),
+      customPerfume: order.customPerfume || null,
       user: order.user
     }));
     

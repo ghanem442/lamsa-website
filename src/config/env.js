@@ -24,6 +24,12 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   ADMIN_NAME: z.string().default('LAMSA Admin'),
   CORS_ORIGIN: z.string().default('*'),
+  
+  // Rate Limiting (configurable from .env)
+  ORDER_RATE_LIMIT_MAX: z.string().default('5'),
+  ORDER_RATE_LIMIT_WINDOW_MINUTES: z.string().default('15'),
+  AUTH_RATE_LIMIT_MAX: z.string().default('5'),
+  AUTH_RATE_LIMIT_WINDOW_MINUTES: z.string().default('15'),
 
   // SECRETS - NO DEFAULTS ALLOWED
   DATABASE_URL: z.string({

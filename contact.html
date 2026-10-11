@@ -8,6 +8,7 @@
   <meta name="theme-color" content="#5C0E14">
   <meta property="og:title" content="تواصل مع لمسة | LAMSA">
   <meta property="og:image" content="assets/logo.png">
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -393,10 +394,16 @@
 
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script>
-    function handleContactSubmit(e) {
+    async function handleContactSubmit(e) {
       e.preventDefault();
+      
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ جاري الإرسال...';
       
       // جمع البيانات
       const name = document.getElementById('contactName').value.trim();
@@ -414,31 +421,56 @@
         'complaint': 'شكوى أو ملاحظة'
       };
       
-      // تكوين رسالة WhatsApp
-      const whatsappMessage = `
+      const typeArabic = typeLabels[type] || type;
+      
+      try {
+        // Send to database
+        const data = await LAMSA_API.submitContactMessage({
+          name: name,
+          email: phone + '@temp.lamsa',
+          phone: phone,
+          subject: typeArabic,
+          message: message
+        });
+        
+        triggerConfetti();
+        showToast('✅ تم إرسال رسالتك بنجاح! سنتواصل معك قريباً');
+        document.getElementById('contactForm').reset();
+        
+        btn.disabled = false;
+        btn.textContent = originalText;
+        
+      } catch (error) {
+        console.error('[Contact] Error:', error);
+        
+        // Fallback to WhatsApp
+        showToast('⚠️ حدث خطأ. سنحاول إرسالها عبر واتساب...');
+        
+        const whatsappMessage = `
 *🌹 رسالة جديدة من موقع لمسة*
 
 *الاسم:* ${name}
 *رقم الهاتف:* ${phone}
-*نوع الاستفسار:* ${typeLabels[type]}
+*نوع الاستفسار:* ${typeArabic}
 
 *الرسالة:*
 ${message}
 
 ---
 _تم الإرسال عبر موقع LAMSA_
-      `.trim();
-      
-      // فتح واتساب مباشرة داخل حدث الإرسال (المتصفح يمنع النوافذ المفتوحة داخل setTimeout)
-      const { url, opened } = openWhatsApp(whatsappMessage);
-
-      triggerConfetti();
-      if (opened) {
-        showToast('✅ جاري فتح واتساب... يرجى إرسال الرسالة من التطبيق');
-        document.getElementById('contactForm').reset();
-      } else {
-        // النموذج بيفضل كما هو لحد ما العميل يضغط على زر واتساب
-        showWhatsAppFallback(url);
+        `.trim();
+        
+        const { url, opened } = openWhatsApp(whatsappMessage);
+        
+        if (opened) {
+          showToast('✅ جاري فتح واتساب... يرجى إرسال الرسالة من التطبيق');
+          document.getElementById('contactForm').reset();
+        } else {
+          showWhatsAppFallback(url);
+        }
+        
+        btn.disabled = false;
+        btn.textContent = originalText;
       }
     }
 

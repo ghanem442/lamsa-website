@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة التحكم | إدارة متجر لمسة (LAMSA)</title>
-
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -247,6 +247,9 @@
       <button class="admin-tab-btn active" id="btnTabOrders" onclick="switchTab('orders')">
         🛒 إدارة وتأكيد الطلبات (<span id="tabOrderCount">0</span>)
       </button>
+      <button class="admin-tab-btn" id="btnTabMessages" onclick="switchTab('messages')">
+        📧 رسائل التواصل (<span id="tabMessageCount">0</span>)
+      </button>
       <button class="admin-tab-btn" id="btnTabDashboard" onclick="switchTab('dashboard')">
         📊 لوحة المبيعات والتقارير
       </button>
@@ -436,6 +439,55 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════
+         TAB 3: CONTACT MESSAGES
+         ══════════════════════════════════════════════════ -->
+    <div id="tabMessages" class="admin-tab-content" style="display: none;">
+      <div class="table-card">
+        <div style="padding: 24px; border-bottom: 1px solid var(--border);">
+          <h2 style="color: var(--burgundy); font-size: 1.4rem; margin-bottom: 8px;">📧 رسائل التواصل من العملاء</h2>
+          <p style="color: var(--text-light); font-size: 0.9rem;">جميع الرسائل المرسلة من صفحة "تواصل معنا"</p>
+          
+          <!-- Filter buttons -->
+          <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-sm btn-outline" onclick="filterMessages('all')" id="filterAll" style="background: var(--burgundy); color: white;">
+              الكل (<span id="countAll">0</span>)
+            </button>
+            <button class="btn btn-sm btn-outline" onclick="filterMessages('unread')" id="filterUnread">
+              غير مقروء (<span id="countUnread">0</span>)
+            </button>
+            <button class="btn btn-sm btn-outline" onclick="filterMessages('read')" id="filterRead">
+              مقروء (<span id="countRead">0</span>)
+            </button>
+          </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>الحالة</th>
+                <th>التاريخ</th>
+                <th>الاسم</th>
+                <th>الهاتف</th>
+                <th>نوع الاستفسار</th>
+                <th>الرسالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="messagesTableBody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 48px 20px; color: var(--text-light);">
+                  <div style="font-size: 2.5rem; margin-bottom: 12px;">📧</div>
+                  <strong style="color: var(--text-dark);">جاري تحميل الرسائل...</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
          TAB 4: PERFUME STUDIO & SCENTS
          ══════════════════════════════════════════════════ -->
     <div id="tabScents" class="admin-tab-content" style="display: none;">
@@ -597,15 +649,29 @@
         </div>
 
         <div class="input-group">
-          <label>رابط الصورة (URL)</label>
-          <input type="text" class="form-input" id="pImageUrl" placeholder="https://example.com/image.jpg">
-        </div>
+          <label>صورة المنتج</label>
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('pImageFile').click()">
+              📤 اختر صورة من جهازك
+            </button>
+            <span style="font-size: 0.85rem; color: var(--text-light); align-self: center;">
+              JPG, PNG, WebP (حد أقصى 5 MB)
+            </span>
+          </div>
+          <input type="file" id="pImageFile" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;" onchange="handleImageFileSelect(event)">
+          
+          <div style="margin-top: 8px;">
+            <input type="text" class="form-input" id="pImageUrl" placeholder="أو الصق رابط صورة مباشر (https://...)">
+          </div>
 
-        <div class="input-group">
-          <label>أو ارفع صورة من جهازك</label>
-          <input type="file" class="form-input" id="pImageFile" accept="image/*" onchange="uploadProductImage(event)">
-          <div id="imagePreview" style="display: none; margin-top: 10px;">
-            <img id="previewImg" src="" alt="معاينة" style="max-width: 200px; border-radius: 8px; border: 1px solid var(--border);">
+          <div id="imagePreview" style="display: none; margin-top: 12px; position: relative;">
+            <img id="previewImg" src="" alt="معاينة" style="max-width: 250px; max-height: 250px; border-radius: 8px; border: 1px solid var(--border); object-fit: contain;">
+            <button type="button" class="btn btn-sm" onclick="removeProductImage()" style="margin-top: 8px; background: #f8d7da; color: #721c24;">
+              🗑️ إزالة الصورة
+            </button>
+            <div id="uploadProgress" style="display: none; margin-top: 8px; color: var(--gold); font-size: 0.9rem;">
+              ⏳ جاري رفع الصورة...
+            </div>
           </div>
         </div>
 
@@ -732,6 +798,10 @@
         document.getElementById('btnTabOrders').classList.add('active');
         document.getElementById('tabOrders').style.display = 'block';
         renderAllOrders();
+      } else if (tab === 'messages') {
+        document.getElementById('btnTabMessages').classList.add('active');
+        document.getElementById('tabMessages').style.display = 'block';
+        loadMessages();
       } else if (tab === 'dashboard') {
         document.getElementById('btnTabDashboard').classList.add('active');
         document.getElementById('tabDashboard').style.display = 'block';
@@ -978,10 +1048,13 @@
       document.getElementById('pImageUrl').value = product.imageUrl || '';
 
       // Show image preview if exists
+      const preview = document.getElementById('imagePreview');
+      const previewImg = document.getElementById('previewImg');
       if (product.imageUrl) {
-        const preview = document.getElementById('imagePreview');
-        preview.innerHTML = `<img src="${product.imageUrl}" style="max-width:200px; border-radius:8px;">`;
+        previewImg.src = product.imageUrl;
         preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
       }
 
       document.getElementById('addModal').classList.add('active');
@@ -999,6 +1072,9 @@
       
       const submitBtn = e.target.querySelector('button[type="submit"]');
       const originalText = submitBtn.textContent;
+      
+      // Prevent double submit
+      if (submitBtn.disabled) return;
       submitBtn.disabled = true;
       submitBtn.textContent = '⏳ جاري الحفظ...';
 
@@ -1024,26 +1100,29 @@
       };
 
       try {
-        let response;
+        let data;
         
         if (editingProductId) {
           // Update existing product
-          response = await LAMSA_API.adminUpdateProduct(editingProductId, productData);
+          data = await LAMSA_API.adminUpdateProduct(editingProductId, productData);
         } else {
           // Create new product
-          response = await LAMSA_API.adminCreateProduct(productData);
+          data = await LAMSA_API.adminCreateProduct(productData);
         }
 
-        if (response.ok && response.data.success) {
-          showToast('✅ ' + response.data.message);
+        // API returns data directly on 2xx, so check data.success
+        if (data.success) {
+          showToast('✅ ' + data.message);
           closeAddModal();
+          document.getElementById('productForm').reset();
           await loadProducts(); // Reload from server
         } else {
-          showToast('⚠️ ' + (response.data.message || 'فشل حفظ المنتج'));
-          console.error('[Admin] Save product failed:', response);
+          showToast('⚠️ ' + (data.message || 'فشل حفظ المنتج'));
+          console.error('[Admin] Save product unexpected response:', data);
         }
       } catch (error) {
-        showToast('⚠️ خطأ في الاتصال بالسيرفر');
+        // Errors are thrown with error.message
+        showToast('⚠️ ' + (error.message || 'خطأ في الاتصال بالسيرفر'));
         console.error('[Admin] Save product error:', error);
       } finally {
         submitBtn.disabled = false;
@@ -1057,84 +1136,114 @@
       }
 
       try {
-        const response = await LAMSA_API.adminDeleteProduct(productId);
+        const data = await LAMSA_API.adminDeleteProduct(productId);
         
-        if (response.ok && response.data.success) {
-          showToast('✅ ' + response.data.message);
+        // API returns data directly on 2xx
+        if (data.success) {
+          showToast('✅ ' + data.message);
           await loadProducts(); // Reload from server
         } else {
-          showToast('⚠️ ' + (response.data.message || 'فشل حذف المنتج'));
-          console.error('[Admin] Delete product failed:', response);
+          showToast('⚠️ ' + (data.message || 'فشل حذف المنتج'));
+          console.error('[Admin] Delete product unexpected response:', data);
         }
       } catch (error) {
-        showToast('⚠️ خطأ في الاتصال بالسيرفر');
+        // Errors are thrown with error.message
+        showToast('⚠️ ' + (error.message || 'خطأ في الاتصال بالسيرفر'));
         console.error('[Admin] Delete product error:', error);
       }
     }
 
-    // Upload image to Cloudinary
-    async function uploadProductImage(event) {
+    // Handle image file selection with preview and upload
+    async function handleImageFileSelect(event) {
+      console.log('File selected:', event.target.files[0]?.name);
+      
       const file = event.target.files[0];
-      if (!file) return;
-
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        showToast('⚠️ الرجاء اختيار صورة فقط (JPG, PNG, WebP)');
+      if (!file) {
+        console.warn('No file selected');
         return;
       }
 
-      // Validate file size (5MB)
+      console.log('File details:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        sizeKB: Math.round(file.size / 1024) + ' KB'
+      });
+
+      // Validate file type (jpg, png, webp only)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        showToast('⚠️ يُسمح فقط بصيغ JPG و PNG و WebP');
+        event.target.value = '';
+        return;
+      }
+
+      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        showToast('⚠️ حجم الصورة كبير جداً. الحد الأقصى 5MB');
+        showToast('⚠️ حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+        event.target.value = '';
         return;
       }
 
-      const uploadBtn = event.target.previousElementSibling;
-      const originalText = uploadBtn.textContent;
-      uploadBtn.disabled = true;
-      uploadBtn.textContent = '⏳ جاري الرفع...';
+      // Show preview immediately (local)
+      const preview = document.getElementById('imagePreview');
+      const previewImg = document.getElementById('previewImg');
+      const progressDiv = document.getElementById('uploadProgress');
+      
+      console.log('Showing preview...');
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        preview.style.display = 'block';
+        console.log('Preview displayed');
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to Cloudinary
+      progressDiv.style.display = 'block';
+      console.log('Uploading to Cloudinary...');
 
       try {
-        const response = await LAMSA_API.adminUploadImage(file);
+        const data = await LAMSA_API.adminUploadImage(file);
         
-        if (response.ok && response.data.success) {
-          const imageUrl = response.data.data.url;
-          document.getElementById('pImageUrl').value = imageUrl;
-          
-          // Show preview
-          const preview = document.getElementById('imagePreview');
-          preview.innerHTML = `<img src="${imageUrl}" style="max-width:200px; border-radius:8px;">`;
-          preview.style.display = 'block';
-          
-          showToast('✅ تم رفع الصورة بنجاح');
-        } else {
-          showToast('⚠️ ' + (response.data.message || 'فشل رفع الصورة'));
-          console.error('[Admin] Upload image failed:', response);
-        }
+        console.log('Upload response:', data);
+        
+        // data is {success, message, data: {url, publicId}}
+        const imageUrl = data.data.url;
+        document.getElementById('pImageUrl').value = imageUrl;
+        previewImg.src = imageUrl; // Replace preview with actual uploaded image
+        
+        progressDiv.style.display = 'none';
+        showToast('✅ تم رفع الصورة بنجاح');
+        console.log('Image uploaded successfully:', imageUrl);
       } catch (error) {
-        showToast('⚠️ خطأ في رفع الصورة');
+        progressDiv.style.display = 'none';
+        preview.style.display = 'none';
+        showToast('⚠️ ' + (error.message || 'فشل رفع الصورة'));
         console.error('[Admin] Upload image error:', error);
       } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = originalText;
         event.target.value = ''; // Reset file input
       }
+    }
+
+    // Remove product image
+    function removeProductImage() {
+      document.getElementById('pImageUrl').value = '';
+      document.getElementById('pImageFile').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('previewImg').src = '';
+      showToast('تم إزالة الصورة');
     }
 
     // Export products to CSV
     async function exportProductsToCSV() {
       try {
         showToast('⏳ جاري تصدير المنتجات...');
-        const response = await LAMSA_API.adminExportCSV();
-        
-        if (response.ok) {
-          showToast('✅ تم تصدير المنتجات بنجاح');
-        } else {
-          showToast('⚠️ فشل تصدير المنتجات');
-          console.error('[Admin] Export CSV failed:', response);
-        }
+        // adminExportCSV handles download internally, no response to check
+        await LAMSA_API.adminExportCSV();
+        showToast('✅ تم تصدير المنتجات بنجاح');
       } catch (error) {
-        showToast('⚠️ خطأ في تصدير المنتجات');
+        showToast('⚠️ ' + (error.message || 'فشل تصدير المنتجات'));
         console.error('[Admin] Export CSV error:', error);
       }
     }
@@ -1143,15 +1252,11 @@
     async function downloadCSVTemplate() {
       try {
         showToast('⏳ جاري تنزيل القالب...');
-        const response = await LAMSA_API.adminDownloadCSVTemplate();
-        
-        if (response.ok) {
-          showToast('✅ تم تنزيل القالب بنجاح');
-        } else {
-          showToast('⚠️ فشل تنزيل القالب');
-        }
+        // adminDownloadCSVTemplate handles download internally
+        await LAMSA_API.adminDownloadCSVTemplate();
+        showToast('✅ تم تنزيل القالب بنجاح');
       } catch (error) {
-        showToast('⚠️ خطأ في تنزيل القالب');
+        showToast('⚠️ ' + (error.message || 'فشل تنزيل القالب'));
         console.error('[Admin] Download template error:', error);
       }
     }
@@ -1169,18 +1274,19 @@
       showToast('⏳ جاري الاستيراد...');
 
       try {
-        const response = await LAMSA_API.adminImportCSV(file);
+        const data = await LAMSA_API.adminImportCSV(file);
         
-        if (response.ok && response.data.success) {
-          const data = response.data.data;
+        // API returns data directly on 2xx
+        if (data.success) {
+          const importData = data.data;
           
           // Build detailed message
-          let message = response.data.message;
+          let message = data.message;
           
           // Show errors if any
-          if (data.errors && data.errors.length > 0) {
+          if (importData.errors && importData.errors.length > 0) {
             console.group('❌ أخطاء الاستيراد');
-            data.errors.forEach(err => {
+            importData.errors.forEach(err => {
               console.error(`الصف ${err.row}: ${err.error}`);
             });
             console.groupEnd();
@@ -1191,11 +1297,11 @@
           showToast(message, 5000);
           await loadProducts(); // Reload from server
         } else {
-          showToast('⚠️ ' + (response.data.message || 'فشل استيراد الملف'));
-          console.error('[Admin] Import CSV failed:', response);
+          showToast('⚠️ ' + (data.message || 'فشل استيراد الملف'));
+          console.error('[Admin] Import CSV unexpected response:', data);
         }
       } catch (error) {
-        showToast('⚠️ خطأ في استيراد الملف');
+        showToast('⚠️ ' + (error.message || 'خطأ في استيراد الملف'));
         console.error('[Admin] Import CSV error:', error);
       } finally {
         // Reset file input
@@ -1274,23 +1380,46 @@
     }
 
     function loadPerfumePrices() {
-      const prices = JSON.parse(localStorage.getItem('lamsa_perfume_prices')) || {
-        '30ml': { edt: 250, edp: 350, ext: 450 },
-        '50ml': { edt: 400, edp: 500, ext: 650 },
-        '100ml': { edt: 600, edp: 750, ext: 950 },
-      };
-      document.getElementById('p_30_edt').value = prices['30ml']?.edt || 250;
-      document.getElementById('p_30_edp').value = prices['30ml']?.edp || 350;
-      document.getElementById('p_30_ext').value = prices['30ml']?.ext || 450;
-      document.getElementById('p_50_edt').value = prices['50ml']?.edt || 400;
-      document.getElementById('p_50_edp').value = prices['50ml']?.edp || 500;
-      document.getElementById('p_50_ext').value = prices['50ml']?.ext || 650;
-      document.getElementById('p_100_edt').value = prices['100ml']?.edt || 600;
-      document.getElementById('p_100_edp').value = prices['100ml']?.edp || 750;
-      document.getElementById('p_100_ext').value = prices['100ml']?.ext || 950;
+      // Load from API (database)
+      LAMSA_API.getPerfumePrices()
+        .then(data => {
+          const prices = data.prices || {
+            '30ml': { edt: 250, edp: 350, ext: 450 },
+            '50ml': { edt: 400, edp: 500, ext: 650 },
+            '100ml': { edt: 600, edp: 750, ext: 950 },
+          };
+          
+          document.getElementById('p_30_edt').value = prices['30ml']?.edt || 250;
+          document.getElementById('p_30_edp').value = prices['30ml']?.edp || 350;
+          document.getElementById('p_30_ext').value = prices['30ml']?.ext || 450;
+          document.getElementById('p_50_edt').value = prices['50ml']?.edt || 400;
+          document.getElementById('p_50_edp').value = prices['50ml']?.edp || 500;
+          document.getElementById('p_50_ext').value = prices['50ml']?.ext || 650;
+          document.getElementById('p_100_edt').value = prices['100ml']?.edt || 600;
+          document.getElementById('p_100_edp').value = prices['100ml']?.edp || 750;
+          document.getElementById('p_100_ext').value = prices['100ml']?.ext || 950;
+        })
+        .catch(error => {
+          console.error('[Admin] Error loading perfume prices:', error);
+          // Fallback to defaults
+          document.getElementById('p_30_edt').value = 250;
+          document.getElementById('p_30_edp').value = 350;
+          document.getElementById('p_30_ext').value = 450;
+          document.getElementById('p_50_edt').value = 400;
+          document.getElementById('p_50_edp').value = 500;
+          document.getElementById('p_50_ext').value = 650;
+          document.getElementById('p_100_edt').value = 600;
+          document.getElementById('p_100_edp').value = 750;
+          document.getElementById('p_100_ext').value = 950;
+        });
     }
 
-    function savePerfumePrices() {
+    async function savePerfumePrices() {
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'جاري الحفظ...';
+
       const prices = {
         '30ml': {
           edt: parseFloat(document.getElementById('p_30_edt').value) || 250,
@@ -1308,8 +1437,22 @@
           ext: parseFloat(document.getElementById('p_100_ext').value) || 950,
         },
       };
-      localStorage.setItem('lamsa_perfume_prices', JSON.stringify(prices));
-      alert('✅ تم حفظ وتحديث أسعار العطور فوراً!');
+
+      try {
+        const data = await LAMSA_API.adminUpdatePerfumePrices(prices);
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('lamsa_perfume_prices', JSON.stringify(prices));
+        
+        alert('✅ ' + (data.message || 'تم حفظ وتحديث أسعار العطور فوراً!'));
+        btn.textContent = originalText;
+        btn.disabled = false;
+      } catch (error) {
+        console.error('[Admin] Error saving perfume prices:', error);
+        alert('❌ فشل حفظ الأسعار: ' + error.message);
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     }
 
     // ══════════════════════════════════════════════════
@@ -1362,6 +1505,181 @@
         window.location.href = 'auth.html';
       }
     })();
+
+    // ══════════════════════════════════════════════════
+    // CONTACT MESSAGES MANAGEMENT
+    // ══════════════════════════════════════════════════
+    let currentMessagesFilter = 'all';
+    let allMessages = [];
+
+    async function loadMessages() {
+      try {
+        const data = await LAMSA_API.adminGetMessages();
+        // API returns: { success, data: { messages: [...], pagination } }
+        allMessages = data.data?.messages || [];
+        
+        // Update stats
+        updateMessagesStats();
+        
+        // Render table
+        renderMessagesTable();
+      } catch (error) {
+        console.error('[Admin] Load messages error:', error);
+        showError('فشل تحميل الرسائل: ' + (error.message || 'خطأ غير معروف'));
+      }
+    }
+
+    function renderMessagesTable() {
+      const tbody = document.getElementById('messagesTableBody');
+      
+      // Filter messages based on current filter
+      let filtered = allMessages;
+      if (currentMessagesFilter === 'unread') {
+        filtered = allMessages.filter(m => !m.isRead);
+      } else if (currentMessagesFilter === 'read') {
+        filtered = allMessages.filter(m => m.isRead);
+      }
+      
+      if (!filtered.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 48px 20px; color: var(--text-light);">
+              <div style="font-size: 2.5rem; margin-bottom: 12px;">📭</div>
+              <strong style="color: var(--text-dark);">لا توجد رسائل</strong>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = filtered.map(m => {
+        const date = new Date(m.createdAt);
+        const dateStr = date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
+        const timeStr = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        
+        return `
+          <tr style="background: ${m.isRead ? 'transparent' : 'rgba(212, 175, 55, 0.08)'};">
+            <td>
+              ${m.isRead 
+                ? '<span class="status-badge" style="background: #E8E8E8; color: #666;">✓ مقروء</span>' 
+                : '<span class="status-badge status-new">● جديد</span>'}
+            </td>
+            <td>
+              <div style="font-size: 0.85rem; color: var(--text-mid);">${dateStr}</div>
+              <div style="font-size: 0.75rem; color: var(--text-light);">${timeStr}</div>
+            </td>
+            <td><strong style="color: var(--text-dark);">${escapeHtml(m.name)}</strong></td>
+            <td><span style="direction: ltr; display: inline-block;">${escapeHtml(m.phone)}</span></td>
+            <td><span class="badge badge-popular">${escapeHtml(m.subject)}</span></td>
+            <td>
+              <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-mid); font-size: 0.88rem;">
+                ${escapeHtml(m.message)}
+              </div>
+            </td>
+            <td>
+              <div class="table-actions">
+                ${!m.isRead 
+                  ? `<button class="action-btn-sm" style="background: var(--gold); color: white;" onclick="markAsRead('${m.id}')">✓ تم القراءة</button>` 
+                  : `<button class="action-btn-sm btn-outline" onclick="markAsUnread('${m.id}')">✕ غير مقروء</button>`}
+                <button class="action-btn-sm btn-wa" onclick="replyViaWhatsApp('${escapeHtml(m.phone)}', '${escapeHtml(m.name)}')">
+                  📱 رد واتساب
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    async function markAsRead(messageId) {
+      try {
+        const data = await LAMSA_API.adminUpdateMessageReadStatus(messageId, true);
+        
+        // Update local cache
+        const msg = allMessages.find(m => m.id === messageId);
+        if (msg) msg.isRead = true;
+        
+        updateMessagesStats();
+        renderMessagesTable();
+        showToast('✅ تم تعيين الرسالة كمقروءة');
+      } catch (error) {
+        console.error('[Admin] Mark as read error:', error);
+        showToast('⚠️ فشل تحديث الرسالة: ' + (error.message || 'خطأ غير معروف'));
+      }
+    }
+
+    async function markAsUnread(messageId) {
+      try {
+        const data = await LAMSA_API.adminUpdateMessageReadStatus(messageId, false);
+        
+        // Update local cache
+        const msg = allMessages.find(m => m.id === messageId);
+        if (msg) msg.isRead = false;
+        
+        updateMessagesStats();
+        renderMessagesTable();
+        showToast('✅ تم تعيين الرسالة كغير مقروءة');
+      } catch (error) {
+        console.error('[Admin] Mark as unread error:', error);
+        showToast('⚠️ فشل تحديث الرسالة: ' + (error.message || 'خطأ غير معروف'));
+      }
+    }
+
+    function replyViaWhatsApp(phone, name) {
+      // Remove any non-digit characters
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      const message = encodeURIComponent(`مرحباً ${name}، شكراً لتواصلك مع لمسة (LAMSA). كيف يمكنني مساعدتك؟`);
+      const waUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+      window.open(waUrl, '_blank');
+    }
+
+    function filterMessages(filter) {
+      currentMessagesFilter = filter;
+      
+      // Update button styles
+      document.querySelectorAll('[id^="filter"]').forEach(btn => {
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--text-mid)';
+      });
+      
+      const activeBtn = document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1));
+      if (activeBtn) {
+        activeBtn.style.background = 'var(--burgundy)';
+        activeBtn.style.color = 'white';
+      }
+      
+      renderMessagesTable();
+    }
+
+    function updateMessagesStats() {
+      const unreadCount = allMessages.filter(m => !m.isRead).length;
+      const readCount = allMessages.filter(m => m.isRead).length;
+      
+      // Update tab counter
+      document.getElementById('tabMessageCount').textContent = unreadCount;
+      
+      // Update filter buttons counters
+      document.getElementById('countAll').textContent = allMessages.length;
+      document.getElementById('countUnread').textContent = unreadCount;
+      document.getElementById('countRead').textContent = readCount;
+    }
+
+    function showError(msg) {
+      const tbody = document.getElementById('messagesTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 32px; color: #D32F2F;">
+            <strong>⚠️ ${msg}</strong>
+          </td>
+        </tr>
+      `;
+    }
   </script>
 </body>
 </html>

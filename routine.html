@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>اختارلي روتين | لمسة LAMSA</title>
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -508,13 +509,54 @@
       }
     }
 
-    function showResults() {
+    async function showResults() {
       document.getElementById('quizContainer').style.display = 'none';
       const resContainer = document.getElementById('resultContainer');
       resContainer.style.display = 'block';
       triggerConfetti();
 
-      currentRecommendedProducts = window.LAMSA.getRoutineProducts(answers);
+      // Fetch products from API and apply routine logic
+      try {
+        const productsData = await LAMSA_API.getProducts({ limit: 100 });
+        const allProducts = productsData.data || productsData || [];
+        
+        // Apply routine selection logic (same as data.js)
+        const { skinType, hairType, concerns, budget } = answers;
+        const result = [];
+
+        // Skincare picks (2-3 products)
+        const skinProducts = allProducts.filter(p =>
+          p.category === 'skin' &&
+          (p.skinType?.includes('all') || p.skinType?.includes(skinType)) &&
+          p.budget?.includes(budget)
+        );
+
+        // Prioritize by concern
+        const byConcern = skinProducts.filter(p =>
+          p.concern?.some(c => concerns.includes(c))
+        );
+
+        const skinPicks = [...new Set([...byConcern, ...skinProducts])].slice(0, 3);
+        
+        // Always include sunscreen if available
+        const spf = allProducts.find(p => p.id === 'sk7' || p.name?.includes('واقي شمس'));
+        if (!skinPicks.find(p => p.id === 'sk7') && budget !== 'eco' && spf) skinPicks.push(spf);
+
+        // Haircare pick (1-2 products)
+        const hairProducts = allProducts.filter(p =>
+          p.category === 'hair' &&
+          (p.hairType?.includes('all') || p.hairType?.includes(hairType)) &&
+          p.budget?.includes(budget)
+        ).slice(0, 2);
+
+        result.push(...skinPicks, ...hairProducts);
+        currentRecommendedProducts = result;
+        
+      } catch (error) {
+        console.error('[Routine] Error loading products from API:', error);
+        // Fallback to data.js
+        currentRecommendedProducts = window.LAMSA.getRoutineProducts(answers);
+      }
 
       let total = currentRecommendedProducts.reduce((sum, p) => sum + p.price, 0);
       document.getElementById('routineTotalPrice').textContent = `${total} ${t[currentLang].currency}`;
@@ -522,8 +564,12 @@
       const grid = document.getElementById('routineProductsGrid');
       grid.innerHTML = currentRecommendedProducts.map(p => `
         <div class="product-card">
-          <div class="product-img-wrap" style="display:flex; align-items:center; justify-content:center; font-size: 3rem; background: var(--cream);">
-            ${p.emoji}
+          <div class="product-img-wrap" style="position: relative; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg-subtle);">
+            ${p.imageUrl 
+              ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 <span style="font-size: 3rem; display: none;">${p.emoji || '🧴'}</span>` 
+              : `<span style="font-size: 3rem;">${p.emoji || '🧴'}</span>`
+            }
             <span class="badge badge-popular product-badge">خطوة بالروتين</span>
           </div>
           <div class="product-info">

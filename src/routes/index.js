@@ -4,6 +4,8 @@ const productRoutes = require('./product.routes');
 const authRoutes = require('./auth.routes');
 const orderRoutes = require('./order.routes');
 const adminRoutes = require('./admin.routes');
+const settingsRoutes = require('./settings.routes');
+const contactRoutes = require('./contact.routes');
 
 /**
  * GET /api/health
@@ -24,5 +26,7 @@ router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);
 router.use('/admin', adminRoutes);
+router.use('/settings', settingsRoutes);
+router.use('/contact', contactRoutes);
 
 module.exports = router;

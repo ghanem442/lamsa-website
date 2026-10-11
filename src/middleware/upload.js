@@ -6,11 +6,12 @@ const storage = multer.memoryStorage();
 // File filter for images and CSV
 const fileFilter = (req, file, cb) => {
   if (file.fieldname === 'image') {
-    // Accept images only
-    if (file.mimetype.startsWith('image/')) {
+    // Accept images only: jpg, png, webp
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedMimeTypes.includes(file.mimetype.toLowerCase())) {
       cb(null, true);
     } else {
-      cb(new Error('الرجاء رفع صورة فقط (JPG, PNG, WebP)'), false);
+      cb(new Error('الرجاء رفع صورة بصيغة JPG أو PNG أو WebP فقط'), false);
     }
   } else if (file.fieldname === 'csv') {
     // Accept CSV only

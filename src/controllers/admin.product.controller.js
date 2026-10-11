@@ -208,7 +208,7 @@ async function deleteProduct(req, res, next) {
   try {
     const { id } = req.params;
 
-    // Get product to delete image from Cloudinary if exists
+    // Get product to check image
     const product = await withRetry(async () => {
       return await prisma.product.findUnique({ where: { id } });
     });
@@ -220,11 +220,27 @@ async function deleteProduct(req, res, next) {
       });
     }
 
-    // Delete image from Cloudinary if exists
+    // Delete image from Cloudinary ONLY if no other product uses it
     if (product.imageUrl && product.imageUrl.includes('cloudinary.com')) {
       try {
-        const publicId = product.imageUrl.split('/').slice(-1)[0].split('.')[0];
-        await cloudinary.uploader.destroy(`lamsa/${publicId}`);
+        // Check if any other product uses the same image
+        const otherProductsWithSameImage = await withRetry(async () => {
+          return await prisma.product.count({
+            where: {
+              imageUrl: product.imageUrl,
+              id: { not: id } // Exclude current product
+            }
+          });
+        });
+
+        // Only delete from Cloudinary if no other product uses this image
+        if (otherProductsWithSameImage === 0) {
+          const publicId = product.imageUrl.split('/').slice(-1)[0].split('.')[0];
+          await cloudinary.uploader.destroy(`lamsa/${publicId}`);
+          console.log(`[Admin] Deleted image from Cloudinary: lamsa/${publicId}`);
+        } else {
+          console.log(`[Admin] Image kept in Cloudinary (used by ${otherProductsWithSameImage} other product(s))`);
+        }
       } catch (err) {
         console.warn('[Admin] Failed to delete image from Cloudinary:', err.message);
       }
@@ -245,7 +261,7 @@ async function deleteProduct(req, res, next) {
 
 /**
  * POST /api/admin/products/upload-image
- * Upload image to Cloudinary
+ * Upload image to Cloudinary with validation
  */
 async function uploadImage(req, res, next) {
   try {
@@ -264,16 +280,34 @@ async function uploadImage(req, res, next) {
       });
     }
 
-    // Upload to Cloudinary
+    // Validate file size (max 5MB)
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({
+        success: false,
+        message: 'حجم الصورة يجب أن يكون أقل من 5 ميجابايت',
+      });
+    }
+
+    // Validate MIME type (jpg, png, webp only)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(req.file.mimetype.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        message: 'يُسمح فقط بصيغ JPG و PNG و WebP',
+      });
+    }
+
+    // Upload to Cloudinary with optimizations
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'lamsa',
           resource_type: 'image',
           transformation: [
-            { width: 800, height: 800, crop: 'limit' },
-            { quality: 'auto' },
+            { width: 1200, crop: 'limit' }, // Max width 1200px
+            { quality: 'auto', fetch_format: 'auto' }, // Auto quality and format
           ],
+          allowed_formats: ['jpg', 'png', 'webp'],
         },
         (error, result) => {
           if (error) reject(error);

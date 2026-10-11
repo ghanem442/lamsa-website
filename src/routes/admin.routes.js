@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminProductController = require('../controllers/admin.product.controller');
 const adminOrderController = require('../controllers/admin.order.controller');
+const adminContactController = require('../controllers/admin.contact.controller');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
@@ -38,5 +39,16 @@ router.get('/orders/stats', adminOrderController.getOrdersStats);
 router.get('/orders', adminOrderController.getAllOrders);
 router.get('/orders/:id', adminOrderController.getOrderById);
 router.patch('/orders/:id/status', adminOrderController.updateOrderStatus);
+
+// ═══════════════════════════════════
+// CONTACT MESSAGES
+// ═══════════════════════════════════
+
+// Messages stats
+router.get('/messages/stats', adminContactController.getMessagesStats);
+
+// Messages CRUD
+router.get('/messages', adminContactController.getAllMessages);
+router.patch('/messages/:id/read', adminContactController.updateMessageReadStatus);
 
 module.exports = router;

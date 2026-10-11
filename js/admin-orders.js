@@ -2,6 +2,24 @@
 // ADMIN ORDERS MANAGEMENT (Using API instead of localStorage)
 // ══════════════════════════════════════════════════
 
+// ── Security: HTML Escape Helper ──────────────
+/**
+ * Escape HTML to prevent XSS attacks
+ * Use this for ANY user/database text before innerHTML
+ */
+function escapeHtml(text) {
+  if (text == null) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+    '/': '&#x2F;'
+  };
+  return String(text).replace(/[&<>"'/]/g, (char) => map[char]);
+}
+
 let ordersCache = [];
 let ordersStats = {
   totalOrders: 0,
@@ -169,6 +187,15 @@ function renderAllOrders() {
   });
 
   tbody.innerHTML = sortedOrders.map((order) => {
+    // SECURITY: Escape all user/database-provided text to prevent XSS
+    const safeOrderNum = escapeHtml(order.orderNumber);
+    const safeCustName = escapeHtml(order.customerName || 'عميل');
+    const safePhone = escapeHtml(order.customerPhone || order.phone || '');
+    const safeWhatsapp = escapeHtml(order.whatsapp);
+    const safeCity = escapeHtml(order.governorate || order.city || '—');
+    const safeAddress = escapeHtml(order.address || '');
+    const safeNotes = escapeHtml(order.notes);
+    
     const phone = order.customerPhone || order.phone || '';
     const whatsapp = order.whatsapp; // Optional WhatsApp number (separate from phone)
     const cleanPhone = phone.replace(/^(\+20|0)/, '');
@@ -176,12 +203,37 @@ function renderAllOrders() {
       ? `https://wa.me/20${whatsapp.replace(/^(\+20|0)/, '')}` 
       : `https://wa.me/20${cleanPhone}`;
     
-    // Format items display
+    // Format items display with XSS protection
     const itemsText = (order.items || []).map(item => {
-      const productName = item.productName || 'منتج';
-      const emoji = item.productEmoji || '📦';
-      return `<div style="font-size:0.85rem;">${emoji} ${productName} × ${item.quantity}</div>`;
+      const safeProdName = escapeHtml(item.productName || 'منتج');
+      const safeProdEmoji = escapeHtml(item.productEmoji || '📦');
+      const safeImageUrl = escapeHtml(item.productImage || '');
+      const imageUrl = item.productImage;
+      
+      return `<div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; margin-bottom: 6px;">
+        ${imageUrl 
+          ? `<img src="${safeImageUrl}" alt="${safeProdName}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border);" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+             <span style="font-size: 1.2rem; display: none;">${safeProdEmoji}</span>` 
+          : `<span style="font-size: 1.2rem;">${safeProdEmoji}</span>`
+        }
+        <span>${safeProdName} × ${item.quantity}</span>
+      </div>`;
     }).join('');
+    
+    // Add custom perfume if exists
+    const customPerfumeText = order.customPerfume ? `
+      <div style="background:linear-gradient(135deg, #5C0E14 0%, #8B1538 100%); padding:10px; border-radius:8px; margin-top:8px; color:white; font-size:0.8rem; line-height:1.5;">
+        <div style="font-weight:700; margin-bottom:4px; color:var(--gold);">🌹 ${escapeHtml(order.customPerfume.customName || 'تركيبة خاصة')}</div>
+        <div style="font-size:0.75rem;">
+          <div>🍋 ${escapeHtml(order.customPerfume.topNote)}</div>
+          <div>🌸 ${escapeHtml(order.customPerfume.heartNote)}</div>
+          <div>🪵 ${escapeHtml(order.customPerfume.baseNote)}</div>
+          <div style="margin-top:4px; color:var(--gold); font-weight:600;">🧴 ${order.customPerfume.size} • ${order.customPerfume.concentration.toUpperCase()}</div>
+        </div>
+      </div>
+    ` : '';
+    
+    const productsDisplay = (itemsText || customPerfumeText) || '<span style="color:var(--text-light);">—</span>';
     
     const dateStr = new Date(order.createdAt).toLocaleString('ar-EG', { 
       dateStyle: 'short', 
@@ -201,27 +253,30 @@ function renderAllOrders() {
 
     return `
       <tr>
-        <td><strong style="color:var(--burgundy); font-family:monospace;">${order.orderNumber}</strong></td>
+        <td><strong style="color:var(--burgundy); font-family:monospace;">
+          ${safeOrderNum}
+          ${order.customPerfume ? '<span class="badge" style="background:linear-gradient(135deg, #5C0E14 0%, #8B1538 100%); border:1px solid var(--gold); color:var(--gold); font-size:0.7rem; padding:2px 6px; margin-right:6px;">🌹 عطر</span>' : ''}
+        </strong></td>
         <td style="white-space:nowrap; font-size:0.85rem;">${dateStr}</td>
-        <td><strong>${order.customerName || 'عميل'}</strong></td>
+        <td><strong>${safeCustName}</strong></td>
         <td>
           <div style="display:flex; flex-direction:column; gap:4px;">
-            <a href="tel:${phone}" class="action-btn-sm btn-call" title="اتصال مباشر بالهاتف">
-              📞 ${phone}
+            <a href="tel:${safePhone}" class="action-btn-sm btn-call" title="اتصال مباشر بالهاتف">
+              📞 ${safePhone}
             </a>
             ${whatsapp ? `<a href="${waLink}" target="_blank" class="action-btn-sm btn-wa" title="مراسلة واتساب">
-              💬 واتساب: ${whatsapp}
+              💬 واتساب: ${safeWhatsapp}
             </a>` : `<a href="${waLink}" target="_blank" class="action-btn-sm btn-wa" title="مراسلة واتساب">
               💬 محادثة واتساب
             </a>`}
           </div>
         </td>
         <td style="font-size:0.88rem;">
-          <div><strong>${order.governorate || order.city || '—'}</strong></div>
-          <div style="color:var(--text-light); font-size:0.82rem;">${order.address || ''}</div>
-          ${order.notes && !order.notes.includes('واتساب:') ? `<div style="color:var(--text-mid); font-size:0.75rem; margin-top:4px;">ملاحظات: ${order.notes}</div>` : ''}
+          <div><strong>${safeCity}</strong></div>
+          <div style="color:var(--text-light); font-size:0.82rem;">${safeAddress}</div>
+          ${order.notes && !order.notes.includes('واتساب:') ? `<div style="color:var(--text-mid); font-size:0.75rem; margin-top:4px;">ملاحظات: ${safeNotes}</div>` : ''}
         </td>
-        <td>${itemsText || '—'}</td>
+        <td>${productsDisplay}</td>
         <td><strong style="color:var(--gold); font-size:1.05rem;">${order.total || order.totalAmount} ج.م</strong></td>
         <td style="font-size:0.85rem;">${paymentDisplay}</td>
         <td>
@@ -309,9 +364,21 @@ async function viewOrderDetails(orderId) {
       details += `💳 الدفع: ${PAYMENT_MAP[order.paymentMethod] || order.paymentMethod}\n`;
       details += `\n📦 المنتجات:\n`;
       
-      order.items.forEach(item => {
-        details += `  • ${item.productEmoji || '📦'} ${item.productName} × ${item.quantity} = ${item.unitPrice * item.quantity} ج.م\n`;
-      });
+      if (order.items && order.items.length > 0) {
+        order.items.forEach(item => {
+          details += `  • ${item.productEmoji || '📦'} ${item.productName} × ${item.quantity} = ${item.unitPrice * item.quantity} ج.م\n`;
+        });
+      }
+      
+      if (order.customPerfume) {
+        const cp = order.customPerfume;
+        details += `\n🌹 **عطر مخصص: ${cp.customName || 'تركيبة خاصة'}**\n`;
+        details += `  🍋 المقدمة: ${cp.topNote}\n`;
+        details += `  🌸 القلب: ${cp.heartNote}\n`;
+        details += `  🪵 القاعدة: ${cp.baseNote}\n`;
+        details += `  🧴 ${cp.size} • ${cp.concentration.toUpperCase()}\n`;
+        details += `  💰 ${cp.calculatedPrice} ج.م\n`;
+      }
       
       details += `\n💰 الإجمالي: ${order.total} ج.م`;
       details += `\n📅 التاريخ: ${new Date(order.createdAt).toLocaleString('ar-EG')}`;

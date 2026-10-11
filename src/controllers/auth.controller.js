@@ -20,10 +20,10 @@ async function register(req, res, next) {
       });
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+        message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
       });
     }
 

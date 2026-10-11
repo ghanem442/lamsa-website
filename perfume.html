@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>مُختبر صناعة العطور | لمسة LAMSA</title>
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -627,6 +628,7 @@
 
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script>
     // ── Olfactory Notes Database ──────────────────────────
@@ -744,16 +746,7 @@
       updateLabCalculations();
     }
 
-    function updateLabCalculations() {
-      const size = document.getElementById('labSizeSelect').value;
-      const conc = document.getElementById('labConcSelect').value;
-
-      const concLabel = conc === 'edt' ? 'EAU DE TOILETTE' : (conc === 'edp' ? 'EAU DE PARFUM' : 'EXTRAIT DE PARFUM');
-      document.getElementById('flaconLabelConc').textContent = concLabel;
-
-      const price = window.LAMSA ? window.LAMSA.getPerfumePrice(size, conc) : 500;
-      document.getElementById('labPriceDisplay').textContent = `${price} ج.م`;
-    }
+    // Note: updateLabCalculations() is now defined earlier in the file (after loadPerfumePricesFromAPI)
 
     function renderPresetsGrid() {
       const PRESETS = [
@@ -809,43 +802,158 @@
       document.getElementById('orderLabModal').classList.remove('active');
     }
 
-    function submitCustomPerfumeOrder(e) {
+    async function submitCustomPerfumeOrder(e) {
       e.preventDefault();
-      const name = document.getElementById('orderCustName').value;
-      const phone = document.getElementById('orderCustPhone').value;
-      const notes = document.getElementById('orderCustNotes').value;
+      
+      const btn = e.target.querySelector('button[type="submit"]') || e.target;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'جاري إرسال الطلب...';
+      
+      const name = document.getElementById('orderCustName').value.trim();
+      const phone = document.getElementById('orderCustPhone').value.trim();
+      const notes = document.getElementById('orderCustNotes').value.trim();
       const size = document.getElementById('labSizeSelect').value;
-      const conc = document.getElementById('labConcSelect').options[document.getElementById('labConcSelect').selectedIndex].text;
-      const price = document.getElementById('labPriceDisplay').textContent;
+      const conc = document.getElementById('labConcSelect').value;
+      const priceText = document.getElementById('labPriceDisplay').textContent;
+      const price = parseFloat(priceText.replace(/[^\d.]/g, ''));
 
-      const msg = `🌹 *طلب تركيب عطر خاص — مُختبر متجر لمسة (LAMSA)*\n\n` +
-                  `👤 *اسم العميل:* ${name}\n` +
-                  `📞 *رقم الهاتف:* ${phone}\n` +
-                  `💎 *الاسم المحفور على الزجاجة:* "${customName}"\n\n` +
-                  `🧪 *الهرم العطري المختار:*\n` +
-                  `🍋 الافتتاحية: ${selectedTop.name}\n` +
-                  `🌸 القلب: ${selectedHeart.name}\n` +
-                  `🪵 القاعدة: ${selectedBase.name}\n\n` +
-                  `🧴 *الحجم والتركيز:* ${size} (${conc})\n` +
-                  `💰 *السعر التقديري:* ${price}\n` +
-                  `📝 *ملاحظات خاصة:* ${notes || 'لا يوجد'}`;
+      // Validation
+      if (!name || name.length < 2) {
+        alert('❌ الرجاء إدخال اسمك الكريم');
+        btn.disabled = false;
+        btn.textContent = originalText;
+        return;
+      }
 
-      // Must open synchronously (user gesture) or the browser blocks the popup.
-      const { url, opened } = openWhatsApp(msg);
-      closeOrderModal();
-      triggerConfetti();
-      if (opened) {
-        showToast('✓ تم تجهيز وصفة عطرك! أرسل الرسالة من واتساب لتأكيد الطلب');
-      } else {
-        showWhatsAppFallback(url);
+      if (!phone || phone.length < 11) {
+        alert('❌ الرجاء إدخال رقم هاتف صحيح');
+        btn.disabled = false;
+        btn.textContent = originalText;
+        return;
+      }
+
+      try {
+        // Send order to backend
+        const orderData = {
+          customerName: name,
+          customerPhone: phone,
+          governorate: 'الإسكندرية', // Default for perfume studio
+          address: 'سيتم التواصل للتوصيل',
+          paymentMethod: 'cod',
+          notes: notes || '',
+          items: [], // No products, only custom perfume
+          customPerfume: {
+            customName: customName,
+            topNote: selectedTop.name,
+            heartNote: selectedHeart.name,
+            baseNote: selectedBase.name,
+            size: size,
+            concentration: conc,
+            calculatedPrice: price
+          }
+        };
+
+        const result = await LAMSA_API.createOrder(orderData);
+        
+        closeOrderModal();
+        triggerConfetti();
+        
+        // Success message
+        alert(`✅ تم إرسال طلبك بنجاح!\n\nرقم الطلب: ${result.order.orderNumber}\n\nسنتواصل معك قريباً على: ${phone}`);
+        
+        // Reset form
+        document.getElementById('orderCustName').value = '';
+        document.getElementById('orderCustPhone').value = '';
+        document.getElementById('orderCustNotes').value = '';
+        
+        showToast('✓ تم تسجيل طلبك في النظام بنجاح! سنتواصل معك قريباً');
+        
+      } catch (error) {
+        console.error('[Perfume] Order error:', error);
+        alert('❌ حدث خطأ في إرسال الطلب: ' + error.message + '\n\nيمكنك التواصل معنا مباشرة عبر واتساب');
+        
+        // Fallback to WhatsApp
+        const msg = `🌹 *طلب تركيب عطر خاص — مُختبر متجر لمسة (LAMSA)*\n\n` +
+                    `👤 *اسم العميل:* ${name}\n` +
+                    `📞 *رقم الهاتف:* ${phone}\n` +
+                    `💎 *الاسم المحفور على الزجاجة:* "${customName}"\n\n` +
+                    `🧪 *الهرم العطري المختار:*\n` +
+                    `🍋 الافتتاحية: ${selectedTop.name}\n` +
+                    `🌸 القلب: ${selectedHeart.name}\n` +
+                    `🪵 القاعدة: ${selectedBase.name}\n\n` +
+                    `🧴 *الحجم والتركيز:* ${size} (${conc.toUpperCase()})\n` +
+                    `💰 *السعر التقديري:* ${priceText}\n` +
+                    `📝 *ملاحظات خاصة:* ${notes || 'لا يوجد'}`;
+
+        const { url, opened } = openWhatsApp(msg);
+        if (!opened) {
+          showWhatsAppFallback(url);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
       }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Load perfume prices from API
+      loadPerfumePricesFromAPI();
+      
       renderNotesGrid();
       renderPresetsGrid();
       updateLiquidAndGauges();
     });
+
+    // Global variable to store loaded prices
+    let cachedPerfumePrices = null;
+
+    async function loadPerfumePricesFromAPI() {
+      try {
+        const data = await LAMSA_API.getPerfumePrices();
+        cachedPerfumePrices = data.prices;
+        
+        // Also save to localStorage as fallback
+        localStorage.setItem('lamsa_perfume_prices', JSON.stringify(data.prices));
+        
+        // Update price display immediately
+        updateLabCalculations();
+      } catch (error) {
+        console.error('[Perfume] Error loading prices from API:', error);
+        
+        // Fallback to localStorage
+        const savedPrices = localStorage.getItem('lamsa_perfume_prices');
+        if (savedPrices) {
+          try {
+            cachedPerfumePrices = JSON.parse(savedPrices);
+          } catch (e) {
+            // Use defaults from data.js
+            cachedPerfumePrices = null;
+          }
+        }
+        
+        // Update price display with fallback
+        updateLabCalculations();
+      }
+    }
+
+    function updateLabCalculations() {
+      const size = document.getElementById('labSizeSelect').value;
+      const conc = document.getElementById('labConcSelect').value;
+
+      const concLabel = conc === 'edt' ? 'EAU DE TOILETTE' : (conc === 'edp' ? 'EAU DE PARFUM' : 'EXTRAIT DE PARFUM');
+      document.getElementById('flaconLabelConc').textContent = concLabel;
+
+      // Get price from cached API data, fallback to data.js getPerfumePrice
+      let price = 500;
+      if (cachedPerfumePrices && cachedPerfumePrices[size] && cachedPerfumePrices[size][conc]) {
+        price = cachedPerfumePrices[size][conc];
+      } else if (window.LAMSA && window.LAMSA.getPerfumePrice) {
+        price = window.LAMSA.getPerfumePrice(size, conc);
+      }
+      
+      document.getElementById('labPriceDisplay').textContent = `${price} ج.م`;
+    }
   </script>
 </body>
 </html>

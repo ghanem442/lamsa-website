@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
@@ -8,6 +8,7 @@
   <meta name="theme-color" content="#5C0E14">
   <meta property="og:title" content="متجر لمسة | LAMSA Shop">
   <meta property="og:image" content="assets/logo.png">
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -402,8 +403,12 @@
         const isInFavorites = isFavorite(p.id);
         html += `
           <div class="product-card" onclick="openQuickView('${p.id}')">
-            <div class="product-img-wrap" style="display: flex; align-items: center; justify-content: center; min-height: 200px; overflow:hidden;">
-              ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;">` : (p.emoji ? `<span style="font-size: 3rem;">${p.emoji}</span>` : '')}
+            <div class="product-img-wrap" style="position: relative; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg-subtle);">
+              ${p.imageUrl 
+                ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <span style="font-size: 3rem; display: none;">${p.emoji || '🧴'}</span>` 
+                : `<span style="font-size: 3rem;">${p.emoji || '🧴'}</span>`
+              }
               ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'مميز'}</span>` : ''}
               <button class="product-wishlist ${isInFavorites ? 'active' : ''}" onclick="toggleFavorite('${p.id}', event)">🤍</button>
             </div>
@@ -438,15 +443,16 @@
     // Load products from API on page load
     async function loadProducts() {
       try {
-        const response = await LAMSA_API.getProducts({
+        const data = await LAMSA_API.getProducts({
           category: activeCat !== 'all' ? activeCat : undefined,
           subCategory: activeSubCat !== 'all' ? activeSubCat : undefined,
           search: searchQuery || undefined,
           sort: currentSort !== 'default' ? currentSort : undefined,
         });
 
-        if (response.ok && response.data) {
-          allProducts = response.data.data || [];
+        // API returns data directly on 2xx
+        if (data && data.data) {
+          allProducts = data.data || [];
           window.currentProducts = allProducts; // Make available globally for modals/cart
           await renderShop();
         } else {

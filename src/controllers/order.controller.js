@@ -21,7 +21,18 @@ const createOrderSchema = z.object({
       productId: z.string().min(1, 'معرف المنتج مطلوب'),
       quantity: z.number().int().min(1, 'الكمية يجب أن تكون على الأقل 1').max(50, 'الكمية القصوى 50')
     })
-  ).min(1, 'يجب إضافة منتج واحد على الأقل').max(30, 'الحد الأقصى 30 منتج في الطلب')
+  ).min(0, 'قائمة المنتجات مطلوبة').max(30, 'الحد الأقصى 30 منتج في الطلب'),
+  
+  // Custom perfume fields (optional)
+  customPerfume: z.object({
+    customName: z.string().min(1).max(100),
+    topNote: z.string().min(1).max(100),
+    heartNote: z.string().min(1).max(100),
+    baseNote: z.string().min(1).max(100),
+    size: z.enum(['30ml', '50ml', '100ml']),
+    concentration: z.enum(['edt', 'edp', 'ext']),
+    calculatedPrice: z.number().min(0)
+  }).optional()
 });
 
 /**
@@ -60,48 +71,57 @@ async function createOrder(req, res, next) {
     // Start transaction
     const order = await withRetry(async () => {
       return await prisma.$transaction(async (tx) => {
-        // 1. Load all products and check stock
-        const productIds = validatedData.items.map(item => item.productId);
-        const products = await tx.product.findMany({
-          where: {
-            id: { in: productIds }
-          }
-        });
-        
-        // Map products by ID
-        const productMap = {};
-        products.forEach(p => {
-          productMap[p.id] = p;
-        });
-        
-        // 2. Validate stock and calculate prices
         let subtotal = 0;
         const orderItems = [];
         
-        for (const item of validatedData.items) {
-          const product = productMap[item.productId];
-          
-          if (!product) {
-            throw new Error(`المنتج غير موجود: ${item.productId}`);
-          }
-          
-          if (product.stockQty < item.quantity) {
-            throw new Error(
-              `الكمية المطلوبة من "${product.nameAr}" غير متوفرة في المخزون. المتاح: ${product.stockQty}`
-            );
-          }
-          
-          const lineTotal = product.price * item.quantity;
-          subtotal += lineTotal;
-          
-          orderItems.push({
-            productId: product.id,
-            quantity: item.quantity,
-            unitPrice: product.price,
-            productName: product.nameAr,
-            productImage: product.imageUrl,
-            productEmoji: product.emoji
+        // Check if this is a custom perfume order or regular products order
+        const isCustomPerfumeOrder = validatedData.customPerfume && !validatedData.items.length;
+        
+        if (isCustomPerfumeOrder) {
+          // Custom perfume order - no products, just the perfume
+          subtotal = validatedData.customPerfume.calculatedPrice;
+        } else {
+          // Regular products order
+          // 1. Load all products and check stock
+          const productIds = validatedData.items.map(item => item.productId);
+          const products = await tx.product.findMany({
+            where: {
+              id: { in: productIds }
+            }
           });
+          
+          // Map products by ID
+          const productMap = {};
+          products.forEach(p => {
+            productMap[p.id] = p;
+          });
+          
+          // 2. Validate stock and calculate prices
+          for (const item of validatedData.items) {
+            const product = productMap[item.productId];
+            
+            if (!product) {
+              throw new Error(`المنتج غير موجود: ${item.productId}`);
+            }
+            
+            if (product.stockQty < item.quantity) {
+              throw new Error(
+                `الكمية المطلوبة من "${product.nameAr}" غير متوفرة في المخزون. المتاح: ${product.stockQty}`
+              );
+            }
+            
+            const lineTotal = product.price * item.quantity;
+            subtotal += lineTotal;
+            
+            orderItems.push({
+              productId: product.id,
+              quantity: item.quantity,
+              unitPrice: product.price,
+              productName: product.nameAr,
+              productImage: product.imageUrl,
+              productEmoji: product.emoji
+            });
+          }
         }
         
         // 3. Calculate total
@@ -112,39 +132,64 @@ async function createOrder(req, res, next) {
         const orderNumber = await generateOrderNumber();
         
         // 5. Create order
-        const newOrder = await tx.order.create({
-          data: {
-            orderNumber,
-            userId,
-            customerName: validatedData.customerName,
-            phone: validatedData.customerPhone,    // Map API field to schema field
-            city: validatedData.governorate,        // Map API field to schema field
-            address: validatedData.address,
-            paymentMethod: validatedData.paymentMethod,
-            notes: validatedData.notes || null,
-            subtotal,
-            shippingFee,
-            totalAmount,                            // Schema field name
-            orderStatus: 'pending',                 // Schema field name
-            items: {
-              create: orderItems
+        const orderData = {
+          orderNumber,
+          userId,
+          customerName: validatedData.customerName,
+          phone: validatedData.customerPhone,
+          city: validatedData.governorate,
+          address: validatedData.address,
+          paymentMethod: validatedData.paymentMethod,
+          notes: validatedData.notes || null,
+          subtotal,
+          shippingFee,
+          totalAmount,
+          orderStatus: 'pending'
+        };
+        
+        // Add items only if there are products
+        if (orderItems.length > 0) {
+          orderData.items = {
+            create: orderItems
+          };
+        }
+        
+        // Add custom perfume if provided
+        if (validatedData.customPerfume) {
+          orderData.customPerfume = {
+            create: {
+              userId,
+              customName: validatedData.customPerfume.customName,
+              topNote: validatedData.customPerfume.topNote,
+              heartNote: validatedData.customPerfume.heartNote,
+              baseNote: validatedData.customPerfume.baseNote,
+              size: validatedData.customPerfume.size,
+              concentration: validatedData.customPerfume.concentration,
+              calculatedPrice: validatedData.customPerfume.calculatedPrice
             }
-          },
+          };
+        }
+        
+        const newOrder = await tx.order.create({
+          data: orderData,
           include: {
-            items: true
+            items: true,
+            customPerfume: true
           }
         });
         
-        // 6. Decrease stock
-        for (const item of validatedData.items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stockQty: {
-                decrement: item.quantity
+        // 6. Decrease stock (only for regular products)
+        if (!isCustomPerfumeOrder) {
+          for (const item of validatedData.items) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stockQty: {
+                  decrement: item.quantity
+                }
               }
-            }
-          });
+            });
+          }
         }
         
         return newOrder;
@@ -165,7 +210,8 @@ async function createOrder(req, res, next) {
         subtotal: order.subtotal,
         shippingFee: order.shippingFee,
         status: order.orderStatus,
-        items: order.items
+        items: order.items,
+        customPerfume: order.customPerfume || null
       }
     });
     
@@ -245,6 +291,7 @@ async function getOrderById(req, res, next) {
               }
             }
           },
+          customPerfume: true,
           user: {
             select: {
               name: true,

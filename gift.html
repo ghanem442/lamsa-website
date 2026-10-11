@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>صمم هديتك | لمسة LAMSA</title>
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -457,7 +458,7 @@
       }
     }
 
-    function showGiftResult() {
+    async function showGiftResult() {
       for (let i = 1; i <= 3; i++) {
         document.getElementById(`gStep${i}`).style.display = 'none';
       }
@@ -465,12 +466,49 @@
       document.getElementById('giftResult').style.display = 'block';
       triggerConfetti();
 
-      currentGiftPicks = window.LAMSA.getGiftProducts(gAnswers);
+      // Fetch products from API and apply gift logic
+      try {
+        const productsData = await LAMSA_API.getProducts({ category: 'gifts', limit: 50 });
+        const allGifts = productsData.data || productsData || [];
+        
+        // Apply gift selection logic (same as data.js)
+        const { forWhom, occasion, budget } = gAnswers;
+        const budgetMap = { low: 'low', mid: 'mid', high: 'high' };
+        const budgetKey = budgetMap[budget] || 'mid';
+
+        let gifts = allGifts.filter(p =>
+          (p.forWhom?.includes('all') || p.forWhom?.includes(forWhom)) &&
+          (p.occasion?.includes('all') || p.occasion?.some(o => o === occasion)) &&
+          p.budget === budgetKey
+        );
+
+        if (gifts.length === 0) {
+          // Fallback: just budget match
+          gifts = allGifts.filter(p => p.budget === budgetKey);
+        }
+        
+        currentGiftPicks = gifts.slice(0, 2);
+        
+        // If no API results, fallback to data.js
+        if (currentGiftPicks.length === 0) {
+          currentGiftPicks = window.LAMSA.getGiftProducts(gAnswers);
+        }
+        
+      } catch (error) {
+        console.error('[Gift] Error loading products from API:', error);
+        // Fallback to data.js
+        currentGiftPicks = window.LAMSA.getGiftProducts(gAnswers);
+      }
+
       const grid = document.getElementById('giftMatchesGrid');
       grid.innerHTML = currentGiftPicks.map(p => `
         <div class="product-card">
-          <div class="product-img-wrap" style="display:flex; align-items:center; justify-content:center; font-size:3.5rem; background:var(--cream);">
-            ${p.emoji}
+          <div class="product-img-wrap" style="position: relative; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg-subtle);">
+            ${p.imageUrl 
+              ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 <span style="font-size: 3.5rem; display: none;">${p.emoji || '🎁'}</span>` 
+              : `<span style="font-size: 3.5rem;">${p.emoji || '🎁'}</span>`
+            }
           </div>
           <div class="product-info">
             <h4 class="product-name">${currentLang === 'ar' ? p.name : p.nameEn}</h4>

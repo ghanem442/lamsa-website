@@ -3,6 +3,24 @@
    (Luxury + Dark Mode + QuickView + Checkout)
    ============================================= */
 
+// ── Security: HTML Escape Helper ──────────────
+/**
+ * Escape HTML to prevent XSS attacks
+ * Use this for ANY user/database text before innerHTML
+ */
+function escapeHtml(text) {
+  if (text == null) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+    '/': '&#x2F;'
+  };
+  return String(text).replace(/[&<>"'/]/g, (char) => map[char]);
+}
+
 // ── Translations ──────────────────────────────
 const t = {
   ar: {
@@ -773,7 +791,13 @@ function renderCartItems() {
 
   body.innerHTML = cart.map(item => `
     <div class="cart-item">
-      <div class="cart-item-img">${item.emoji || '🧴'}</div>
+      <div class="cart-item-img">
+        ${item.imageUrl 
+          ? `<img src="${item.imageUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+             <span style="font-size: 2rem; display: none;">${item.emoji || '🧴'}</span>` 
+          : `<span style="font-size: 2rem;">${item.emoji || '🧴'}</span>`
+        }
+      </div>
       <div style="flex:1;">
         <div class="cart-item-name">${lang === 'ar' ? item.name : item.nameEn}</div>
         <div class="cart-item-price">${item.price} ${t[lang].currency}</div>
