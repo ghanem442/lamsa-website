@@ -101,14 +101,14 @@ async function main() {
   };
 
   await prisma.setting.upsert({
-    where: { key: 'perfume_pricing_matrix' },
+    where: { key: 'perfume_prices' },
     update: { value: defaultPerfumeMatrix },
     create: {
-      key: 'perfume_pricing_matrix',
+      key: 'perfume_prices',
       value: defaultPerfumeMatrix,
     },
   });
-  console.log('✅ Perfume pricing matrix seeded.');
+  console.log('✅ Perfume pricing settings seeded.');
 
   // 3. Seed Products from js/data.js
   const rawProducts = parseProductsFromDataJs();

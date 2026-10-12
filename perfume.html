@@ -382,7 +382,6 @@
         <span id="cartTotal">0 ج.م</span>
       </div>
       <button class="btn btn-primary btn-full mb-8" id="cartCheckout" data-key="cart_checkout">إتمام الطلب والشحن 🚀</button>
-      <button class="btn btn-outline btn-full" id="cartQuickWhatsApp" data-key="cart_whatsapp">طلب سريع عبر واتساب 💬</button>
     </div>
   </div>
 
@@ -472,7 +471,7 @@
         <!-- Engraving Input -->
         <div class="engrave-input-wrap">
           <label>✍️ احفر اسمك أو اسم العطر على الزجاجة:</label>
-          <input type="text" class="form-input" id="customNameInput" value="عطر لمسة الخاص" oninput="updateEngraving(this.value)" placeholder="اكتب اسمك هنا ليظهر محفوراً...">
+          <input type="text" class="form-input" id="customNameInput" value="سوفاج الملكي (Sauvage Blend)" oninput="updateEngraving(this.value)" placeholder="اكتب اسمك هنا ليظهر محفوراً...">
         </div>
 
         <!-- Size & Concentration Selectors -->
@@ -607,14 +606,14 @@
           <input type="text" class="form-input" id="orderCustName" required placeholder="اسمك الكامل">
         </div>
         <div class="input-group">
-          <label>رقم الهاتف / واتساب *</label>
+          <label>رقم الهاتف *</label>
           <input type="tel" class="form-input" id="orderCustPhone" required placeholder="01xxxxxxxxx">
         </div>
         <div class="input-group">
           <label>ملاحظات إضافية للمحل (اختياري)</label>
           <textarea class="form-textarea" id="orderCustNotes" placeholder="أي تفاصيل خاصة تحب نضيفها للتركيبة؟..."></textarea>
         </div>
-        <button type="submit" class="btn btn-gold btn-lg btn-full">إرسال التركيبة لتجهيزها فوراً عبر واتساب 💬🚀</button>
+        <button type="submit" class="btn btn-gold btn-lg btn-full">إرسال الطلب 🚀</button>
       </form>
     </div>
   </div>
@@ -660,7 +659,7 @@
     let selectedTop = TOP_NOTES[0];
     let selectedHeart = HEART_NOTES[1];
     let selectedBase = BASE_NOTES[0];
-    let customName = "عطر لمسة الخاص";
+    let customName = "سوفاج الملكي (Sauvage Blend)";
 
     function switchAtelierMode(mode) {
       document.getElementById('btnModeLab').classList.toggle('active', mode === 'lab');
@@ -717,7 +716,7 @@
     }
 
     function updateEngraving(val) {
-      customName = val.trim() || "عطر لمسة الخاص";
+      customName = val.trim() || "سوفاج الملكي (Sauvage Blend)";
       document.getElementById('flaconLabelName').textContent = customName;
     }
 
@@ -849,8 +848,8 @@
             heartNote: selectedHeart.name,
             baseNote: selectedBase.name,
             size: size,
-            concentration: conc,
-            calculatedPrice: price
+            concentration: conc
+            // calculatedPrice removed - server calculates from settings
           }
         };
 
@@ -871,28 +870,42 @@
         
       } catch (error) {
         console.error('[Perfume] Order error:', error);
-        alert('❌ حدث خطأ في إرسال الطلب: ' + error.message + '\n\nيمكنك التواصل معنا مباشرة عبر واتساب');
-        
-        // Fallback to WhatsApp
-        const msg = `🌹 *طلب تركيب عطر خاص — مُختبر متجر لمسة (LAMSA)*\n\n` +
-                    `👤 *اسم العميل:* ${name}\n` +
-                    `📞 *رقم الهاتف:* ${phone}\n` +
-                    `💎 *الاسم المحفور على الزجاجة:* "${customName}"\n\n` +
-                    `🧪 *الهرم العطري المختار:*\n` +
-                    `🍋 الافتتاحية: ${selectedTop.name}\n` +
-                    `🌸 القلب: ${selectedHeart.name}\n` +
-                    `🪵 القاعدة: ${selectedBase.name}\n\n` +
-                    `🧴 *الحجم والتركيز:* ${size} (${conc.toUpperCase()})\n` +
-                    `💰 *السعر التقديري:* ${priceText}\n` +
-                    `📝 *ملاحظات خاصة:* ${notes || 'لا يوجد'}`;
-
-        const { url, opened } = openWhatsApp(msg);
-        if (!opened) {
-          showWhatsAppFallback(url);
-        }
-      } finally {
         btn.disabled = false;
         btn.textContent = originalText;
+        
+        // Check if error has field-level validation errors
+        if (error.errors && Array.isArray(error.errors)) {
+          // Display field errors inside modal
+          let errorHTML = '<div style="background: #FFEAEA; border: 1px solid #D32F2F; border-radius: 8px; padding: 16px; margin-bottom: 16px;">';
+          errorHTML += '<div style="color: #D32F2F; font-weight: 700; margin-bottom: 8px;">❌ يُرجى تصحيح الأخطاء التالية:</div>';
+          errorHTML += '<ul style="margin: 0; padding-right: 20px; color: #721C24;">';
+          
+          error.errors.forEach(err => {
+            errorHTML += `<li><strong>${err.fieldName}:</strong> ${err.message}</li>`;
+          });
+          
+          errorHTML += '</ul></div>';
+          
+          // Show errors in modal (before the form)
+          const modalContent = document.querySelector('.modal-box');
+          const existingError = modalContent.querySelector('.validation-errors');
+          if (existingError) {
+            existingError.remove();
+          }
+          
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'validation-errors';
+          errorDiv.innerHTML = errorHTML;
+          modalContent.insertBefore(errorDiv, modalContent.firstChild);
+          
+          return; // Don't continue for validation errors
+        }
+        
+        // For other errors, show generic message
+        let errorMsg = error.message || 'حدث خطأ غير معروف';
+        alert('❌ حدث خطأ في إرسال الطلب:\n' + errorMsg);
+      } finally {
+        // Don't re-enable button here, it's done in catch
       }
     }
 
@@ -913,24 +926,13 @@
         const data = await LAMSA_API.getPerfumePrices();
         cachedPerfumePrices = data.prices;
         
-        // Also save to localStorage as fallback
-        localStorage.setItem('lamsa_perfume_prices', JSON.stringify(data.prices));
-        
         // Update price display immediately
         updateLabCalculations();
       } catch (error) {
         console.error('[Perfume] Error loading prices from API:', error);
         
-        // Fallback to localStorage
-        const savedPrices = localStorage.getItem('lamsa_perfume_prices');
-        if (savedPrices) {
-          try {
-            cachedPerfumePrices = JSON.parse(savedPrices);
-          } catch (e) {
-            // Use defaults from data.js
-            cachedPerfumePrices = null;
-          }
-        }
+        // Use defaults from data.js on error
+        cachedPerfumePrices = null;
         
         // Update price display with fallback
         updateLabCalculations();

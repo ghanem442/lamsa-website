@@ -1,6 +1,14 @@
 const prisma = require('../config/prisma');
 const { withRetry } = require('../utils/prismaRetry');
 const { z } = require('zod');
+const { 
+  PERFUME_SIZES, 
+  PERFUME_CONCENTRATIONS, 
+  PERFUME_SETTINGS_KEY,
+  ALLOWED_SCENTS,
+  MAX_CUSTOM_NAME_LENGTH,
+  MAX_NOTES_LENGTH
+} = require('../constants/perfume');
 
 // Egyptian phone validation
 const egyptianPhoneSchema = z.string().regex(
@@ -15,7 +23,7 @@ const createOrderSchema = z.object({
   governorate: z.string().min(2, 'المحافظة مطلوبة').max(100),
   address: z.string().min(5, 'العنوان مطلوب').max(500),
   paymentMethod: z.enum(['cod', 'instapay', 'voda']),
-  notes: z.string().max(1000).optional(),
+  notes: z.string().max(MAX_NOTES_LENGTH, `الملاحظات يجب ألا تتجاوز ${MAX_NOTES_LENGTH} حرف`).optional().nullable(),
   items: z.array(
     z.object({
       productId: z.string().min(1, 'معرف المنتج مطلوب'),
@@ -25,13 +33,23 @@ const createOrderSchema = z.object({
   
   // Custom perfume fields (optional)
   customPerfume: z.object({
-    customName: z.string().min(1).max(100),
-    topNote: z.string().min(1).max(100),
-    heartNote: z.string().min(1).max(100),
-    baseNote: z.string().min(1).max(100),
-    size: z.enum(['30ml', '50ml', '100ml']),
-    concentration: z.enum(['edt', 'edp', 'ext']),
-    calculatedPrice: z.number().min(0)
+    customName: z.string()
+      .min(1, 'اسم العطر مطلوب')
+      .max(MAX_CUSTOM_NAME_LENGTH, `اسم العطر يجب ألا يتجاوز ${MAX_CUSTOM_NAME_LENGTH} حرف`)
+      .refine(
+        (name) => ALLOWED_SCENTS.includes(name),
+        { message: 'اسم العطر غير مسموح به. يرجى اختيار عطر من القائمة المتاحة' }
+      ),
+    topNote: z.string().min(1).max(100, 'المقدمة يجب ألا تتجاوز 100 حرف'),
+    heartNote: z.string().min(1).max(100, 'القلب يجب ألا تتجاوز 100 حرف'),
+    baseNote: z.string().min(1).max(100, 'القاعدة يجب ألا تتجاوز 100 حرف'),
+    size: z.enum(PERFUME_SIZES, { 
+      errorMap: () => ({ message: `الحجم يجب أن يكون أحد: ${PERFUME_SIZES.join(', ')}` }) 
+    }),
+    concentration: z.enum(PERFUME_CONCENTRATIONS, {
+      errorMap: () => ({ message: `التركيز يجب أن يكون أحد: ${PERFUME_CONCENTRATIONS.join(', ')}` })
+    })
+    // calculatedPrice removed - server calculates from settings
   }).optional()
 });
 
@@ -73,13 +91,31 @@ async function createOrder(req, res, next) {
       return await prisma.$transaction(async (tx) => {
         let subtotal = 0;
         const orderItems = [];
+        let calculatedPerfumePrice = null;
         
         // Check if this is a custom perfume order or regular products order
         const isCustomPerfumeOrder = validatedData.customPerfume && !validatedData.items.length;
         
         if (isCustomPerfumeOrder) {
-          // Custom perfume order - no products, just the perfume
-          subtotal = validatedData.customPerfume.calculatedPrice;
+          // Custom perfume order - calculate price from settings
+          const perfumeSettings = await tx.setting.findUnique({
+            where: { key: PERFUME_SETTINGS_KEY }
+          });
+          
+          if (!perfumeSettings) {
+            throw new Error('أسعار العطور غير متوفرة في النظام');
+          }
+          
+          const prices = perfumeSettings.value;
+          const { size, concentration } = validatedData.customPerfume;
+          
+          // Validate and get price
+          if (!prices[size] || !prices[size][concentration]) {
+            throw new Error(`سعر غير متوفر للحجم ${size} والتركيز ${concentration}`);
+          }
+          
+          calculatedPerfumePrice = prices[size][concentration];
+          subtotal = calculatedPerfumePrice;
         } else {
           // Regular products order
           // 1. Load all products and check stock
@@ -165,7 +201,7 @@ async function createOrder(req, res, next) {
               baseNote: validatedData.customPerfume.baseNote,
               size: validatedData.customPerfume.size,
               concentration: validatedData.customPerfume.concentration,
-              calculatedPrice: validatedData.customPerfume.calculatedPrice
+              calculatedPrice: calculatedPerfumePrice // Server-calculated price
             }
           };
         }
@@ -216,16 +252,50 @@ async function createOrder(req, res, next) {
     });
     
   } catch (error) {
+    // Enhanced Zod validation error handling
     if (error instanceof z.ZodError) {
-      const firstError = error.errors?.[0];
-      const errorMsg = firstError?.message || 'خطأ في التحقق من البيانات';
+      // Map Zod errors to Arabic field-level errors
+      const fieldErrors = error.issues.map(err => {  // Changed from error.errors to error.issues
+        const fieldPath = err.path.join('.');
+        let fieldName = fieldPath;
+        let message = err.message;
+        
+        // Map field paths to Arabic names
+        const fieldNameMap = {
+          'customerName': 'اسم العميل',
+          'customerPhone': 'رقم الهاتف',
+          'governorate': 'المحافظة',
+          'address': 'العنوان',
+          'notes': 'الملاحظات',
+          'customPerfume.customName': 'اسم العطر',
+          'customPerfume.topNote': 'المقدمة',
+          'customPerfume.heartNote': 'القلب',
+          'customPerfume.baseNote': 'القاعدة',
+          'customPerfume.size': 'الحجم',
+          'customPerfume.concentration': 'التركيز'
+        };
+        
+        const arabicFieldName = fieldNameMap[fieldPath] || fieldName;
+        
+        return {
+          field: fieldPath,
+          fieldName: arabicFieldName,
+          message: message
+        };
+      });
+      
+      console.log('[Order] Validation failed:', JSON.stringify(fieldErrors, null, 2));
+      
+      const firstError = fieldErrors[0];
+      
       return res.status(400).json({
         success: false,
-        message: errorMsg
+        message: firstError ? `${firstError.fieldName}: ${firstError.message}` : 'خطأ في التحقق من البيانات',
+        errors: fieldErrors
       });
     }
     
-    if (error.message && (error.message.includes('المنتج') || error.message.includes('الكمية') || error.message.includes('المخزون'))) {
+    if (error.message && (error.message.includes('المنتج') || error.message.includes('الكمية') || error.message.includes('المخزون') || error.message.includes('أسعار'))) {
       return res.status(400).json({
         success: false,
         message: error.message

@@ -4,6 +4,12 @@
  */
 
 const prisma = require('../config/prisma');
+const { 
+  PERFUME_SIZES, 
+  PERFUME_CONCENTRATIONS, 
+  PERFUME_SETTINGS_KEY, 
+  DEFAULT_PERFUME_PRICES 
+} = require('../constants/perfume');
 
 /**
  * Get perfume pricing settings
@@ -12,18 +18,11 @@ const prisma = require('../config/prisma');
 async function getPerfumePrices(req, res, next) {
   try {
     const setting = await prisma.setting.findUnique({
-      where: { key: 'perfume_prices' },
+      where: { key: PERFUME_SETTINGS_KEY },
     });
 
-    // Default prices if not found
-    const defaultPrices = {
-      '30ml': { edt: 250, edp: 350, ext: 450 },
-      '50ml': { edt: 400, edp: 500, ext: 650 },
-      '100ml': { edt: 600, edp: 750, ext: 950 },
-    };
-
     res.json({
-      prices: setting ? setting.value : defaultPrices,
+      prices: setting ? setting.value : DEFAULT_PERFUME_PRICES,
     });
   } catch (error) {
     next(error);
@@ -44,28 +43,59 @@ async function updatePerfumePrices(req, res, next) {
       return res.status(400).json({ message: 'Invalid prices format' });
     }
 
-    // Validate required keys and structure
-    const requiredSizes = ['30ml', '50ml', '100ml'];
-    const requiredConcentrations = ['edt', 'edp', 'ext'];
-
-    for (const size of requiredSizes) {
+    // Validate all sizes are present and valid
+    for (const size of PERFUME_SIZES) {
       if (!prices[size]) {
         return res.status(400).json({ message: `Missing size: ${size}` });
       }
-      for (const conc of requiredConcentrations) {
-        if (typeof prices[size][conc] !== 'number' || prices[size][conc] < 0) {
+      
+      // Validate all concentrations for this size
+      for (const conc of PERFUME_CONCENTRATIONS) {
+        const price = prices[size][conc];
+        
+        if (typeof price !== 'number') {
           return res.status(400).json({ 
-            message: `Invalid price for ${size} ${conc}` 
+            message: `Price for ${size} ${conc} must be a number` 
+          });
+        }
+        
+        if (price < 0) {
+          return res.status(400).json({ 
+            message: `Price for ${size} ${conc} cannot be negative` 
+          });
+        }
+        
+        if (!isFinite(price)) {
+          return res.status(400).json({ 
+            message: `Price for ${size} ${conc} must be a valid number` 
           });
         }
       }
     }
 
-    // Upsert setting
+    // Reject any keys not in PERFUME_SIZES
+    const extraKeys = Object.keys(prices).filter(k => !PERFUME_SIZES.includes(k));
+    if (extraKeys.length > 0) {
+      return res.status(400).json({ 
+        message: `Invalid size keys: ${extraKeys.join(', ')}. Allowed: ${PERFUME_SIZES.join(', ')}` 
+      });
+    }
+
+    // Reject any concentration keys not in PERFUME_CONCENTRATIONS
+    for (const size of PERFUME_SIZES) {
+      const extraConcs = Object.keys(prices[size]).filter(c => !PERFUME_CONCENTRATIONS.includes(c));
+      if (extraConcs.length > 0) {
+        return res.status(400).json({ 
+          message: `Invalid concentration keys for ${size}: ${extraConcs.join(', ')}. Allowed: ${PERFUME_CONCENTRATIONS.join(', ')}` 
+        });
+      }
+    }
+
+    // Upsert setting using constants key
     const setting = await prisma.setting.upsert({
-      where: { key: 'perfume_prices' },
+      where: { key: PERFUME_SETTINGS_KEY },
       update: { value: prices },
-      create: { key: 'perfume_prices', value: prices },
+      create: { key: PERFUME_SETTINGS_KEY, value: prices },
     });
 
     res.json({
