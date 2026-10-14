@@ -276,7 +276,7 @@
             <textarea id="contactMessage" class="form-textarea" required placeholder="اكتبي استفسارك هنا..." minlength="10" rows="5"></textarea>
           </div>
           <button type="submit" class="btn btn-primary btn-full btn-lg" data-key="contact_send">
-            إرسال عبر واتساب 💬
+            إرسال الرسالة 📩
           </button>
         </form>
       </div>
@@ -427,7 +427,6 @@
         // Send to database
         const data = await LAMSA_API.submitContactMessage({
           name: name,
-          email: phone + '@temp.lamsa',
           phone: phone,
           subject: typeArabic,
           message: message
@@ -443,31 +442,9 @@
       } catch (error) {
         console.error('[Contact] Error:', error);
         
-        // Fallback to WhatsApp
-        showToast('⚠️ حدث خطأ. سنحاول إرسالها عبر واتساب...');
-        
-        const whatsappMessage = `
-*🌹 رسالة جديدة من موقع لمسة*
-
-*الاسم:* ${name}
-*رقم الهاتف:* ${phone}
-*نوع الاستفسار:* ${typeArabic}
-
-*الرسالة:*
-${message}
-
----
-_تم الإرسال عبر موقع LAMSA_
-        `.trim();
-        
-        const { url, opened } = openWhatsApp(whatsappMessage);
-        
-        if (opened) {
-          showToast('✅ جاري فتح واتساب... يرجى إرسال الرسالة من التطبيق');
-          document.getElementById('contactForm').reset();
-        } else {
-          showWhatsAppFallback(url);
-        }
+        // Show error message
+        let errorMsg = error.message || 'حدث خطأ غير معروف';
+        showToast('❌ حدث خطأ في إرسال الرسالة: ' + errorMsg);
         
         btn.disabled = false;
         btn.textContent = originalText;

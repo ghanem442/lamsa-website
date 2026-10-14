@@ -9,11 +9,11 @@ const { z } = require('zod');
 
 // Contact message schema
 const contactMessageSchema = z.object({
-  name: z.string().min(2, 'الاسم مطلوب').max(100),
-  email: z.string().email('البريد الإلكتروني غير صحيح').max(100),
-  phone: z.string().max(20).optional(),
-  subject: z.string().max(200).optional(),
-  message: z.string().min(10, 'الرسالة يجب أن تكون 10 أحرف على الأقل').max(2000)
+  name: z.string().min(2, 'الاسم يجب أن يكون حرفين على الأقل').max(100, 'الاسم يجب ألا يتجاوز 100 حرف'),
+  email: z.string().email('البريد الإلكتروني غير صحيح').max(100, 'البريد الإلكتروني يجب ألا يتجاوز 100 حرف').optional().nullable(),
+  phone: z.string().min(10, 'رقم الهاتف غير صحيح').max(20, 'رقم الهاتف يجب ألا يتجاوز 20 رقم').optional().nullable(),
+  subject: z.string().max(200, 'الموضوع يجب ألا يتجاوز 200 حرف').optional().nullable(),
+  message: z.string().min(10, 'الرسالة يجب أن تكون 10 أحرف على الأقل').max(2000, 'الرسالة يجب ألا تتجاوز 2000 حرف')
 });
 
 /**
@@ -28,7 +28,7 @@ async function submitContactMessage(req, res, next) {
       return await prisma.contactMessage.create({
         data: {
           name: validatedData.name,
-          email: validatedData.email,
+          email: validatedData.email || '', // Empty string instead of null
           phone: validatedData.phone || null,
           subject: validatedData.subject || null,
           message: validatedData.message,
