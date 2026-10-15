@@ -3,15 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عن لمسة | LAMSA - قصتنا ورؤيتنا في الجمال الفاخر</title>
-  <meta name="description" content="تعرف على قصة متجر لمسة - شغفنا بالجمال، تركيبات العطور اليدوية الحصرية، ورسالتنا لتقديم تجربة عناية فاخرة في الإسكندرية.">
+  
+  <!-- Primary Meta Tags -->
+  <title>عن لمسة | LAMSA - قصتنا ورؤيتنا في الجمال والعطور الفاخرة</title>
+  <meta name="description" content="تعرفي على قصة متجر لمسة في الإسكندرية - شغفنا بالجمال الفاخر، تركيبات العطور اليدوية الحصرية، ورسالتنا لتقديم تجربة عناية فريدة بلمسة من الأناقة والرقي.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  
+  <!-- Theme Color -->
   <meta name="theme-color" content="#5C0E14">
-  <meta property="og:title" content="عن لمسة | LAMSA">
-  <meta property="og:image" content="assets/logo.png">
-  <link rel="icon" href="/assets/logo.png" type="image/png">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="" id="canonical-link">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:title" content="عن لمسة | LAMSA - قصتنا ورؤيتنا">
+  <meta property="og:description" content="تعرفي على قصة متجر لمسة - شغفنا بالجمال، تركيبات العطور اليدوية الحصرية، ورسالتنا لتقديم تجربة عناية فاخرة.">
+  <meta property="og:image" content="/assets/logo.png">
+  <meta property="og:locale" content="ar_EG">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="عن لمسة | LAMSA">
+  <meta name="twitter:description" content="تعرفي على قصة متجر لمسة وشغفنا بالجمال والعطور الفاخرة في الإسكندرية.">
+  <meta name="twitter:image" content="/assets/logo.png">
+  
+  <!-- Dynamic URL Script -->
+  <script>
+    (function() {
+      const path = window.location.pathname;
+      const origin = window.location.origin;
+      const canonical = document.getElementById('canonical-link');
+      if (canonical) canonical.href = origin + path;
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.content = origin + path;
+      const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+      if (twitterUrl) twitterUrl.content = origin + path;
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.content = origin + '/assets/logo.png';
+      const twitterImage = document.querySelector('meta[name="twitter:image"]');
+      if (twitterImage) twitterImage.content = origin + '/assets/logo.png';
+    })();
+  </script>
+  
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -366,6 +415,7 @@
     </div>
   </footer>
 
+  <script src="js/security.js"></script>
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
   <script src="js/main.js"></script>

@@ -118,13 +118,16 @@ async function createOrder(req, res, next) {
           subtotal = calculatedPerfumePrice;
         } else {
           // Regular products order
-          // 1. Load all products and check stock
+          // 1. Load all products WITH ROW LOCKS to prevent race conditions
           const productIds = validatedData.items.map(item => item.productId);
-          const products = await tx.product.findMany({
-            where: {
-              id: { in: productIds }
-            }
-          });
+          
+          // Use raw query to get row-level locks (FOR UPDATE)
+          // This ensures no other transaction can read/write these products until we commit
+          const products = await tx.$queryRaw`
+            SELECT * FROM products 
+            WHERE id = ANY(${productIds}::uuid[])
+            FOR UPDATE
+          `;
           
           // Map products by ID
           const productMap = {};
@@ -140,9 +143,10 @@ async function createOrder(req, res, next) {
               throw new Error(`المنتج غير موجود: ${item.productId}`);
             }
             
-            if (product.stockQty < item.quantity) {
+            // Critical: check stock AFTER acquiring lock
+            if (product.stock_qty < item.quantity) {
               throw new Error(
-                `الكمية المطلوبة من "${product.nameAr}" غير متوفرة في المخزون. المتاح: ${product.stockQty}`
+                `الكمية المطلوبة من "${product.name_ar}" غير متوفرة في المخزون. المتاح: ${product.stock_qty}`
               );
             }
             
@@ -153,8 +157,8 @@ async function createOrder(req, res, next) {
               productId: product.id,
               quantity: item.quantity,
               unitPrice: product.price,
-              productName: product.nameAr,
-              productImage: product.imageUrl,
+              productName: product.name_ar,
+              productImage: product.image_url,
               productEmoji: product.emoji
             });
           }

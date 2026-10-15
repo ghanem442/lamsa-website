@@ -3,7 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>صمم هديتك | لمسة LAMSA</title>
+  
+  <!-- Primary Meta Tags -->
+  <title>صمم هديتك | لمسة LAMSA - هدايا فاخرة مخصصة لكل مناسبة</title>
+  <meta name="description" content="صممي هدية فاخرة مميزة! اختاري المناسبة والمستلم والميزانية ونقوم بتنسيق هدية راقية من لمسة مع تغليف احترافي. مثالية للأعراس والخطوبة وأعياد الميلاد.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#5C0E14">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="" id="canonical-link">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:title" content="صمم هديتك | لمسة LAMSA - هدايا فاخرة مخصصة">
+  <meta property="og:description" content="صممي هدية فاخرة مميزة! اختاري المناسبة والمستلم ونقوم بتنسيق هدية راقية مع تغليف احترافي.">
+  <meta property="og:image" content="/assets/logo.png">
+  <meta property="og:locale" content="ar_EG">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="صمم هديتك | لمسة LAMSA">
+  <meta name="twitter:description" content="صممي هدية فاخرة مخصصة لكل مناسبة مع تغليف احترافي من لمسة.">
+  <meta name="twitter:image" content="/assets/logo.png">
+  
+  <!-- Dynamic URL Script -->
+  <script>
+    (function() {
+      const path = window.location.pathname;
+      const origin = window.location.origin;
+      const canonical = document.getElementById('canonical-link');
+      if (canonical) canonical.href = origin + path;
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.content = origin + path;
+      const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+      if (twitterUrl) twitterUrl.content = origin + path;
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.content = origin + '/assets/logo.png';
+      const twitterImage = document.querySelector('meta[name="twitter:image"]');
+      if (twitterImage) twitterImage.content = origin + '/assets/logo.png';
+    })();
+  </script>
+  
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
   <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
@@ -413,8 +469,10 @@
     </div>
   </footer>
 
+  <script src="js/security.js"></script>
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script>
     let gStep = 1;
@@ -466,10 +524,16 @@
       document.getElementById('giftResult').style.display = 'block';
       triggerConfetti();
 
-      // Fetch products from API and apply gift logic
+      // Fetch products from recommendation pool
       try {
-        const productsData = await LAMSA_API.getProducts({ category: 'gifts', limit: 50 });
-        const allGifts = productsData.data || productsData || [];
+        const poolData = await LAMSA_API.getRecommendationPool();
+        const allGifts = (poolData.data || poolData || []).filter(p => p.category === 'gifts');
+        
+        if (allGifts.length === 0) {
+          // Empty state
+          showGiftError('لا توجد هدايا متاحة حالياً. يرجى المحاولة لاحقاً.');
+          return;
+        }
         
         // Apply gift selection logic (same as data.js)
         const { forWhom, occasion, budget } = gAnswers;
@@ -477,49 +541,71 @@
         const budgetKey = budgetMap[budget] || 'mid';
 
         let gifts = allGifts.filter(p =>
-          (p.forWhom?.includes('all') || p.forWhom?.includes(forWhom)) &&
-          (p.occasion?.includes('all') || p.occasion?.some(o => o === occasion)) &&
-          p.budget === budgetKey
+          p.forWhom && Array.isArray(p.forWhom) && p.forWhom.length > 0 && // Has required attribute
+          p.occasion && Array.isArray(p.occasion) && p.occasion.length > 0 && // Has required attribute
+          p.budget && Array.isArray(p.budget) && p.budget.length > 0 && // Has required attribute
+          (p.forWhom.includes('all') || p.forWhom.includes(forWhom)) &&
+          (p.occasion.includes('all') || p.occasion.some(o => o === occasion)) &&
+          p.budget.includes(budgetKey) // Fixed: compare array with .includes()
         );
 
         if (gifts.length === 0) {
           // Fallback: just budget match
-          gifts = allGifts.filter(p => p.budget === budgetKey);
+          gifts = allGifts.filter(p => p.budget && Array.isArray(p.budget) && p.budget.includes(budgetKey));
         }
         
         currentGiftPicks = gifts.slice(0, 2);
         
-        // If no API results, fallback to data.js
         if (currentGiftPicks.length === 0) {
-          currentGiftPicks = window.LAMSA.getGiftProducts(gAnswers);
+          showGiftError('لم نجد هدايا تطابق اختيارك حالياً. يرجى المحاولة مرة أخرى لاحقاً.');
+          return;
         }
         
       } catch (error) {
         console.error('[Gift] Error loading products from API:', error);
-        // Fallback to data.js
-        currentGiftPicks = window.LAMSA.getGiftProducts(gAnswers);
+        showGiftError(error.message || 'حدث خطأ في تحميل الهدايا. يرجى المحاولة مرة أخرى.');
+        return;
       }
 
       const grid = document.getElementById('giftMatchesGrid');
-      grid.innerHTML = currentGiftPicks.map(p => `
+      grid.innerHTML = currentGiftPicks.map(p => {
+        // SECURITY: Escape all user/database data
+        const safeName = escapeHtml(currentLang === 'ar' ? p.nameAr : p.nameEn);
+        const safeEmoji = escapeHtml(p.emoji || '🎁');
+        const safePrice = escapeHtml(p.price);
+        const safeImageUrl = sanitizeUrl(p.imageUrl);
+        
+        return `
         <div class="product-card">
           <div class="product-img-wrap" style="position: relative; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg-subtle);">
             ${p.imageUrl 
-              ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                 <span style="font-size: 3.5rem; display: none;">${p.emoji || '🎁'}</span>` 
-              : `<span style="font-size: 3.5rem;">${p.emoji || '🎁'}</span>`
+              ? `<img src="${safeImageUrl}" alt="${safeName}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 <span style="font-size: 3.5rem; display: none;">${safeEmoji}</span>` 
+              : `<span style="font-size: 3.5rem;">${safeEmoji}</span>`
             }
           </div>
           <div class="product-info">
-            <h4 class="product-name">${currentLang === 'ar' ? p.name : p.nameEn}</h4>
-            <div class="product-price">${p.price} ${t[currentLang].currency}</div>
+            <h4 class="product-name">${safeName}</h4>
+            <div class="product-price">${safePrice} ${t[currentLang].currency}</div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
+    }
+    
+    function showGiftError(message) {
+      const grid = document.getElementById('giftMatchesGrid');
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+          <div style="font-size: 4rem; margin-bottom: 16px;">⚠️</div>
+          <h3 style="color: var(--text-dark); margin-bottom: 12px;">${escapeHtml(message)}</h3>
+          <button class="btn btn-primary" onclick="restartGift()">🔄 إعادة المحاولة</button>
+        </div>
+      `;
     }
 
     function orderSelectedGift() {
-      const names = currentGiftPicks.map(p => currentLang === 'ar' ? p.name : p.nameEn).join(' + ');
+      const names = currentGiftPicks.map(p => currentLang === 'ar' ? p.nameAr : p.nameEn).join(' + ');
       const msg = `مرحباً لمسة، أريد طلب باقة هدية:\n- لمن: ${gAnswers.forWhom}\n- المناسبة: ${gAnswers.occasion}\n- الباقة: ${names}`;
       const { url, opened } = openWhatsApp(msg);
       if (!opened) showWhatsAppFallback(url);

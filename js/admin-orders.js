@@ -1,24 +1,7 @@
 // ══════════════════════════════════════════════════
 // ADMIN ORDERS MANAGEMENT (Using API instead of localStorage)
+// NOTE: escapeHtml is loaded from js/security.js
 // ══════════════════════════════════════════════════
-
-// ── Security: HTML Escape Helper ──────────────
-/**
- * Escape HTML to prevent XSS attacks
- * Use this for ANY user/database text before innerHTML
- */
-function escapeHtml(text) {
-  if (text == null) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-    '/': '&#x2F;'
-  };
-  return String(text).replace(/[&<>"'/]/g, (char) => map[char]);
-}
 
 let ordersCache = [];
 let ordersStats = {
@@ -285,11 +268,7 @@ function renderAllOrders() {
             onchange="updateOrderStatusAPI('${order.id}', this.value)" 
             style="display:block; margin-top:6px; padding: 4px 8px; border-radius: 8px; font-family: inherit; font-size: 0.85rem; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-dark); width: 100%;"
           >
-            <option value="pending" ${statusKey === 'pending' ? 'selected' : ''}>جديد ⏳</option>
-            <option value="confirmed" ${statusKey === 'confirmed' ? 'selected' : ''}>تم التأكيد 📞</option>
-            <option value="shipped" ${statusKey === 'shipped' ? 'selected' : ''}>قيد الشحن 🚚</option>
-            <option value="delivered" ${statusKey === 'delivered' ? 'selected' : ''}>تم التسليم ✅</option>
-            <option value="cancelled" ${statusKey === 'cancelled' ? 'selected' : ''}>تم الإلغاء ❌</option>
+            ${generateStatusOptions(statusKey)}
           </select>
         </td>
         <td>
@@ -306,8 +285,63 @@ function renderAllOrders() {
   }
 }
 
+// Allowed status transitions
+const ALLOWED_TRANSITIONS = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['shipped', 'cancelled'],
+  shipped: ['delivered', 'cancelled'],
+  delivered: [], // Final state
+  cancelled: []  // Final state
+};
+
+// Get allowed next statuses
+function getAllowedNextStatuses(currentStatus) {
+  return ALLOWED_TRANSITIONS[currentStatus] || [];
+}
+
+// Generate status dropdown options (only show current + allowed next)
+function generateStatusOptions(currentStatus) {
+  const allStatuses = {
+    'pending': 'جديد ⏳',
+    'confirmed': 'تم التأكيد 📞',
+    'shipped': 'قيد الشحن 🚚',
+    'delivered': 'تم التسليم ✅',
+    'cancelled': 'تم الإلغاء ❌'
+  };
+  
+  const allowedNext = getAllowedNextStatuses(currentStatus);
+  const statusesToShow = [currentStatus, ...allowedNext];
+  
+  return statusesToShow.map(status => {
+    const label = allStatuses[status] || status;
+    const selected = status === currentStatus ? 'selected' : '';
+    return `<option value="${status}" ${selected}>${label}</option>`;
+  }).join('');
+}
+
 // Update order status via API
 async function updateOrderStatusAPI(orderId, newStatus) {
+  const orderIndex = ordersCache.findIndex(o => o.id === orderId);
+  if (orderIndex === -1) {
+    showToast('❌ الطلب غير موجود');
+    return;
+  }
+  
+  const currentOrder = ordersCache[orderIndex];
+  const currentStatus = currentOrder.status || currentOrder.orderStatus;
+  const dropdown = event.target; // Save dropdown reference
+  const originalValue = currentStatus;
+  
+  // If changing to cancelled, ask for confirmation
+  if (newStatus === 'cancelled' && currentStatus !== 'cancelled') {
+    const confirmCancel = confirm('⚠️ هل أنت متأكد من إلغاء هذا الطلب؟\n\nسيتم إرجاع الكميات للمخزون.');
+    if (!confirmCancel) {
+      // Restore dropdown to original value
+      dropdown.value = originalValue;
+      return;
+    }
+  }
+  
   try {
     const statusMap = {
       'pending': 'pending',
@@ -325,10 +359,8 @@ async function updateOrderStatusAPI(orderId, newStatus) {
       showToast('✅ تم تحديث حالة الطلب بنجاح');
       
       // Update local cache
-      const orderIndex = ordersCache.findIndex(o => o.id === orderId);
-      if (orderIndex !== -1) {
-        ordersCache[orderIndex].status = apiStatus;
-      }
+      ordersCache[orderIndex].status = apiStatus;
+      ordersCache[orderIndex].orderStatus = apiStatus;
       
       // Reload orders and stats to reflect changes (e.g., stock returned on cancellation)
       await loadOrdersFromAPI();
@@ -337,12 +369,16 @@ async function updateOrderStatusAPI(orderId, newStatus) {
       renderAllOrders();
     } else {
       showToast('❌ فشل تحديث حالة الطلب: ' + (response.message || 'خطأ غير معروف'));
+      // Restore dropdown to original value
+      dropdown.value = originalValue;
       // Reload to restore correct status in UI
       await loadOrdersFromAPI();
     }
   } catch (error) {
     console.error('Error updating order status:', error);
-    showToast('❌ حدث خطأ أثناء تحديث حالة الطلب');
+    showToast('❌ ' + (error.message || 'حدث خطأ أثناء تحديث حالة الطلب'));
+    // Restore dropdown to original value
+    dropdown.value = originalValue;
     // Reload to restore correct status in UI
     await loadOrdersFromAPI();
   }

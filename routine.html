@@ -3,7 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>اختارلي روتين | لمسة LAMSA</title>
+  
+  <!-- Primary Meta Tags -->
+  <title>اختارلي روتين | لمسة LAMSA - روتين عناية مخصص لبشرتك وشعرك</title>
+  <meta name="description" content="اكتشفي روتين العناية المثالي لبشرتك وشعرك! أجيبي 4 أسئلة بسيطة ونختارلك منتجات لمسة المناسبة لنوع بشرتك ومشاكلك وميزانيتك. استشارة مجانية ذكية.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#5C0E14">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="" id="canonical-link">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:title" content="اختارلي روتين | لمسة LAMSA - روتين عناية مخصص">
+  <meta property="og:description" content="اكتشفي روتين العناية المثالي! أجيبي 4 أسئلة ونختارلك منتجات لمسة المناسبة لبشرتك وشعرك.">
+  <meta property="og:image" content="/assets/logo.png">
+  <meta property="og:locale" content="ar_EG">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="اختارلي روتين | لمسة LAMSA">
+  <meta name="twitter:description" content="اكتشفي روتين العناية المثالي لبشرتك وشعرك مع استشارة ذكية مجانية.">
+  <meta name="twitter:image" content="/assets/logo.png">
+  
+  <!-- Dynamic URL Script -->
+  <script>
+    (function() {
+      const path = window.location.pathname;
+      const origin = window.location.origin;
+      const canonical = document.getElementById('canonical-link');
+      if (canonical) canonical.href = origin + path;
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.content = origin + path;
+      const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+      if (twitterUrl) twitterUrl.content = origin + path;
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.content = origin + '/assets/logo.png';
+      const twitterImage = document.querySelector('meta[name="twitter:image"]');
+      if (twitterImage) twitterImage.content = origin + '/assets/logo.png';
+    })();
+  </script>
+  
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
   <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
@@ -427,8 +483,10 @@
     </div>
   </footer>
 
+  <script src="js/security.js"></script>
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script>
     let currentStep = 1;
@@ -515,10 +573,16 @@
       resContainer.style.display = 'block';
       triggerConfetti();
 
-      // Fetch products from API and apply routine logic
+      // Fetch products from recommendation pool
       try {
-        const productsData = await LAMSA_API.getProducts({ limit: 100 });
-        const allProducts = productsData.data || productsData || [];
+        const poolData = await LAMSA_API.getRecommendationPool();
+        const allProducts = poolData.data || poolData || [];
+        
+        if (allProducts.length === 0) {
+          // Empty state
+          showRoutineError('لا توجد منتجات متاحة حالياً. يرجى المحاولة لاحقاً.');
+          return;
+        }
         
         // Apply routine selection logic (same as data.js)
         const { skinType, hairType, concerns, budget } = answers;
@@ -527,63 +591,94 @@
         // Skincare picks (2-3 products)
         const skinProducts = allProducts.filter(p =>
           p.category === 'skin' &&
-          (p.skinType?.includes('all') || p.skinType?.includes(skinType)) &&
-          p.budget?.includes(budget)
+          p.skinType && Array.isArray(p.skinType) && p.skinType.length > 0 && // Has required attribute
+          (p.skinType.includes('all') || p.skinType.includes(skinType)) &&
+          p.budget && Array.isArray(p.budget) && p.budget.includes(budget)
         );
 
         // Prioritize by concern
         const byConcern = skinProducts.filter(p =>
-          p.concern?.some(c => concerns.includes(c))
+          p.concern && Array.isArray(p.concern) && p.concern.some(c => concerns.includes(c))
         );
 
         const skinPicks = [...new Set([...byConcern, ...skinProducts])].slice(0, 3);
         
         // Always include sunscreen if available
-        const spf = allProducts.find(p => p.id === 'sk7' || p.name?.includes('واقي شمس'));
-        if (!skinPicks.find(p => p.id === 'sk7') && budget !== 'eco' && spf) skinPicks.push(spf);
+        const spf = allProducts.find(p => p.id === 'sk7' || (p.nameAr && p.nameAr.includes('واقي شمس')));
+        if (spf && !skinPicks.find(p => p.id === spf.id) && budget !== 'eco') {
+          skinPicks.push(spf);
+        }
 
         // Haircare pick (1-2 products)
         const hairProducts = allProducts.filter(p =>
           p.category === 'hair' &&
-          (p.hairType?.includes('all') || p.hairType?.includes(hairType)) &&
-          p.budget?.includes(budget)
+          p.hairType && Array.isArray(p.hairType) && p.hairType.length > 0 && // Has required attribute
+          (p.hairType.includes('all') || p.hairType.includes(hairType)) &&
+          p.budget && Array.isArray(p.budget) && p.budget.includes(budget)
         ).slice(0, 2);
 
         result.push(...skinPicks, ...hairProducts);
+        
+        if (result.length === 0) {
+          // No matching products
+          showRoutineError('لم نجد منتجات تطابق احتياجاتك حالياً. يرجى المحاولة مرة أخرى لاحقاً.');
+          return;
+        }
+        
         currentRecommendedProducts = result;
         
       } catch (error) {
         console.error('[Routine] Error loading products from API:', error);
-        // Fallback to data.js
-        currentRecommendedProducts = window.LAMSA.getRoutineProducts(answers);
+        showRoutineError(error.message || 'حدث خطأ في تحميل التوصيات. يرجى المحاولة مرة أخرى.');
+        return;
       }
 
       let total = currentRecommendedProducts.reduce((sum, p) => sum + p.price, 0);
       document.getElementById('routineTotalPrice').textContent = `${total} ${t[currentLang].currency}`;
 
       const grid = document.getElementById('routineProductsGrid');
-      grid.innerHTML = currentRecommendedProducts.map(p => `
+      grid.innerHTML = currentRecommendedProducts.map(p => {
+        // SECURITY: Escape all user/database data
+        const safeName = escapeHtml(currentLang === 'ar' ? p.nameAr : p.nameEn);
+        const safeEmoji = escapeHtml(p.emoji || '🧴');
+        const safePrice = escapeHtml(p.price);
+        const safeImageUrl = sanitizeUrl(p.imageUrl);
+        const safeCategory = p.category === 'skin' ? 'للبشرة' : 'للشعر';
+        
+        return `
         <div class="product-card">
           <div class="product-img-wrap" style="position: relative; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg-subtle);">
             ${p.imageUrl 
-              ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                 <span style="font-size: 3rem; display: none;">${p.emoji || '🧴'}</span>` 
-              : `<span style="font-size: 3rem;">${p.emoji || '🧴'}</span>`
+              ? `<img src="${safeImageUrl}" alt="${safeName}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 <span style="font-size: 3rem; display: none;">${safeEmoji}</span>` 
+              : `<span style="font-size: 3rem;">${safeEmoji}</span>`
             }
             <span class="badge badge-popular product-badge">خطوة بالروتين</span>
           </div>
           <div class="product-info">
-            <div class="product-category">${p.category === 'skin' ? 'للبشرة' : 'للشعر'}</div>
-            <h4 class="product-name">${currentLang === 'ar' ? p.name : p.nameEn}</h4>
+            <div class="product-category">${safeCategory}</div>
+            <h4 class="product-name">${safeName}</h4>
             <div class="product-price-row">
-              <div class="product-price">${p.price} ${t[currentLang].currency}</div>
+              <div class="product-price">${safePrice} ${t[currentLang].currency}</div>
               <button class="add-to-cart-btn" onclick='addToCart(${JSON.stringify(p)})' title="أضف للسلة">+</button>
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function showRoutineError(message) {
+      document.getElementById('resultContainer').style.display = 'block';
+      document.getElementById('routineProductsGrid').innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+          <div style="font-size: 4rem; margin-bottom: 16px;">⚠️</div>
+          <h3 style="color: var(--text-dark); margin-bottom: 12px;">${escapeHtml(message)}</h3>
+          <button class="btn btn-primary" onclick="restartQuiz()">🔄 إعادة المحاولة</button>
+        </div>
+      `;
     }
 
     function addFullRoutineToCart() {

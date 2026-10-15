@@ -24,6 +24,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   ADMIN_NAME: z.string().default('LAMSA Admin'),
   CORS_ORIGIN: z.string().default('*'),
+  SITE_URL: z.string().url().optional(), // For canonical URLs and sitemap
   
   // Rate Limiting (configurable from .env)
   ORDER_RATE_LIMIT_MAX: z.string().default('5'),

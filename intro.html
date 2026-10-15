@@ -3,10 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>lamsa — انترو</title>
-<link rel="icon" href="/assets/logo.png" type="image/png">
+
+<!-- Primary Meta Tags -->
+<title>لمسة | LAMSA — متجر العناية الفاخرة والعطور الحصرية</title>
+<meta name="description" content="متجر لمسة لتجربة جمال فريدة - عناية فاخرة بالبشرة والشعر، عطور يدوية حصرية، هدايا راقية في الإسكندرية.">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
+<link rel="shortcut icon" href="/favicon.ico">
+
+<!-- Theme Color -->
+<meta name="theme-color" content="#5C0E14">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="" id="canonical-link">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="">
+<meta property="og:title" content="لمسة | LAMSA - متجر الجمال والعطور الفاخرة">
+<meta property="og:description" content="عناية فاخرة بالبشرة والشعر، عطور يدوية حصرية، هدايا راقية في الإسكندرية.">
+<meta property="og:image" content="/assets/logo.png">
+<meta property="og:locale" content="ar_EG">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="لمسة | LAMSA">
+<meta name="twitter:description" content="عناية فاخرة بالبشرة والشعر، عطور يدوية حصرية.">
+<meta name="twitter:image" content="/assets/logo.png">
+
+<!-- Dynamic URL Script -->
+<script>
+  (function() {
+    const path = window.location.pathname;
+    const origin = window.location.origin;
+    const canonical = document.getElementById('canonical-link');
+    if (canonical) canonical.href = origin + path;
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl) ogUrl.content = origin + path;
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    if (ogImage) ogImage.content = origin + '/assets/logo.png';
+    const twitterImage = document.querySelector('meta[name="twitter:image"]');
+    if (twitterImage) twitterImage.content = origin + '/assets/logo.png';
+  })();
+</script>
+
+<!-- Preconnect -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,400&family=Tajawal:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{

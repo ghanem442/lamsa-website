@@ -3,8 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Primary Meta Tags -->
   <title>لوحة التحكم | إدارة متجر لمسة (LAMSA)</title>
+  
+  <!-- Prevent Indexing -->
+  <meta name="robots" content="noindex, nofollow">
+  
+  <!-- Favicon -->
   <link rel="icon" href="/assets/logo.png" type="image/png">
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#5C0E14">
+  
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -691,6 +703,92 @@
           <input type="text" class="form-input" id="pEmoji" placeholder="🧴 أو 🌹 أو 🎁 أو ✨" value="🧴">
         </div>
 
+        <!-- ══════════════════════════════════════════════════
+             RECOMMENDATION ATTRIBUTES
+             ══════════════════════════════════════════════════ -->
+        <div style="border-top: 2px solid var(--border); margin: 32px 0 24px; padding-top: 24px;">
+          <h3 style="color: var(--burgundy); margin-bottom: 12px; font-size: 1.2rem;">🎯 خصائص التوصيات الذكية</h3>
+          <p style="color: var(--text-mid); font-size: 0.9rem; margin-bottom: 20px;">
+            هذه الخصائص تحدد متى يظهر المنتج في "اختارلي روتين" و "صمم هديتك" و "اعمل برفانك"
+          </p>
+        </div>
+
+        <!-- Skin Products Attributes -->
+        <div id="skinAttributesSection" style="display: none;">
+          <div class="input-group">
+            <label>نوع البشرة (للروتين) - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px;" id="skinTypeCheckboxes"></div>
+          </div>
+          
+          <div class="input-group">
+            <label>المشاكل التي يعالجها (للروتين) - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px;" id="concernCheckboxes"></div>
+          </div>
+          
+          <div class="input-group">
+            <label>الميزانية (للروتين) - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;" id="budgetCheckboxes"></div>
+          </div>
+        </div>
+
+        <!-- Hair Products Attributes -->
+        <div id="hairAttributesSection" style="display: none;">
+          <div class="input-group">
+            <label>نوع الشعر (للروتين) - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px;" id="hairTypeCheckboxes"></div>
+          </div>
+          
+          <div class="input-group">
+            <label>المشاكل التي يعالجها (للروتين) - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px;" id="hairConcernCheckboxes"></div>
+          </div>
+          
+          <div class="input-group">
+            <label>الميزانية (للروتين) - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;" id="hairBudgetCheckboxes"></div>
+          </div>
+        </div>
+
+        <!-- Gift Attributes -->
+        <div id="giftAttributesSection" style="display: none;">
+          <div class="input-group">
+            <label>لمن الهدية - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px;" id="forWhomCheckboxes"></div>
+          </div>
+          
+          <div class="input-group">
+            <label>المناسبات - اختر واحد أو أكثر</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px;" id="occasionCheckboxes"></div>
+          </div>
+          
+          <div class="input-group">
+            <label>ميزانية الهدية *</label>
+            <select class="form-select" id="giftBudgetSelect">
+              <option value="">اختر الميزانية</option>
+              <option value="low">أقل من 300 جنيه</option>
+              <option value="mid">300 - 700 جنيه</option>
+              <option value="high">أكثر من 700 جنيه</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Perfume Attributes -->
+        <div id="perfumeAttributesSection" style="display: none;">
+          <div class="input-group">
+            <label>العائلة العطرية *</label>
+            <select class="form-select" id="perfumeFamilySelect">
+              <option value="">اختر العائلة</option>
+              <option value="floral">زهري</option>
+              <option value="oud">عود</option>
+              <option value="musky">مسكي</option>
+              <option value="fruity">فاكهي</option>
+              <option value="woody">خشبي</option>
+              <option value="oriental">شرقي</option>
+              <option value="fresh">منعش</option>
+            </select>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-primary btn-full btn-lg mt-16">حفظ وإضافة للموقع فوراً ✓</button>
       </form>
     </div>
@@ -729,6 +827,8 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/product-attributes.js"></script>
   <script src="js/api.js"></script>
   <script src="js/data.js"></script>
   <script src="js/subcategories.js"></script>
@@ -925,6 +1025,121 @@
           subCatSelect.appendChild(option);
         });
       }
+      
+      // Show/hide attribute sections based on category
+      updateAttributeSections();
+    }
+
+    // ══════════════════════════════════════════════════
+    // PRODUCT ATTRIBUTES MANAGEMENT
+    // ══════════════════════════════════════════════════
+    
+    function initializeAttributeCheckboxes() {
+      // Skin attributes
+      const skinTypeContainer = document.getElementById('skinTypeCheckboxes');
+      skinTypeContainer.innerHTML = window.LAMSA_ATTRIBUTES.SKIN_TYPES.map(st => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+          <input type="checkbox" name="skinType" value="${st.value}" style="margin: 0;">
+          <span>${st.labelAr}</span>
+        </label>
+      `).join('');
+      
+      const concernContainer = document.getElementById('concernCheckboxes');
+      concernContainer.innerHTML = window.LAMSA_ATTRIBUTES.CONCERNS.map(c => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+          <input type="checkbox" name="concern" value="${c.value}" style="margin: 0;">
+          <span>${c.labelAr}</span>
+        </label>
+      `).join('');
+      
+      const budgetContainer = document.getElementById('budgetCheckboxes');
+      budgetContainer.innerHTML = window.LAMSA_ATTRIBUTES.BUDGET_TIERS.map(b => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+          <input type="checkbox" name="budget" value="${b.value}" style="margin: 0;">
+          <span>${b.labelAr}</span>
+        </label>
+      `).join('');
+      
+      // Hair attributes
+      const hairTypeContainer = document.getElementById('hairTypeCheckboxes');
+      hairTypeContainer.innerHTML = window.LAMSA_ATTRIBUTES.HAIR_TYPES.map(ht => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+          <input type="checkbox" name="hairType" value="${ht.value}" style="margin: 0;">
+          <span>${ht.labelAr}</span>
+        </label>
+      `).join('');
+      
+      const hairConcernContainer = document.getElementById('hairConcernCheckboxes');
+      hairConcernContainer.innerHTML = window.LAMSA_ATTRIBUTES.CONCERNS.map(c => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+          <input type="checkbox" name="hairConcern" value="${c.value}" style="margin: 0;">
+          <span>${c.labelAr}</span>
+        </label>
+      `).join('');
+      
+      const hairBudgetContainer = document.getElementById('hairBudgetCheckboxes');
+      hairBudgetContainer.innerHTML = window.LAMSA_ATTRIBUTES.BUDGET_TIERS.map(b => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+          <input type="checkbox" name="hairBudget" value="${b.value}" style="margin: 0;">
+          <span>${b.labelAr}</span>
+        </label>
+      `).join('');
+      
+      // Gift attributes
+      const forWhomContainer = document.getElementById('forWhomCheckboxes');
+      forWhomContainer.innerHTML = window.LAMSA_ATTRIBUTES.FOR_WHOM.map(fw => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+          <input type="checkbox" name="forWhom" value="${fw.value}" style="margin: 0;">
+          <span>${fw.labelAr}</span>
+        </label>
+      `).join('');
+      
+      const occasionContainer = document.getElementById('occasionCheckboxes');
+      occasionContainer.innerHTML = window.LAMSA_ATTRIBUTES.OCCASIONS.map(o => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+          <input type="checkbox" name="occasion" value="${o.value}" style="margin: 0;">
+          <span>${o.labelAr}</span>
+        </label>
+      `).join('');
+    }
+    
+    function updateAttributeSections() {
+      const category = document.getElementById('pCategory').value;
+      
+      // Hide all sections first
+      document.getElementById('skinAttributesSection').style.display = 'none';
+      document.getElementById('hairAttributesSection').style.display = 'none';
+      document.getElementById('giftAttributesSection').style.display = 'none';
+      document.getElementById('perfumeAttributesSection').style.display = 'none';
+      
+      // Show relevant sections
+      if (category === 'skin') {
+        document.getElementById('skinAttributesSection').style.display = 'block';
+      } else if (category === 'hair') {
+        document.getElementById('hairAttributesSection').style.display = 'block';
+      } else if (category === 'gifts') {
+        document.getElementById('giftAttributesSection').style.display = 'block';
+      } else if (category === 'perfumes') {
+        document.getElementById('perfumeAttributesSection').style.display = 'block';
+      }
+    }
+    
+    function getAttributeValues(name) {
+      const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+      return Array.from(checkboxes).map(cb => cb.value);
+    }
+    
+    function setAttributeValues(name, values) {
+      // Clear all first
+      document.querySelectorAll(`input[name="${name}"]`).forEach(cb => cb.checked = false);
+      
+      // Check selected values
+      if (values && Array.isArray(values)) {
+        values.forEach(val => {
+          const checkbox = document.querySelector(`input[name="${name}"][value="${val}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
     }
 
     // Load products from API with pagination and filters
@@ -993,24 +1208,41 @@
           }
         }
         
+        // SECURITY: Escape all user/database data
+        const safeId = escapeHtml(p.id);
+        const safeName = escapeHtml(p.nameAr);
+        const safeNameEn = escapeHtml(p.nameEn || '');
+        const safeCategory = escapeHtml(p.category);
+        const safeSubCat = escapeHtml(subCatLabel);
+        const safePrice = escapeHtml(p.price);
+        const safeStock = escapeHtml(p.stockQty || 0);
+        const safeImageUrl = sanitizeUrl(p.imageUrl);
+        const safeEmoji = escapeHtml(p.emoji || '🧴');
+        
+        // Check if product has missing recommendation attributes
+        const readiness = window.LAMSA_ATTRIBUTES.checkProductRecommendationReadiness(p);
+        const hasMissingAttributes = readiness.routine || readiness.gift || readiness.perfume;
+        const missingTooltip = readiness.details.join(' • ');
+        
         return `
         <tr>
           <td>
             <div style="display:flex; align-items:center; gap:12px;">
-              ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:50px; height:50px; object-fit:cover; border-radius:8px;">` : `<span style="font-size:1.8rem;">${p.emoji || '🧴'}</span>`}
+              ${p.imageUrl ? `<img src="${safeImageUrl}" style="width:50px; height:50px; object-fit:cover; border-radius:8px;">` : `<span style="font-size:1.8rem;">${safeEmoji}</span>`}
               <div>
-                <strong style="color:var(--text-dark);">${p.nameAr}</strong>
-                ${p.nameEn ? `<div style="font-size:0.8rem; color:var(--text-light);">${p.nameEn}</div>` : ''}
+                <strong style="color:var(--text-dark);">${safeName}</strong>
+                ${p.nameEn ? `<div style="font-size:0.8rem; color:var(--text-light);">${safeNameEn}</div>` : ''}
+                ${hasMissingAttributes ? `<div style="margin-top:4px;"><span style="background:#ff9800; color:white; font-size:0.7rem; padding:2px 6px; border-radius:4px; font-weight:600;" title="${escapeHtml(missingTooltip)}">⚠️ ناقص خصائص</span></div>` : ''}
               </div>
             </div>
           </td>
-          <td><span class="badge badge-popular">${p.category}</span></td>
-          <td>${subCatLabel}</td>
-          <td><strong style="color:var(--gold); font-size:1.05rem;">${p.price} ج.م</strong></td>
-          <td><span style="font-size:0.88rem;">${p.stockQty || 0}</span></td>
+          <td><span class="badge badge-popular">${safeCategory}</span></td>
+          <td>${safeSubCat}</td>
+          <td><strong style="color:var(--gold); font-size:1.05rem;">${safePrice} ج.م</strong></td>
+          <td><span style="font-size:0.88rem;">${safeStock}</span></td>
           <td>
-            <button class="action-btn-sm" style="background:#3498db; margin-left:8px;" onclick="openEditModal('${p.id}')">✏️ تعديل</button>
-            <button class="action-btn-sm btn-delete" onclick="deleteProduct('${p.id}')">🗑️ حذف</button>
+            <button class="action-btn-sm" style="background:#3498db; margin-left:8px;" onclick="openEditModal('${safeId}')">✏️ تعديل</button>
+            <button class="action-btn-sm btn-delete" onclick="deleteProduct('${safeId}')">🗑️ حذف</button>
           </td>
         </tr>
       `;
@@ -1021,9 +1253,14 @@
       editingProductId = null;
       document.getElementById('modalTitle').textContent = '➕ إضافة منتج جديد';
       document.getElementById('productForm').reset();
-      updateSubCategoryDropdown();
+      updateSubCategoryDropdown(); // This also calls updateAttributeSections()
       document.getElementById('imagePreview').style.display = 'none';
       document.getElementById('addModal').classList.add('active');
+      
+      // Clear all attribute selections
+      document.querySelectorAll('input[type="checkbox"][name^="skin"], input[type="checkbox"][name^="hair"], input[type="checkbox"][name="concern"], input[type="checkbox"][name="hairConcern"], input[type="checkbox"][name="budget"], input[type="checkbox"][name="hairBudget"], input[type="checkbox"][name="forWhom"], input[type="checkbox"][name="occasion"]').forEach(cb => cb.checked = false);
+      document.getElementById('giftBudgetSelect').value = '';
+      document.getElementById('perfumeFamilySelect').value = '';
     }
 
     function openEditModal(productId) {
@@ -1039,7 +1276,7 @@
       document.getElementById('pName').value = product.nameAr;
       document.getElementById('pNameEn').value = product.nameEn || '';
       document.getElementById('pCategory').value = product.category;
-      updateSubCategoryDropdown();
+      updateSubCategoryDropdown(); // This also calls updateAttributeSections()
       document.getElementById('pSubCategory').value = product.subCategory || '';
       document.getElementById('pPrice').value = product.price;
       document.getElementById('pStock').value = product.stockQty || 0;
@@ -1055,6 +1292,23 @@
         preview.style.display = 'block';
       } else {
         preview.style.display = 'none';
+      }
+
+      // Populate attributes based on category
+      if (product.category === 'skin') {
+        setAttributeValues('skinType', product.skinType);
+        setAttributeValues('concern', product.concern);
+        setAttributeValues('budget', product.budget);
+      } else if (product.category === 'hair') {
+        setAttributeValues('hairType', product.hairType);
+        setAttributeValues('hairConcern', product.concern);
+        setAttributeValues('hairBudget', product.budget);
+      } else if (product.category === 'gifts') {
+        setAttributeValues('forWhom', product.forWhom);
+        setAttributeValues('occasion', product.occasion);
+        document.getElementById('giftBudgetSelect').value = product.budget || '';
+      } else if (product.category === 'perfumes') {
+        document.getElementById('perfumeFamilySelect').value = product.family || '';
       }
 
       document.getElementById('addModal').classList.add('active');
@@ -1098,6 +1352,35 @@
         badge: document.getElementById('pBadge').value || null,
         imageUrl: imageUrlInput || null,
       };
+
+      // Add recommendation attributes based on category
+      const category = productData.category;
+      
+      if (category === 'skin') {
+        const skinType = getAttributeValues('skinType');
+        const concern = getAttributeValues('concern');
+        const budget = getAttributeValues('budget');
+        if (skinType.length > 0) productData.skinType = skinType;
+        if (concern.length > 0) productData.concern = concern;
+        if (budget.length > 0) productData.budget = budget;
+      } else if (category === 'hair') {
+        const hairType = getAttributeValues('hairType');
+        const concern = getAttributeValues('hairConcern');
+        const budget = getAttributeValues('hairBudget');
+        if (hairType.length > 0) productData.hairType = hairType;
+        if (concern.length > 0) productData.concern = concern;
+        if (budget.length > 0) productData.budget = budget;
+      } else if (category === 'gifts') {
+        const forWhom = getAttributeValues('forWhom');
+        const occasion = getAttributeValues('occasion');
+        const giftBudget = document.getElementById('giftBudgetSelect').value;
+        if (forWhom.length > 0) productData.forWhom = forWhom;
+        if (occasion.length > 0) productData.occasion = occasion;
+        if (giftBudget) productData.budget = giftBudget;
+      } else if (category === 'perfumes') {
+        const family = document.getElementById('perfumeFamilySelect').value;
+        if (family) productData.family = family;
+      }
 
       try {
         let data;
@@ -1461,6 +1744,7 @@
     // INITIALIZATION
     // ══════════════════════════════════════════════════
     async function initAdminDashboard() {
+      initializeAttributeCheckboxes(); // Initialize recommendation attributes UI
       await loadProducts(); // Load products from server API
       await initializeOrdersManagement(); // Load orders and stats from API (defined in admin-orders.js)
       await updateDashboard();
@@ -1557,6 +1841,13 @@
         const dateStr = date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
         const timeStr = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         
+        // SECURITY: Already using escapeHtml() below - just ensure all fields are escaped
+        const safeName = escapeHtml(m.name);
+        const safePhone = escapeHtml(m.phone);
+        const safeSubject = escapeHtml(m.subject);
+        const safeMessage = escapeHtml(m.message);
+        const safeId = escapeHtml(m.id);
+        
         return `
           <tr style="background: ${m.isRead ? 'transparent' : 'rgba(212, 175, 55, 0.08)'};">
             <td>
@@ -1568,20 +1859,20 @@
               <div style="font-size: 0.85rem; color: var(--text-mid);">${dateStr}</div>
               <div style="font-size: 0.75rem; color: var(--text-light);">${timeStr}</div>
             </td>
-            <td><strong style="color: var(--text-dark);">${escapeHtml(m.name)}</strong></td>
-            <td><span style="direction: ltr; display: inline-block;">${escapeHtml(m.phone)}</span></td>
-            <td><span class="badge badge-popular">${escapeHtml(m.subject)}</span></td>
+            <td><strong style="color: var(--text-dark);">${safeName}</strong></td>
+            <td><span style="direction: ltr; display: inline-block;">${safePhone}</span></td>
+            <td><span class="badge badge-popular">${safeSubject}</span></td>
             <td>
               <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-mid); font-size: 0.88rem;">
-                ${escapeHtml(m.message)}
+                ${safeMessage}
               </div>
             </td>
             <td>
               <div class="table-actions">
                 ${!m.isRead 
-                  ? `<button class="action-btn-sm" style="background: var(--gold); color: white;" onclick="markAsRead('${m.id}')">✓ تم القراءة</button>` 
-                  : `<button class="action-btn-sm btn-outline" onclick="markAsUnread('${m.id}')">✕ غير مقروء</button>`}
-                <button class="action-btn-sm btn-wa" onclick="replyViaWhatsApp('${escapeHtml(m.phone)}', '${escapeHtml(m.name)}')">
+                  ? `<button class="action-btn-sm" style="background: var(--gold); color: white;" onclick="markAsRead('${safeId}')">✓ تم القراءة</button>` 
+                  : `<button class="action-btn-sm btn-outline" onclick="markAsUnread('${safeId}')">✕ غير مقروء</button>`}
+                <button class="action-btn-sm btn-wa" onclick="replyViaWhatsApp('${safePhone}', '${safeName}')">
                   📱 رد واتساب
                 </button>
               </div>
@@ -1589,12 +1880,6 @@
           </tr>
         `;
       }).join('');
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text || '';
-      return div.innerHTML;
     }
 
     async function markAsRead(messageId) {

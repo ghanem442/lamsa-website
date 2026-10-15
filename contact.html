@@ -3,15 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تواصل معنا | لمسة LAMSA - الإسكندرية</title>
-  <meta name="description" content="تواصلي مع لمسة - الإسكندرية عزبة محسن شارع نمرة 9. واتساب 201080239612. يومياً من 11 ص لـ 1 ص. استشارات مجانية للعناية والعطور.">
+  
+  <!-- Primary Meta Tags -->
+  <title>تواصل معنا | لمسة LAMSA - الإسكندرية عزبة محسن</title>
+  <meta name="description" content="تواصلي مع متجر لمسة في الإسكندرية - عزبة محسن شارع نمرة 9. واتساب 201080239612. ساعات العمل يومياً 11 صباحاً - 1 صباحاً. استشارات مجانية للعناية والعطور.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  
+  <!-- Theme Color -->
   <meta name="theme-color" content="#5C0E14">
-  <meta property="og:title" content="تواصل مع لمسة | LAMSA">
-  <meta property="og:image" content="assets/logo.png">
-  <link rel="icon" href="/assets/logo.png" type="image/png">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="" id="canonical-link">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:title" content="تواصل معنا | لمسة LAMSA - الإسكندرية">
+  <meta property="og:description" content="تواصلي مع لمسة في الإسكندرية - عزبة محسن شارع 9. واتساب 201080239612. استشارات مجانية.">
+  <meta property="og:image" content="/assets/logo.png">
+  <meta property="og:locale" content="ar_EG">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="تواصل مع لمسة | LAMSA">
+  <meta name="twitter:description" content="تواصلي مع متجر لمسة في الإسكندرية. واتساب 201080239612. استشارات مجانية.">
+  <meta name="twitter:image" content="/assets/logo.png">
+  
+  <!-- Dynamic URL Script -->
+  <script>
+    (function() {
+      const path = window.location.pathname;
+      const origin = window.location.origin;
+      const canonical = document.getElementById('canonical-link');
+      if (canonical) canonical.href = origin + path;
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.content = origin + path;
+      const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+      if (twitterUrl) twitterUrl.content = origin + path;
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.content = origin + '/assets/logo.png';
+      const twitterImage = document.querySelector('meta[name="twitter:image"]');
+      if (twitterImage) twitterImage.content = origin + '/assets/logo.png';
+    })();
+  </script>
+  
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -392,6 +441,7 @@
     </div>
   </footer>
 
+  <script src="js/security.js"></script>
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>

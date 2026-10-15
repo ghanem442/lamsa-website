@@ -1,25 +1,8 @@
 /* =============================================
    LAMSA — Language Translations & Main JS
    (Luxury + Dark Mode + QuickView + Checkout)
+   NOTE: escapeHtml is loaded from js/security.js
    ============================================= */
-
-// ── Security: HTML Escape Helper ──────────────
-/**
- * Escape HTML to prevent XSS attacks
- * Use this for ANY user/database text before innerHTML
- */
-function escapeHtml(text) {
-  if (text == null) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-    '/': '&#x2F;'
-  };
-  return String(text).replace(/[&<>"'/]/g, (char) => map[char]);
-}
 
 // ── Translations ──────────────────────────────
 const t = {
@@ -492,17 +475,15 @@ function toggleFavorite(productId, event) {
     event.stopPropagation();
   }
 
-  // Find product in current products or fallback to LAMSA.PRODUCTS
+  // Find product in current products (no fake fallback)
   let product = null;
   if (window.currentProducts && window.currentProducts.length) {
     product = window.currentProducts.find(p => String(p.id) === String(productId));
   }
-  if (!product && window.LAMSA && window.LAMSA.PRODUCTS) {
-    product = window.LAMSA.PRODUCTS.find(p => String(p.id) === String(productId));
-  }
 
   if (!product) {
     console.warn('[Favorites] Product not found:', productId);
+    showToast('⚠️ المنتج غير موجود');
     return;
   }
 
@@ -577,28 +558,36 @@ function renderFavorites() {
     return;
   }
   
-  body.innerHTML = favorites.map(item => `
-    <div class="cart-item" style="cursor: pointer;" onclick="openQuickView('${item.id}')">
+  body.innerHTML = favorites.map(item => {
+    const safeId = escapeHtml(item.id);
+    const safeName = escapeHtml(item.name);
+    const safeEmoji = escapeHtml(item.emoji || '🧴');
+    const safePrice = escapeHtml(item.price);
+    const safeImageUrl = sanitizeUrl(item.imageUrl);
+    
+    return `
+    <div class="cart-item" style="cursor: pointer;" onclick="openQuickView('${safeId}')">
       <div class="cart-item-img">
         ${item.imageUrl 
-          ? `<img src="${item.imageUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">` 
-          : `<span style="font-size: 2rem;">${item.emoji || '🧴'}</span>`
+          ? `<img src="${safeImageUrl}" alt="${safeName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">` 
+          : `<span style="font-size: 2rem;">${safeEmoji}</span>`
         }
       </div>
       <div class="cart-item-info">
-        <h4 class="cart-item-name">${item.name}</h4>
-        <div class="cart-item-price">${item.price} ج.م</div>
+        <h4 class="cart-item-name">${safeName}</h4>
+        <div class="cart-item-price">${safePrice} ج.م</div>
       </div>
       <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button class="cart-item-remove" onclick="event.stopPropagation(); removeFavorite('${item.id}')" title="إزالة">
+        <button class="cart-item-remove" onclick="event.stopPropagation(); removeFavorite('${safeId}')" title="إزالة">
           🗑️
         </button>
-        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); addFavoriteToCart('${item.id}')" style="padding: 6px 10px; font-size: 0.75rem; white-space: nowrap;">
+        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); addFavoriteToCart('${safeId}')" style="padding: 6px 10px; font-size: 0.75rem; white-space: nowrap;">
           🛍️
         </button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function removeFavorite(productId) {
@@ -789,27 +778,36 @@ function renderCartItems() {
     el.style.removeProperty('display');
   });
 
-  body.innerHTML = cart.map(item => `
+  body.innerHTML = cart.map(item => {
+    const safeId = escapeHtml(item.id);
+    const safeName = escapeHtml(lang === 'ar' ? item.name : item.nameEn);
+    const safeEmoji = escapeHtml(item.emoji || '🧴');
+    const safePrice = escapeHtml(item.price);
+    const safeQty = escapeHtml(item.qty);
+    const safeImageUrl = sanitizeUrl(item.imageUrl);
+    
+    return `
     <div class="cart-item">
       <div class="cart-item-img">
         ${item.imageUrl 
-          ? `<img src="${item.imageUrl}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-             <span style="font-size: 2rem; display: none;">${item.emoji || '🧴'}</span>` 
-          : `<span style="font-size: 2rem;">${item.emoji || '🧴'}</span>`
+          ? `<img src="${safeImageUrl}" alt="${safeName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+             <span style="font-size: 2rem; display: none;">${safeEmoji}</span>` 
+          : `<span style="font-size: 2rem;">${safeEmoji}</span>`
         }
       </div>
       <div style="flex:1;">
-        <div class="cart-item-name">${lang === 'ar' ? item.name : item.nameEn}</div>
-        <div class="cart-item-price">${item.price} ${t[lang].currency}</div>
+        <div class="cart-item-name">${safeName}</div>
+        <div class="cart-item-price">${safePrice} ${t[lang].currency}</div>
         <div class="flex gap-8 mt-8" style="align-items:center;">
-          <button class="cart-close" style="width:26px; height:26px; font-size:0.9rem;" onclick="updateQty('${item.id}', -1)">−</button>
-          <span style="font-weight:700; color:var(--text-dark); min-width:20px; text-align:center;">${item.qty}</span>
-          <button class="cart-close" style="width:26px; height:26px; font-size:0.9rem;" onclick="updateQty('${item.id}', 1)">+</button>
-          <button style="margin-inline-start:auto; background:none; border:none; color:#D32F2F; cursor:pointer; font-size:0.85rem;" onclick="removeFromCart('${item.id}')">حذف 🗑️</button>
+          <button class="cart-close" style="width:26px; height:26px; font-size:0.9rem;" onclick="updateQty('${safeId}', -1)">−</button>
+          <span style="font-weight:700; color:var(--text-dark); min-width:20px; text-align:center;">${safeQty}</span>
+          <button class="cart-close" style="width:26px; height:26px; font-size:0.9rem;" onclick="updateQty('${safeId}', 1)">+</button>
+          <button style="margin-inline-start:auto; background:none; border:none; color:#D32F2F; cursor:pointer; font-size:0.85rem;" onclick="removeFromCart('${safeId}')">حذف 🗑️</button>
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   const totalEl = document.getElementById('cartTotal');
   if (totalEl) totalEl.textContent = `${getCartTotal()} ${t[lang].currency}`;
@@ -850,13 +848,10 @@ function openQuickView(productId) {
     product = window.currentProducts.find(p => String(p.id) === String(productId));
   }
   
-  // Fallback to static data.js
-  if (!product && window.LAMSA && window.LAMSA.PRODUCTS) {
-    product = window.LAMSA.PRODUCTS.find(p => String(p.id) === String(productId));
-  }
-  
+  // No fallback to fake data - product must exist in currentProducts
   if (!product) {
     console.warn('[QuickView] Product not found:', productId);
+    showToast('⚠️ المنتج غير موجود');
     return;
   }
   
@@ -871,10 +866,14 @@ function openQuickView(productId) {
   }
 
   const lang = currentLang;
-  const name = lang === 'ar' ? product.name : product.nameEn;
+  const safeName = escapeHtml(lang === 'ar' ? product.name : product.nameEn);
+  const safeEmoji = escapeHtml(product.emoji || '🧴');
+  const safePrice = escapeHtml(product.price);
+  const safeImageUrl = sanitizeUrl(product.imageUrl);
   const desc = product.description || (lang === 'ar' 
     ? 'منتج فاخر وأصلي 100% مختار بعناية من أفضل التركيبات لمنحك نتائج مبهرة وعناية متكاملة تدوم طويلاً.' 
     : '100% Authentic luxury formulation handpicked to deliver exceptional radiance and long-lasting care.');
+  const safeDesc = escapeHtml(desc);
 
   modal.innerHTML = `
     <div class="luxury-modal-box">
@@ -883,20 +882,20 @@ function openQuickView(productId) {
       <div class="quickview-grid">
         <div class="quickview-img-box">
           ${product.imageUrl 
-            ? `<img src="${product.imageUrl}" alt="${name}" style="width:100%; height:100%; object-fit:contain; border-radius:var(--radius-lg);">` 
-            : `<span style="font-size:4rem;">${product.emoji || '🧴'}</span>`
+            ? `<img src="${safeImageUrl}" alt="${safeName}" style="width:100%; height:100%; object-fit:contain; border-radius:var(--radius-lg);">` 
+            : `<span style="font-size:4rem;">${safeEmoji}</span>`
           }
         </div>
 
         <div>
           <span class="quickview-feature-pill">✨ منتج أصلي 100%</span>
-          <h2 style="font-size:1.6rem; color:var(--text-dark); margin-bottom:8px;">${name}</h2>
+          <h2 style="font-size:1.6rem; color:var(--text-dark); margin-bottom:8px;">${safeName}</h2>
           <div style="font-size:1.4rem; font-weight:800; color:var(--burgundy); margin-bottom:16px;" id="qvPrice">
-            ${product.price} ${t[lang].currency}
+            ${safePrice} ${t[lang].currency}
           </div>
           
           <p style="font-size:0.92rem; color:var(--text-mid); line-height:1.7; margin-bottom:20px;">
-            ${desc}
+            ${safeDesc}
           </p>
 
           <div style="background:var(--bg-subtle); padding:12px 16px; border-radius:var(--radius-md); margin-bottom:20px; font-size:0.85rem;">

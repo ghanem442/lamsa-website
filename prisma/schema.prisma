@@ -55,18 +55,22 @@ model Product {
   imageUrl    String?     @map("image_url")
   emoji       String?
   badge       String?     // "popular" | "new"
-  skinTypes   Json?       @map("skin_types") // ["oily", "dry", ...]
-  concerns    Json?       @map("concerns")   // ["acne", "dark_spots", ...]
-  hairTypes   Json?       @map("hair_types") // ["dry", "damaged", ...]
-  budgetTier  Json?       @map("budget_tier")
-  forWhom     Json?       @map("for_whom")
-  occasion    Json?       @map("occasion")
-  family      String?     // scent family: "oud", "floral", etc.
+  skinType    Json?       @map("skin_type") // ["oily", "dry", "combo", "sensitive", "all"]
+  concern     Json?       @map("concern")   // ["acne", "dry_skin", "hair_loss", "dull", "wrinkles", "dark_spots", "all"]
+  hairType    Json?       @map("hair_type") // ["dry", "oily", "damaged", "normal", "all"]
+  budget      Json?       @map("budget")    // ["eco", "mid", "prem"] for routine, OR "low"/"mid"/"high" for gifts
+  forWhom     Json?       @map("for_whom")  // ["her", "him", "mom", "friend", "wife", "bride", "all"]
+  occasion    Json?       @map("occasion")  // ["bday", "engage", "wedding", "grad", "ramadan", "just", "all"]
+  family      String?     // perfume family: "oud", "floral", "musky", "fruity", "woody", "oriental", "fresh"
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
   orderItems  OrderItem[]
 
+  @@index([category], map: "idx_products_category")
+  @@index([category, subCategory], map: "idx_products_category_subcategory")
+  @@index([stockQty], map: "idx_products_stock_qty")
+  @@index([badge, createdAt(sort: Desc)], map: "idx_products_badge_created")
   @@map("products")
 }
 
@@ -93,6 +97,9 @@ model Order {
   items         OrderItem[]
   customPerfume CustomPerfume?
 
+  @@index([orderStatus, createdAt(sort: Desc)], map: "idx_orders_status_created")
+  @@index([phone], map: "idx_orders_phone")
+  @@index([createdAt(sort: Desc)], map: "idx_orders_created_at")
   @@map("orders")
 }
 
@@ -111,6 +118,7 @@ model OrderItem {
   order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
+  @@index([orderId], map: "idx_order_items_order_id")
   @@map("order_items")
 }
 
@@ -151,5 +159,6 @@ model ContactMessage {
   isRead    Boolean  @default(false) @map("is_read")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([isRead, createdAt(sort: Desc)], map: "idx_contact_messages_read_created")
   @@map("contact_messages")
 }

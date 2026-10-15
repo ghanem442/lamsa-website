@@ -1,7 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
-const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
 const prisma = new PrismaClient();
@@ -14,23 +12,6 @@ const FORBIDDEN_PASSWORDS = [
   '123456',
 ];
 
-// Extract PRODUCTS from js/data.js safely
-function parseProductsFromDataJs() {
-  const dataJsPath = path.join(__dirname, '..', 'js', 'data.js');
-  const content = fs.readFileSync(dataJsPath, 'utf8');
-
-  // Match the PRODUCTS array block
-  const match = content.match(/const\s+PRODUCTS\s*=\s*(\[[\s\S]*?\]);/);
-  if (!match) {
-    throw new Error('Could not find const PRODUCTS array in js/data.js');
-  }
-
-  // Evaluate safely in isolated context
-  const arrayCode = match[1];
-  const fn = new Function(`return ${arrayCode};`);
-  return fn();
-}
-
 async function main() {
   console.log('🌱 Starting database seed...');
 
@@ -38,6 +19,7 @@ async function main() {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
   const adminName = process.env.ADMIN_NAME || 'LAMSA Admin';
+  const seedSampleProducts = process.env.SEED_SAMPLE_PRODUCTS === 'true';
 
   if (!adminEmail) {
     console.error('\n❌ ADMIN_EMAIL is required in .env file for seeding.');
@@ -110,52 +92,82 @@ async function main() {
   });
   console.log('✅ Perfume pricing settings seeded.');
 
-  // 3. Seed Products from js/data.js
-  const rawProducts = parseProductsFromDataJs();
-  console.log(`📦 Found ${rawProducts.length} products in js/data.js to seed...`);
+  // 3. Optionally Seed Sample Products (only if SEED_SAMPLE_PRODUCTS=true)
+  if (!seedSampleProducts) {
+    console.log('ℹ️  Skipping sample products (set SEED_SAMPLE_PRODUCTS=true to enable)');
+    console.log('🎉 Seeding complete! (Admin user + perfume settings only)');
+    return;
+  }
+
+  console.log('📦 Seeding sample products...');
+
+  // Sample products with correct field names (skinType, concern, hairType, budget)
+  const sampleProducts = [
+    // Skincare
+    { id: 'sk1', nameAr: 'غسول الوجه المنقي', nameEn: 'Purifying Face Wash', category: 'skin', price: 180, emoji: '🧴', badge: 'new', skinType: ['oily', 'combo'], concern: ['acne'], budget: ['eco', 'mid'] },
+    { id: 'sk2', nameAr: 'غسول مرطب للبشرة الجافة', nameEn: 'Hydrating Cleanser', category: 'skin', price: 220, emoji: '💧', skinType: ['dry', 'sensitive'], concern: ['dry_skin'], budget: ['eco', 'mid'] },
+    { id: 'sk3', nameAr: 'سيروم فيتامين سي', nameEn: 'Vitamin C Serum', category: 'skin', price: 350, emoji: '✨', badge: 'popular', skinType: ['all'], concern: ['dull', 'dark_spots'], budget: ['mid', 'prem'] },
+    
+    // Haircare
+    { id: 'hr1', nameAr: 'شامبو للشعر الجاف والتالف', nameEn: 'Repair Shampoo', category: 'hair', price: 150, emoji: '🧖', hairType: ['dry', 'damaged'], budget: ['eco', 'mid'] },
+    { id: 'hr2', nameAr: 'شامبو للشعر الدهني', nameEn: 'Oil-Control Shampoo', category: 'hair', price: 140, emoji: '🌊', hairType: ['oily'], budget: ['eco', 'mid'] },
+    
+    // Gifts
+    { id: 'gf1', nameAr: 'مجموعة الإطراقة الملكية', nameEn: 'Royal Pampering Set', category: 'gifts', price: 650, emoji: '🎁', badge: 'popular', forWhom: ['her', 'wife', 'bride'], occasion: ['wedding', 'bday', 'engage'], budget: 'high' },
+    { id: 'gf2', nameAr: 'باقة العناية الكاملة', nameEn: 'Full Care Bundle', category: 'gifts', price: 420, emoji: '🎀', forWhom: ['her', 'mom', 'friend'], occasion: ['bday', 'grad'], budget: 'mid' },
+    
+    // Perfumes
+    { id: 'pf1', nameAr: 'عطر أوركيد الليل', nameEn: 'Night Orchid', category: 'perfumes', price: 450, emoji: '🌙', badge: 'popular', family: 'floral' },
+    { id: 'pf2', nameAr: 'عود الملكي', nameEn: 'Royal Oud', category: 'perfumes', price: 600, emoji: '🪵', family: 'oud' },
+    
+    // Body
+    { id: 'bd1', nameAr: 'بادي لوشن الحرير المرطب', nameEn: 'Silk Body Lotion', category: 'body', price: 120, emoji: '🌺' },
+  ];
 
   let seededCount = 0;
-  for (const p of rawProducts) {
+  for (const p of sampleProducts) {
     await prisma.product.upsert({
       where: { id: p.id },
       update: {
-        nameAr: p.name,
+        nameAr: p.nameAr,
         nameEn: p.nameEn,
         category: p.category,
         subCategory: p.subCategory || null,
         price: parseFloat(p.price) || 0,
+        stockQty: 100,
         emoji: p.emoji || null,
         badge: p.badge || null,
-        skinTypes: p.skinType ? p.skinType : null,
-        concerns: p.concern ? p.concern : null,
-        hairTypes: p.hairType ? p.hairType : null,
-        budgetTier: p.budget ? (Array.isArray(p.budget) ? p.budget : [p.budget]) : null,
-        forWhom: p.forWhom ? p.forWhom : null,
-        occasion: p.occasion ? p.occasion : null,
+        skinType: p.skinType || null,
+        concern: p.concern || null,
+        hairType: p.hairType || null,
+        budget: p.budget || null,
+        forWhom: p.forWhom || null,
+        occasion: p.occasion || null,
         family: p.family || null,
       },
       create: {
         id: p.id,
-        nameAr: p.name,
+        nameAr: p.nameAr,
         nameEn: p.nameEn,
         category: p.category,
         subCategory: p.subCategory || null,
         price: parseFloat(p.price) || 0,
+        stockQty: 100,
         emoji: p.emoji || null,
         badge: p.badge || null,
-        skinTypes: p.skinType ? p.skinType : null,
-        concerns: p.concern ? p.concern : null,
-        hairTypes: p.hairType ? p.hairType : null,
-        budgetTier: p.budget ? (Array.isArray(p.budget) ? p.budget : [p.budget]) : null,
-        forWhom: p.forWhom ? p.forWhom : null,
-        occasion: p.occasion ? p.occasion : null,
+        skinType: p.skinType || null,
+        concern: p.concern || null,
+        hairType: p.hairType || null,
+        budget: p.budget || null,
+        forWhom: p.forWhom || null,
+        occasion: p.occasion || null,
         family: p.family || null,
       },
     });
     seededCount++;
   }
 
-  console.log(`🎉 Successfully seeded ${seededCount} products into database!`);
+  console.log(`🎉 Successfully seeded ${seededCount} sample products!`);
 }
 
 main()

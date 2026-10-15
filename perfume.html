@@ -3,7 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مُختبر صناعة العطور | لمسة LAMSA</title>
+  
+  <!-- Primary Meta Tags -->
+  <title>اعمل برفانك | لمسة LAMSA - مختبر صناعة عطرك الخاص يدوياً</title>
+  <meta name="description" content="صنع عطرك الحصري يدوياً في مختبر لمسة! اختاري المقدمة والقلب والقاعدة، الحجم والتركيز، ونركبه لكِ بحرفية. عطور يدوية فريدة EDT, EDP, Extrait.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#5C0E14">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="" id="canonical-link">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:title" content="اعمل برفانك | لمسة LAMSA - مختبر صناعة العطور">
+  <meta property="og:description" content="صنع عطرك الحصري يدوياً! اختاري المقدمة والقلب والقاعدة ونركبه لكِ بحرفية في مختبر لمسة.">
+  <meta property="og:image" content="/assets/logo.png">
+  <meta property="og:locale" content="ar_EG">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="اعمل برفانك | لمسة LAMSA">
+  <meta name="twitter:description" content="صنع عطرك الحصري يدوياً في مختبر لمسة! عطور يدوية فريدة بتركيبات مخصصة.">
+  <meta name="twitter:image" content="/assets/logo.png">
+  
+  <!-- Dynamic URL Script -->
+  <script>
+    (function() {
+      const path = window.location.pathname;
+      const origin = window.location.origin;
+      const canonical = document.getElementById('canonical-link');
+      if (canonical) canonical.href = origin + path;
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.content = origin + path;
+      const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+      if (twitterUrl) twitterUrl.content = origin + path;
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage) ogImage.content = origin + '/assets/logo.png';
+      const twitterImage = document.querySelector('meta[name="twitter:image"]');
+      if (twitterImage) twitterImage.content = origin + '/assets/logo.png';
+    })();
+  </script>
+  
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
   <link rel="icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
@@ -625,6 +681,7 @@
     </div>
   </footer>
 
+  <script src="js/security.js"></script>
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
@@ -920,41 +977,70 @@
 
     // Global variable to store loaded prices
     let cachedPerfumePrices = null;
+    let pricesLoadingState = 'loading'; // loading, loaded, error
 
     async function loadPerfumePricesFromAPI() {
+      pricesLoadingState = 'loading';
+      updatePriceDisplay();
+      
       try {
         const data = await LAMSA_API.getPerfumePrices();
         cachedPerfumePrices = data.prices;
+        pricesLoadingState = 'loaded';
         
         // Update price display immediately
         updateLabCalculations();
       } catch (error) {
         console.error('[Perfume] Error loading prices from API:', error);
-        
-        // Use defaults from data.js on error
+        pricesLoadingState = 'error';
         cachedPerfumePrices = null;
         
-        // Update price display with fallback
-        updateLabCalculations();
+        // Show error state
+        updatePriceDisplay();
       }
+    }
+    
+    function updatePriceDisplay() {
+      const priceEl = document.getElementById('labPriceDisplay');
+      
+      if (pricesLoadingState === 'loading') {
+        priceEl.innerHTML = '<span style="color: var(--gold); font-size: 0.9rem;">⏳ جاري التحميل...</span>';
+        disableOrderButton(true);
+      } else if (pricesLoadingState === 'error') {
+        priceEl.innerHTML = '<span style="color: #ff6b6b; font-size: 0.85rem;">❌ فشل تحميل الأسعار<br><button class="btn btn-sm btn-primary" onclick="loadPerfumePricesFromAPI()" style="margin-top: 8px;">🔄 إعادة المحاولة</button></span>';
+        disableOrderButton(true);
+      }
+      // If loaded, price will be set by updateLabCalculations
+    }
+    
+    function disableOrderButton(disabled) {
+      const orderBtns = document.querySelectorAll('.btn-order-perfume');
+      orderBtns.forEach(btn => {
+        btn.disabled = disabled;
+        btn.style.opacity = disabled ? '0.5' : '1';
+        btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+      });
     }
 
     function updateLabCalculations() {
+      if (pricesLoadingState !== 'loaded') {
+        return; // Don't update prices if not loaded
+      }
+      
       const size = document.getElementById('labSizeSelect').value;
       const conc = document.getElementById('labConcSelect').value;
 
       const concLabel = conc === 'edt' ? 'EAU DE TOILETTE' : (conc === 'edp' ? 'EAU DE PARFUM' : 'EXTRAIT DE PARFUM');
       document.getElementById('flaconLabelConc').textContent = concLabel;
 
-      // Get price from cached API data, fallback to data.js getPerfumePrice
-      let price = 500;
+      // Get price from cached API data (no fallback to DEFAULT_PERFUME_PRICES)
+      let price = 500; // Default fallback if data malformed
       if (cachedPerfumePrices && cachedPerfumePrices[size] && cachedPerfumePrices[size][conc]) {
         price = cachedPerfumePrices[size][conc];
-      } else if (window.LAMSA && window.LAMSA.getPerfumePrice) {
-        price = window.LAMSA.getPerfumePrice(size, conc);
       }
       
       document.getElementById('labPriceDisplay').textContent = `${price} ج.م`;
+      disableOrderButton(false); // Enable ordering when prices loaded
     }
   </script>
 </body>

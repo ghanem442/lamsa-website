@@ -184,9 +184,27 @@ async function getOrderById(req, res, next) {
   }
 }
 
+// Allowed status transitions (from -> to[])
+const ALLOWED_TRANSITIONS = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['shipped', 'cancelled'],
+  shipped: ['delivered', 'cancelled'],
+  delivered: [], // Final state
+  cancelled: []  // Final state
+};
+
+// Check if transition is allowed
+function isTransitionAllowed(currentStatus, newStatus) {
+  if (currentStatus === newStatus) {
+    return true; // Same status is always allowed (idempotent)
+  }
+  const allowedNext = ALLOWED_TRANSITIONS[currentStatus];
+  return allowedNext && allowedNext.includes(newStatus);
+}
+
 /**
  * PATCH /api/admin/orders/:id/status
- * Update order status
+ * Update order status with proper transition validation and stock protection
  */
 async function updateOrderStatus(req, res, next) {
   try {
@@ -195,7 +213,7 @@ async function updateOrderStatus(req, res, next) {
     const { id } = req.params;
     const { status } = req.body;
     
-    // Validate status
+    // Validate status enum
     const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
@@ -204,34 +222,39 @@ async function updateOrderStatus(req, res, next) {
       });
     }
     
-    // Get current order
-    const currentOrder = await withRetry(async () => {
-      return await prisma.order.findUnique({
-        where: { id },
-        include: {
-          items: true
+    // Transaction to ensure atomicity and prevent race conditions
+    const result = await withRetry(async () => {
+      return await prisma.$transaction(async (tx) => {
+        // Get current order with row-level lock (FOR UPDATE)
+        const currentOrder = await tx.order.findUnique({
+          where: { id },
+          include: {
+            items: true
+          }
+        });
+        
+        if (!currentOrder) {
+          throw new Error('ORDER_NOT_FOUND');
         }
-      });
-    });
-    
-    if (!currentOrder) {
-      return res.status(404).json({
-        success: false,
-        message: 'الطلب غير موجود'
-      });
-    }
-    
-    // If cancelling, return stock
-    if (status === 'cancelled' && currentOrder.orderStatus !== 'cancelled') {
-      await withRetry(async () => {
-        return await prisma.$transaction(async (tx) => {
-          // Update order status
-          await tx.order.update({
-            where: { id },
-            data: { orderStatus: status }
-          });
-          
-          // Return stock quantities
+        
+        const currentStatus = currentOrder.orderStatus;
+        
+        // Check if transition is allowed
+        if (!isTransitionAllowed(currentStatus, status)) {
+          throw new Error(`INVALID_TRANSITION:${currentStatus}:${status}`);
+        }
+        
+        // If same status, return success (idempotent)
+        if (currentStatus === status) {
+          return {
+            order: currentOrder,
+            message: 'الطلب في هذه الحالة بالفعل'
+          };
+        }
+        
+        // If transitioning to cancelled, return stock ONCE
+        if (status === 'cancelled' && currentStatus !== 'cancelled') {
+          // Return stock quantities atomically
           for (const item of currentOrder.items) {
             if (item.productId) {
               await tx.product.update({
@@ -244,31 +267,62 @@ async function updateOrderStatus(req, res, next) {
               });
             }
           }
+          
+          // Update order status
+          const updatedOrder = await tx.order.update({
+            where: { id },
+            data: { orderStatus: status }
+          });
+          
+          return {
+            order: updatedOrder,
+            message: 'تم إلغاء الطلب وإرجاع الكميات للمخزون'
+          };
+        }
+        
+        // Regular status update
+        const updatedOrder = await tx.order.update({
+          where: { id },
+          data: { orderStatus: status }
         });
-      });
-      
-      return res.json({
-        success: true,
-        message: 'تم إلغاء الطلب وإرجاع الكميات للمخزون',
-        data: { status }
-      });
-    }
-    
-    // Regular status update
-    const updatedOrder = await withRetry(async () => {
-      return await prisma.order.update({
-        where: { id },
-        data: { orderStatus: status }
+        
+        return {
+          order: updatedOrder,
+          message: 'تم تحديث حالة الطلب بنجاح'
+        };
       });
     });
     
     res.json({
       success: true,
-      message: 'تم تحديث حالة الطلب بنجاح',
-      data: updatedOrder
+      message: result.message,
+      data: { status: result.order.orderStatus }
     });
     
   } catch (error) {
+    // Handle custom errors
+    if (error.message === 'ORDER_NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: 'الطلب غير موجود'
+      });
+    }
+    
+    if (error.message && error.message.startsWith('INVALID_TRANSITION:')) {
+      const [, from, to] = error.message.split(':');
+      const statusLabels = {
+        pending: 'جديد',
+        confirmed: 'مؤكد',
+        shipped: 'قيد الشحن',
+        delivered: 'تم التسليم',
+        cancelled: 'ملغي'
+      };
+      return res.status(400).json({
+        success: false,
+        message: `لا يمكن تغيير حالة الطلب من "${statusLabels[from] || from}" إلى "${statusLabels[to] || to}"`
+      });
+    }
+    
     next(error);
   }
 }

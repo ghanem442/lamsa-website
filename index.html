@@ -3,24 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" href="/assets/logo.png">
-  <title>لمسة | LAMSA — متجر الجمال والعطور الفاخرة</title>
   
-  <meta name="description" content="لمسة - وجهتك الأولى للعناية الفاخرة بالبشرة والشعر، تركيبات عطور حصرية نصنعها لكِ، وهدايا فاخرة.">
-  <meta name="keywords" content="لمسة, lamsa, عطور, عناية بالبشرة, متجر تجميل">
+  <!-- Primary Meta Tags -->
+  <title>لمسة | LAMSA — متجر العناية الفاخرة والعطور الحصرية في الإسكندرية</title>
+  <meta name="description" content="متجر لمسة لتجربة جمال فريدة - عناية فاخرة بالبشرة والشعر، عطور يدوية حصرية نصنعها لكِ، هدايا راقية وإكسسوارات أنيقة. شحن سريع في الإسكندرية.">
+  
+  <!-- Favicon - All Sizes -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logo.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  
+  <!-- Theme Color -->
   <meta name="theme-color" content="#5C0E14">
+  <meta name="msapplication-TileColor" content="#5C0E14">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="" id="canonical-link">
+  <script>
+    // Set canonical URL dynamically
+    (function() {
+      const canonical = document.getElementById('canonical-link');
+      if (canonical) {
+        canonical.href = window.location.origin + '/';
+      }
+      // Update Open Graph URLs
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.content = window.location.origin + '/';
+      const twitterUrl = document.querySelector('meta[name="twitter:url"]');
+      if (twitterUrl) twitterUrl.content = window.location.origin + '/';
+      // Update OG image to absolute URL
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage && !ogImage.content.startsWith('http')) {
+        ogImage.content = window.location.origin + '/assets/logo.png';
+      }
+      const twitterImage = document.querySelector('meta[name="twitter:image"]');
+      if (twitterImage && !twitterImage.content.startsWith('http')) {
+        twitterImage.content = window.location.origin + '/assets/logo.png';
+      }
+    })();
+  </script>
+  
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="لمسة | LAMSA - متجر الجمال الفاخر">
-  <meta property="og:description" content="عناية فاخرة بالبشرة والشعر وتركيبات عطور حصرية نصنعها لكِ.">
-  <meta property="og:image" content="https://ghanem442.github.io/lamsa-website/assets/logo.png">
+  <meta property="og:url" content="">
+  <meta property="og:title" content="لمسة | LAMSA - متجر الجمال والعطور الفاخرة">
+  <meta property="og:description" content="عناية فاخرة بالبشرة والشعر، تركيبات عطور حصرية نصنعها لكِ، وهدايا راقية. شحن سريع في الإسكندرية.">
+  <meta property="og:image" content="/assets/logo.png">
+  <meta property="og:locale" content="ar_EG">
+  <meta property="og:site_name" content="لمسة | LAMSA">
+  
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="canonical" href="https://ghanem442.github.io/lamsa-website/">
-  <link rel="preload" href="assets/logo.png" as="image">
-
+  <meta name="twitter:url" content="">
+  <meta name="twitter:title" content="لمسة | LAMSA - متجر الجمال والعطور الفاخرة">
+  <meta name="twitter:description" content="عناية فاخرة بالبشرة والشعر، تركيبات عطور حصرية نصنعها لكِ، وهدايا راقية.">
+  <meta name="twitter:image" content="/assets/logo.png">
+  
+  <!-- Preconnect for Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
+  
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -347,6 +395,7 @@
     </div>
   </footer>
 
+  <script src="js/security.js"></script>
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
@@ -361,13 +410,42 @@
         product = window.currentProducts.find(p => String(p.id) === String(id));
       }
       
-      // Fallback to static data.js
-      if (!product && window.LAMSA && window.LAMSA.PRODUCTS) {
-        product = window.LAMSA.PRODUCTS.find(p => String(p.id) === String(id));
+      // No fallback to fake data - product must exist in API response
+      if (!product) {
+        console.error('[Home] Product not found:', id);
+        showToast('⚠️ المنتج غير موجود');
+        return;
       }
       
       if (product && typeof addToCart === 'function') {
         addToCart(product);
+      }
+    }
+
+    function showEmptyState() {
+      const grid = document.getElementById('picksGrid');
+      if (grid) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+            <div style="font-size: 4rem; margin-bottom: 16px; opacity: 0.3;">📦</div>
+            <h3 style="color: var(--text-dark); margin-bottom: 12px;">لا توجد منتجات حالياً</h3>
+            <p style="color: var(--text-mid); margin-bottom: 24px;">جاري تحضير مجموعة رائعة من المنتجات لك</p>
+          </div>
+        `;
+      }
+    }
+
+    function showErrorState(message) {
+      const grid = document.getElementById('picksGrid');
+      if (grid) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+            <div style="font-size: 4rem; margin-bottom: 16px;">⚠️</div>
+            <h3 style="color: var(--text-dark); margin-bottom: 12px;">حدث خطأ في تحميل المنتجات</h3>
+            <p style="color: var(--text-mid); margin-bottom: 24px;">${escapeHtml(message || 'يرجى المحاولة مرة أخرى')}</p>
+            <button class="btn btn-primary" onclick="loadFeaturedProducts()">🔄 إعادة المحاولة</button>
+          </div>
+        `;
       }
     }
 
@@ -383,24 +461,35 @@
         if (grid && picks.length) {
           grid.innerHTML = picks.map(p => {
             const isInFavorites = typeof isFavorite === 'function' ? isFavorite(p.id) : false;
+            
+            // SECURITY: Escape all user/database data
+            const safeId = escapeHtml(p.id);
+            const safeName = escapeHtml(p.name);
+            const safeEmoji = escapeHtml(p.emoji || '🧴');
+            const safePrice = escapeHtml(p.price);
+            const safeCategory = escapeHtml(p.category);
+            const safeImageUrl = sanitizeUrl(p.imageUrl);
+            const safeBadge = p.badge ? escapeHtml(p.badge) : '';
+            const badgeText = p.badge === 'new' ? 'جديد' : 'الأكثر طلباً';
+            
             return `
-            <div class="product-card" onclick="openQuickView('${p.id}')">
+            <div class="product-card" onclick="openQuickView('${safeId}')">
               <div class="product-img-wrap" style="position: relative; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg-subtle);">
                 ${p.imageUrl 
-                  ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                     <span style="font-size: 3rem; display: none;">${p.emoji || '🧴'}</span>` 
-                  : `<span style="font-size: 3rem;">${p.emoji || '🧴'}</span>`
+                  ? `<img src="${safeImageUrl}" alt="${safeName}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                     <span style="font-size: 3rem; display: none;">${safeEmoji}</span>` 
+                  : `<span style="font-size: 3rem;">${safeEmoji}</span>`
                 }
-                ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'الأكثر طلباً'}</span>` : ''}
-                <button class="product-wishlist ${isInFavorites ? 'active' : ''}" onclick="toggleFavorite('${p.id}', event)" aria-label="المفضلة">🤍</button>
+                ${safeBadge ? `<span class="badge badge-${safeBadge} product-badge">${badgeText}</span>` : ''}
+                <button class="product-wishlist ${isInFavorites ? 'active' : ''}" onclick="toggleFavorite('${safeId}', event)" aria-label="المفضلة">🤍</button>
               </div>
               <div class="product-info">
                 <div>
-                  <div class="product-category">${p.category}</div>
-                  <h4 class="product-name">${p.name}</h4>
+                  <div class="product-category">${safeCategory}</div>
+                  <h4 class="product-name">${safeName}</h4>
                 </div>
                 <div class="product-price-row">
-                  <div class="product-price">${p.price} ج.م</div>
+                  <div class="product-price">${safePrice} ج.م</div>
                   <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="أضف للسلة">+</button>
                 </div>
               </div>
@@ -410,41 +499,11 @@
         } else {
           // Fallback to data.js
           console.warn('[Index] API returned empty, using fallback data');
-          loadFeaturedFallback();
+          showEmptyState();
         }
       } catch (error) {
         console.error('[Index] Error loading featured products:', error);
-        loadFeaturedFallback();
-      }
-    }
-
-    function loadFeaturedFallback() {
-      const picks = window.LAMSA.PRODUCTS.filter(p => p.badge === 'popular' || p.badge === 'new').slice(0, 3);
-      window.currentProducts = picks; // Make available globally
-      const grid = document.getElementById('picksGrid');
-      if (grid && picks.length) {
-        grid.innerHTML = picks.map(p => {
-          const isInFavorites = typeof isFavorite === 'function' ? isFavorite(p.id) : false;
-          return `
-          <div class="product-card" onclick="openQuickView('${p.id}')">
-            <div class="product-img-wrap">
-              ${p.emoji}
-              ${p.badge ? `<span class="badge badge-${p.badge} product-badge">${p.badge === 'new' ? 'جديد' : 'الأكثر طلباً'}</span>` : ''}
-              <button class="product-wishlist ${isInFavorites ? 'active' : ''}" onclick="toggleFavorite('${p.id}', event)" aria-label="المفضلة">🤍</button>
-            </div>
-            <div class="product-info">
-              <div>
-                <div class="product-category">${p.category}</div>
-                <h4 class="product-name">${p.name}</h4>
-              </div>
-              <div class="product-price-row">
-                <div class="product-price">${p.price} ج.م</div>
-                <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCartById('${p.id}')" title="أضف للسلة">+</button>
-              </div>
-            </div>
-          </div>
-          `;
-        }).join('');
+        showErrorState(error.message);
       }
     }
 

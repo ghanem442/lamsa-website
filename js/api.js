@@ -85,6 +85,10 @@
       return await request(`/api/products/featured?limit=${limit}`);
     },
 
+    async getRecommendationPool() {
+      return await request('/api/products/recommendation-pool');
+    },
+
     async getProduct(id) {
       return await request(`/api/products/${id}`);
     },

@@ -1,6 +1,16 @@
 const prisma = require('../config/prisma');
 const { withRetry } = require('../utils/prismaRetry');
 const cloudinary = require('cloudinary').v2;
+const { validateAttributeValues, getAllowedValues } = require('../../js/product-attributes');
+
+// Import recommendation cache invalidator
+let invalidateRecommendationCache = null;
+try {
+  const recommendationController = require('./recommendation.controller');
+  invalidateRecommendationCache = recommendationController.invalidateCache;
+} catch (e) {
+  console.warn('[Admin Products] Could not load recommendation controller for cache invalidation');
+}
 
 // Configure Cloudinary
 if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
@@ -69,8 +79,8 @@ async function createProduct(req, res, next) {
     // Whitelist: Only allow known Product model fields
     const allowedFields = [
       'nameAr', 'nameEn', 'category', 'subCategory', 'price', 'stockQty',
-      'imageUrl', 'emoji', 'badge', 'skinTypes', 'concerns', 'hairTypes',
-      'budgetTier', 'forWhom', 'occasion', 'family'
+      'imageUrl', 'emoji', 'badge', 'skinType', 'concern', 'hairType',
+      'budget', 'forWhom', 'occasion', 'family'
     ];
 
     const data = {};
@@ -98,8 +108,10 @@ async function createProduct(req, res, next) {
     data.badge = data.badge || null;
     data.family = data.family || null;
 
-    // Ensure JSON array fields are arrays (not strings)
-    const jsonArrayFields = ['skinTypes', 'concerns', 'hairTypes', 'budgetTier', 'forWhom', 'occasion'];
+    // Ensure JSON array fields are arrays (not strings) and validate values
+    const jsonArrayFields = ['skinType', 'concern', 'hairType', 'budget', 'forWhom', 'occasion'];
+    const validationErrors = [];
+    
     jsonArrayFields.forEach(field => {
       if (data[field] === undefined || data[field] === null || data[field] === '') {
         data[field] = [];
@@ -109,11 +121,45 @@ async function createProduct(req, res, next) {
       } else if (!Array.isArray(data[field])) {
         data[field] = [];
       }
+      
+      // Validate attribute values if array is not empty
+      if (data[field].length > 0) {
+        const validation = validateAttributeValues(field, data[field]);
+        if (!validation.valid) {
+          validationErrors.push(`${field}: ${validation.errors.join(', ')}`);
+        }
+      }
     });
+    
+    // Validate family if present
+    if (data.family) {
+      const allowedFamilies = getAllowedValues('family');
+      if (!allowedFamilies.includes(data.family)) {
+        validationErrors.push(`family: قيمة غير صالحة "${data.family}". القيم المسموحة: ${allowedFamilies.join(', ')}`);
+      }
+    }
+    
+    // If there are validation errors, return them
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'قيم غير صالحة في خصائص المنتج',
+        errors: validationErrors
+      });
+    }
 
     const product = await withRetry(async () => {
       return await prisma.product.create({ data });
     });
+
+    // Invalidate recommendation cache
+    if (invalidateRecommendationCache) {
+      try {
+        invalidateRecommendationCache({}, { json: () => {} }, () => {});
+      } catch (e) {
+        console.warn('[Admin Products] Cache invalidation failed:', e.message);
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -136,8 +182,8 @@ async function updateProduct(req, res, next) {
     // Whitelist: Only allow known Product model fields
     const allowedFields = [
       'nameAr', 'nameEn', 'category', 'subCategory', 'price', 'stockQty',
-      'imageUrl', 'emoji', 'badge', 'skinTypes', 'concerns', 'hairTypes',
-      'budgetTier', 'forWhom', 'occasion', 'family'
+      'imageUrl', 'emoji', 'badge', 'skinType', 'concern', 'hairType',
+      'budget', 'forWhom', 'occasion', 'family'
     ];
 
     const data = {};
@@ -155,8 +201,10 @@ async function updateProduct(req, res, next) {
       data.stockQty = parseInt(data.stockQty, 10);
     }
 
-    // Ensure JSON array fields are arrays
-    const jsonArrayFields = ['skinTypes', 'concerns', 'hairTypes', 'budgetTier', 'forWhom', 'occasion'];
+    // Ensure JSON array fields are arrays and validate values
+    const jsonArrayFields = ['skinType', 'concern', 'hairType', 'budget', 'forWhom', 'occasion'];
+    const validationErrors = [];
+    
     jsonArrayFields.forEach(field => {
       if (data[field] !== undefined) {
         if (data[field] === null || data[field] === '') {
@@ -167,8 +215,33 @@ async function updateProduct(req, res, next) {
         } else if (!Array.isArray(data[field])) {
           data[field] = [];
         }
+        
+        // Validate attribute values if array is not empty
+        if (data[field].length > 0) {
+          const validation = validateAttributeValues(field, data[field]);
+          if (!validation.valid) {
+            validationErrors.push(`${field}: ${validation.errors.join(', ')}`);
+          }
+        }
       }
     });
+    
+    // Validate family if present
+    if (data.family !== undefined && data.family !== null && data.family !== '') {
+      const allowedFamilies = getAllowedValues('family');
+      if (!allowedFamilies.includes(data.family)) {
+        validationErrors.push(`family: قيمة غير صالحة "${data.family}". القيم المسموحة: ${allowedFamilies.join(', ')}`);
+      }
+    }
+    
+    // If there are validation errors, return them
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'قيم غير صالحة في خصائص المنتج',
+        errors: validationErrors
+      });
+    }
 
     // Convert null strings to actual null
     ['subCategory', 'imageUrl', 'emoji', 'badge', 'family'].forEach(field => {
@@ -183,6 +256,15 @@ async function updateProduct(req, res, next) {
         data,
       });
     });
+
+    // Invalidate recommendation cache
+    if (invalidateRecommendationCache) {
+      try {
+        invalidateRecommendationCache({}, { json: () => {} }, () => {});
+      } catch (e) {
+        console.warn('[Admin Products] Cache invalidation failed:', e.message);
+      }
+    }
 
     res.json({
       success: true,
@@ -249,6 +331,15 @@ async function deleteProduct(req, res, next) {
     await withRetry(async () => {
       return await prisma.product.delete({ where: { id } });
     });
+
+    // Invalidate recommendation cache
+    if (invalidateRecommendationCache) {
+      try {
+        invalidateRecommendationCache({}, { json: () => {} }, () => {});
+      } catch (e) {
+        console.warn('[Admin Products] Cache invalidation failed:', e.message);
+      }
+    }
 
     res.json({
       success: true,
@@ -458,7 +549,7 @@ async function importCSV(req, res, next) {
         };
 
         // Parse array fields (pipe-separated)
-        const arrayFields = ['skinTypes', 'concerns', 'hairTypes', 'budgetTier', 'forWhom', 'occasion'];
+        const arrayFields = ['skinType', 'concern', 'hairType', 'budget', 'forWhom', 'occasion'];
         arrayFields.forEach(field => {
           if (row[field] && row[field].trim()) {
             productData[field] = row[field].split('|').map(v => v.trim()).filter(Boolean);
@@ -581,10 +672,10 @@ async function exportCSV(req, res, next) {
       'imageUrl',
       'emoji',
       'badge',
-      'skinTypes',
-      'concerns',
-      'hairTypes',
-      'budgetTier',
+      'skinType',
+      'concern',
+      'hairType',
+      'budget',
       'forWhom',
       'occasion',
       'family',
@@ -642,10 +733,10 @@ function getCSVTemplate(req, res) {
     'imageUrl',
     'emoji',
     'badge',
-    'skinTypes',
-    'concerns',
-    'hairTypes',
-    'budgetTier',
+    'skinType',
+    'concern',
+    'hairType',
+    'budget',
     'forWhom',
     'occasion',
     'family',
