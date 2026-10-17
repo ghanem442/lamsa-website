@@ -743,3 +743,8 @@ body.lang-en .cart-sidebar.open { right: 0; left: auto; }
 }
 
 
+
+/* Utility Class - Hidden */
+.hidden {
+  display: none !important;
+}

@@ -20,6 +20,32 @@
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
+
+  <style>
+    /* Auth Button */
+    .auth-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: 1.5px solid;
+      white-space: nowrap;
+    }
+    .auth-btn[data-auth-state="logout"] {
+      background: linear-gradient(135deg, #8B1520 0%, #5C0E14 100%);
+      color: #FFFFFF;
+      border-color: rgba(255, 100, 100, 0.4);
+    }
+    .auth-btn[data-auth-state="logout"]:hover {
+      background: linear-gradient(135deg, #A01828 0%, #6B1118 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(139, 21, 32, 0.4);
+    }
+  </style>
   <style>
     /* Admin Theme & Layout */
     .admin-container {
@@ -221,15 +247,15 @@
   <!-- Navbar -->
   <header class="navbar">
     <div class="container nav-inner">
-      <a href="index.html" class="nav-logo">
+      <a href="/home" class="nav-logo">
         <img src="assets/logo.png" alt="LAMSA" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold);">
         <span class="nav-logo-text">LAMSA</span>
         <span class="badge badge-popular" style="margin-inline-start: 10px;">لوحة الإدارة 👑</span>
       </a>
 
       <div class="nav-actions">
-        <a href="shop.html" class="btn btn-outline btn-sm">← المتجر</a>
-        <a href="perfume.html" class="btn btn-gold btn-sm">🌹 استوديو البرفان</a>
+        <a href="/shop" class="btn btn-outline btn-sm">← المتجر</a>
+        <a href="/perfume-studio" class="btn btn-gold btn-sm">🌹 استوديو البرفان</a>
         <button onclick="adminLogout()" class="btn btn-outline btn-sm" style="border-color: #D32F2F; color: #FF6B6B;">خروج 🚪</button>
       </div>
     </div>
@@ -273,9 +299,9 @@
       </button>
     </div>
 
-    <!-- ══════════════════════════════════════════════════
+    <!-- --------------------------------------------------
          TAB 1: ORDERS MANAGEMENT (Primary focus)
-         ══════════════════════════════════════════════════ -->
+         -------------------------------------------------- -->
     <div id="tabOrders" class="admin-tab-content">
       <div class="table-card">
         <div style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
@@ -316,9 +342,9 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════
+    <!-- --------------------------------------------------
          TAB 2: DASHBOARD & STATS
-         ══════════════════════════════════════════════════ -->
+         -------------------------------------------------- -->
     <div id="tabDashboard" class="admin-tab-content" style="display: none;">
       
       <!-- Stats Cards -->
@@ -378,9 +404,9 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════
+    <!-- --------------------------------------------------
          TAB 3: STORE PRODUCTS MANAGEMENT
-         ══════════════════════════════════════════════════ -->
+         -------------------------------------------------- -->
     <div id="tabProducts" class="admin-tab-content" style="display: none;">
       <!-- Top Actions Card -->
       <div class="admin-header-card">
@@ -450,9 +476,9 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════
+    <!-- --------------------------------------------------
          TAB 3: CONTACT MESSAGES
-         ══════════════════════════════════════════════════ -->
+         -------------------------------------------------- -->
     <div id="tabMessages" class="admin-tab-content" style="display: none;">
       <div class="table-card">
         <div style="padding: 24px; border-bottom: 1px solid var(--border);">
@@ -499,9 +525,9 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════
+    <!-- --------------------------------------------------
          TAB 4: PERFUME STUDIO & SCENTS
-         ══════════════════════════════════════════════════ -->
+         -------------------------------------------------- -->
     <div id="tabScents" class="admin-tab-content" style="display: none;">
       
       <!-- Pricing Matrix Card -->
@@ -566,19 +592,58 @@
             </div>
           </div>
         </div>
+
+        <!-- Save Button for Perfume Prices -->
+        <div style="margin-top:20px; text-align:right;">
+          <button class="btn btn-primary" onclick="savePerfumePrices()">💾 حفظ أسعار العطور</button>
+        </div>
       </div>
 
-      <!-- Scents List Card -->
+      <!-- Shipping Fee Settings Card -->
+      <div class="admin-header-card" style="margin-top:30px;">
+        <div>
+          <h2 style="font-size: 1.4rem; margin-bottom: 6px; color: var(--burgundy);">💰 إعدادات تكلفة الشحن</h2>
+          <p style="color: var(--text-mid); font-size: 0.9rem;">تحديد المبلغ الثابت لشحن الطلبات.</p>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div style="max-width:400px;">
+          <div class="input-group">
+            <label>تكلفة الشحن (ج.م) *</label>
+            <input type="number" class="form-input" id="shipping_fee_input" min="0" max="1000" step="1" placeholder="مثال: 35">
+            <small style="color:var(--text-light); font-size:0.85rem; display:block; margin-top:4px;">
+              يجب أن يكون بين 0 و 1000 جنيه
+            </small>
+          </div>
+          
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="saveShippingFee()">💾 حفظ تكلفة الشحن</button>
+          </div>
+          
+          <div id="shipping_fee_message" style="margin-top:12px; padding:12px; border-radius:8px; display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Scents Management Card -->
       <div class="admin-header-card">
         <div>
-          <h2 style="font-size: 1.4rem; margin-bottom: 6px; color: var(--burgundy);">قائمة العطور والتركيبات المتاحة</h2>
-          <p style="color: var(--text-mid); font-size: 0.9rem;">تظهر للزبائن للاختيار منها في صفحة "اعمل برفانك".</p>
+          <h2 style="font-size: 1.4rem; margin-bottom: 6px; color: var(--burgundy);">🌹 قائمة العطور والتركيبات</h2>
+          <p style="color: var(--text-mid); font-size: 0.9rem;">تظهر للزبائن للاختيار منها في صفحة "اعمل برفانك" - مدارة من قاعدة البيانات.</p>
         </div>
 
         <div class="flex gap-10">
           <button class="btn btn-primary" onclick="openAddScentModal()">➕ إضافة عطر جديد</button>
-          <button class="btn btn-outline" onclick="resetScentsToDefault()">🔄 استعادة الافتراضية</button>
+          <button class="btn btn-outline" onclick="seedDefaultScents()">🔄 استعادة العطور الافتراضية</button>
         </div>
+      </div>
+
+      <!-- Scents Filter Tabs -->
+      <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="btn btn-outline btn-sm" id="filterAll" onclick="filterScentsByLayer('all')" style="background: var(--burgundy); color: white;">الكل</button>
+        <button class="btn btn-outline btn-sm" id="filterTop" onclick="filterScentsByLayer('top')">المقدمة (Top)</button>
+        <button class="btn btn-outline btn-sm" id="filterHeart" onclick="filterScentsByLayer('heart')">القلب (Heart)</button>
+        <button class="btn btn-outline btn-sm" id="filterBase" onclick="filterScentsByLayer('base')">القاعدة (Base)</button>
       </div>
 
       <!-- Scents Table -->
@@ -587,14 +652,23 @@
           <table>
             <thead>
               <tr>
-                <th>العطر / التركيبة</th>
-                <th>طابع الرائحة</th>
                 <th>الرمز</th>
+                <th>الاسم</th>
+                <th>الطبقة</th>
+                <th>الوصف</th>
+                <th>القوة</th>
                 <th>الحالة</th>
+                <th>الترتيب</th>
                 <th>إجراءات</th>
               </tr>
             </thead>
-            <tbody id="adminScentsTable"></tbody>
+            <tbody id="adminScentsTable">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-light);">
+                  ⏳ جاري تحميل العطور...
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -602,9 +676,102 @@
 
   </main>
 
-  <!-- ══════════════════════════════════════════════════
+  <!-- --------------------------------------------------
+       ADD/EDIT SCENT MODAL
+       -------------------------------------------------- -->
+  <div class="modal-backdrop" id="scentModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="flex-between mb-24">
+        <h2 style="font-size: 1.5rem; color: var(--burgundy);" id="scentModalTitle">إضافة عطر جديد</h2>
+        <button class="cart-close" onclick="closeScentModal()">✕</button>
+      </div>
+
+      <form id="scentForm" onsubmit="saveScent(event)">
+        <input type="hidden" id="scentId">
+
+        <div class="input-group">
+          <label>الطبقة / Layer *</label>
+          <select class="form-select" id="scentLayer" required>
+            <option value="top">المقدمة (Top Notes)</option>
+            <option value="heart">القلب (Heart Notes)</option>
+            <option value="base">القاعدة (Base Notes)</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>اسم العطر بالعربية *</label>
+          <input type="text" class="form-input" id="scentNameAr" required placeholder="مثال: برغموت إيطالي">
+        </div>
+
+        <div class="input-group">
+          <label>اسم العطر بالإنجليزية</label>
+          <input type="text" class="form-input" id="scentNameEn" placeholder="مثال: Bergamot">
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>الرمز التعبيري (Emoji) *</label>
+            <input type="text" class="form-input" id="scentIcon" required placeholder="🍋" maxlength="2" style="font-size: 1.5rem; text-align: center;">
+          </div>
+
+          <div class="input-group">
+            <label>اللون (Hex) *</label>
+            <input type="text" class="form-input" id="scentColor" required placeholder="#FFE066" pattern="^#[0-9A-Fa-f]{6}$">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>لون التوهج (RGBA) *</label>
+          <input type="text" class="form-input" id="scentGlowColor" required placeholder="rgba(255, 224, 102, 0.5)">
+          <small style="color: var(--text-light); font-size: 0.85rem;">مثال: rgba(255, 224, 102, 0.5)</small>
+        </div>
+
+        <div class="input-group">
+          <label>الوصف *</label>
+          <textarea class="form-input" id="scentDescription" required placeholder="حمضي منعش وفواح" rows="2" style="resize: vertical;"></textarea>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>قوة الانتشار (Sillage)</label>
+            <input type="number" class="form-input" id="scentBoostSillage" min="1" max="15" placeholder="للمقدمة والقلب فقط">
+            <small style="color: var(--text-light); font-size: 0.85rem;">1-15 (للمقدمة والقلب)</small>
+          </div>
+
+          <div class="input-group">
+            <label>قوة الثبات (Longevity)</label>
+            <input type="number" class="form-input" id="scentBoostLongevity" min="1" max="15" placeholder="للقاعدة فقط">
+            <small style="color: var(--text-light); font-size: 0.85rem;">1-15 (للقاعدة فقط)</small>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label>الحالة</label>
+            <select class="form-select" id="scentIsActive">
+              <option value="true">نشط (يظهر للزبائن)</option>
+              <option value="false">غير نشط (مخفي)</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>ترتيب العرض</label>
+            <input type="number" class="form-input" id="scentSortOrder" value="0" min="0">
+            <small style="color: var(--text-light); font-size: 0.85rem;">الأقل يظهر أولاً</small>
+          </div>
+        </div>
+
+        <div class="flex gap-10" style="margin-top: 24px;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">💾 حفظ العطر</button>
+          <button type="button" class="btn btn-outline" onclick="closeScentModal()">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------------
        ADD PRODUCT MODAL
-       ══════════════════════════════════════════════════ -->
+       -------------------------------------------------- -->
   <div class="modal-backdrop" id="addModal">
     <div class="modal-box">
       <div class="flex-between mb-24">
@@ -703,9 +870,9 @@
           <input type="text" class="form-input" id="pEmoji" placeholder="🧴 أو 🌹 أو 🎁 أو ✨" value="🧴">
         </div>
 
-        <!-- ══════════════════════════════════════════════════
+        <!-- --------------------------------------------------
              RECOMMENDATION ATTRIBUTES
-             ══════════════════════════════════════════════════ -->
+             -------------------------------------------------- -->
         <div style="border-top: 2px solid var(--border); margin: 32px 0 24px; padding-top: 24px;">
           <h3 style="color: var(--burgundy); margin-bottom: 12px; font-size: 1.2rem;">🎯 خصائص التوصيات الذكية</h3>
           <p style="color: var(--text-mid); font-size: 0.9rem; margin-bottom: 20px;">
@@ -794,9 +961,9 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════
+  <!-- --------------------------------------------------
        ADD SCENT MODAL
-       ══════════════════════════════════════════════════ -->
+       -------------------------------------------------- -->
   <div class="modal-backdrop" id="addScentModal">
     <div class="modal-box">
       <div class="flex-between mb-24">
@@ -832,11 +999,15 @@
   <script src="js/api.js"></script>
   <script src="js/data.js"></script>
   <script src="js/subcategories.js"></script>
-  <script src="js/admin-orders.js"></script>
+    
+  <!-- Auth Guard -->
+  <script src="js/auth-guard.js"></script>
+  
+<script src="js/admin-orders.js"></script>
   <script>
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // AUTHENTICATION & ACCESS CONTROL
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     function adminLogout() {
       if (confirm('هل ترغب بتسجيل الخروج من لوحة التحكم؟')) {
         localStorage.removeItem('lamsa_user');
@@ -845,9 +1016,9 @@
       }
     }
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // TOAST NOTIFICATION
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     function showToast(msg, duration = 3000) {
       let toast = document.getElementById('adminToast');
       if (!toast) {
@@ -887,9 +1058,9 @@
       }, duration);
     }
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // TABS LOGIC
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     function switchTab(tab) {
       document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
@@ -918,9 +1089,9 @@
       }
     }
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // ORDERS MANAGEMENT (Now using API via admin-orders.js)
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // Orders functions are now in admin-orders.js and loaded from API
     
     // Removed legacy renderAllOrders - now defined in js/admin-orders.js
@@ -930,11 +1101,11 @@
     // getOrders(), saveOrders(), updateOrderStatus(), deleteOrder(), addSampleOrder()
     // are replaced by API-based functions in admin-orders.js
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // DASHBOARD & ANALYTICS
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // DASHBOARD & ANALYTICS (Now using API stats)
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     let salesChartInstance = null;
 
     async function updateDashboard() {
@@ -1001,9 +1172,9 @@
       });
     }
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // PRODUCTS MANAGEMENT (Connected to Real API)
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     let currentProducts = [];
     let editingProductId = null;
     let currentPage = 1;
@@ -1030,9 +1201,9 @@
       updateAttributeSections();
     }
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // PRODUCT ATTRIBUTES MANAGEMENT
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     
     function initializeAttributeCheckboxes() {
       // Skin attributes
@@ -1592,75 +1763,9 @@
       }
     }
 
-    // ══════════════════════════════════════════════════
-    // PERFUME STUDIO & SCENTS
-    // ══════════════════════════════════════════════════
-    const DEFAULT_SCENTS = [
-      { id: 'sc_oud', nameAr: 'عود فاخر (Royal Oud)', note: 'فخم ودافئ وثبات عالي جداً', emoji: '🪵' },
-      { id: 'sc_musk', nameAr: 'مسك نقي (Pure Musk)', note: 'رائحة نظافة هادئة وراقية', emoji: '🌫️' },
-      { id: 'sc_floral', nameAr: 'زهري أنيق (Floral)', note: 'ياسمين وورد فرنسي ناعم', emoji: '🌸' },
-      { id: 'sc_spicy', nameAr: 'حار وجذاب (Spicy)', note: 'توابل شرقية مع لمسة فانيلا', emoji: '🌶️' },
-      { id: 'sc_fresh', nameAr: 'منعش صيفي (Summer Fresh)', note: 'حمضيات ونسيم البحر', emoji: '🍃' },
-      { id: 'sc_fruity', nameAr: 'فاكهي حلو (Sweet Fruity)', note: 'توت وخوخ مبهج وساحر', emoji: '🍑' },
-    ];
-    let localScents = JSON.parse(localStorage.getItem('lamsa_custom_scents')) || DEFAULT_SCENTS;
-
-    function renderScentsTable() {
-      localScents = JSON.parse(localStorage.getItem('lamsa_custom_scents')) || DEFAULT_SCENTS;
-      const tbody = document.getElementById('adminScentsTable');
-      tbody.innerHTML = localScents.map((s, idx) => `
-        <tr>
-          <td>
-            <div style="display:flex; align-items:center; gap:12px;">
-              <span style="font-size:1.8rem;">${s.emoji || '🌹'}</span>
-              <div>
-                <strong style="color:var(--text-dark);">${s.nameAr}</strong>
-              </div>
-            </div>
-          </td>
-          <td><span style="color:var(--text-mid); font-size:0.88rem;">${s.note || '—'}</span></td>
-          <td><span style="font-size:1.5rem;">${s.emoji}</span></td>
-          <td><span class="badge badge-popular" style="background:#28A745; color:white;">متاح للزبائن ✓</span></td>
-          <td>
-            <button class="action-btn-sm btn-delete" onclick="deleteScent(${idx})">🗑️ حذف</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    function openAddScentModal() { document.getElementById('addScentModal').classList.add('active'); }
-    function closeAddScentModal() { document.getElementById('addScentModal').classList.remove('active'); document.getElementById('scentForm').reset(); }
-
-    function saveScent(e) {
-      e.preventDefault();
-      const newS = {
-        id: 'sc_' + Date.now(),
-        nameAr: document.getElementById('sNameAr').value.trim(),
-        note: document.getElementById('sNote').value.trim(),
-        emoji: document.getElementById('sEmoji').value.trim() || '🌹'
-      };
-      localScents.push(newS);
-      localStorage.setItem('lamsa_custom_scents', JSON.stringify(localScents));
-      closeAddScentModal();
-      renderScentsTable();
-      alert('✅ تم إضافة العطر بنجاح وأصبح متاحاً في استوديو العطور!');
-    }
-
-    function deleteScent(idx) {
-      if (confirm('هل أنت متأكد من حذف هذا العطر؟')) {
-        localScents.splice(idx, 1);
-        localStorage.setItem('lamsa_custom_scents', JSON.stringify(localScents));
-        renderScentsTable();
-      }
-    }
-
-    function resetScentsToDefault() {
-      if (confirm('هل ترغب باستعادة قائمة العطور الافتراضية؟')) {
-        localScents = [...DEFAULT_SCENTS];
-        localStorage.setItem('lamsa_custom_scents', JSON.stringify(localScents));
-        renderScentsTable();
-      }
-    }
+    // --------------------------------------------------
+    // PERFUME STUDIO & SCENTS - Removed (Now managed in database)
+    // --------------------------------------------------
 
     function loadPerfumePrices() {
       // Load from API (database)
@@ -1738,25 +1843,299 @@
       }
     }
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
+    // SHIPPING FEE SETTINGS
+    // --------------------------------------------------
+
+    // --------------------------------------------------
+    // SCENTS MANAGEMENT (Database-backed)
+    // --------------------------------------------------
+    
+    let allScents = [];
+    let currentScentFilter = 'all';
+
+    async function loadScents() {
+      try {
+        const data = await LAMSA_API.getAllScents(null, true);
+        allScents = data.data || [];
+        renderScentsTable();
+      } catch (error) {
+        console.error('[Admin] Error loading scents:', error);
+        document.getElementById('adminScentsTable').innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-light);">
+              ⚠️ فشل تحميل العطور: ${escapeHtml(error.message)}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function filterScentsByLayer(layer) {
+      currentScentFilter = layer;
+      
+      // Update button styles
+      document.getElementById('filterAll').style.background = layer === 'all' ? 'var(--burgundy)' : '';
+      document.getElementById('filterAll').style.color = layer === 'all' ? 'white' : '';
+      document.getElementById('filterTop').style.background = layer === 'top' ? 'var(--burgundy)' : '';
+      document.getElementById('filterTop').style.color = layer === 'top' ? 'white' : '';
+      document.getElementById('filterHeart').style.background = layer === 'heart' ? 'var(--burgundy)' : '';
+      document.getElementById('filterHeart').style.color = layer === 'heart' ? 'white' : '';
+      document.getElementById('filterBase').style.background = layer === 'base' ? 'var(--burgundy)' : '';
+      document.getElementById('filterBase').style.color = layer === 'base' ? 'white' : '';
+      
+      renderScentsTable();
+    }
+
+    function renderScentsTable() {
+      const tbody = document.getElementById('adminScentsTable');
+      
+      let scentsToShow = allScents;
+      if (currentScentFilter !== 'all') {
+        scentsToShow = allScents.filter(s => s.layer === currentScentFilter);
+      }
+      
+      if (scentsToShow.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-light);">
+              لا توجد عطور ${currentScentFilter !== 'all' ? 'في هذه الفئة' : ''} 
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = scentsToShow.map(scent => {
+        const layerText = scent.layer === 'top' ? 'المقدمة' : scent.layer === 'heart' ? 'القلب' : 'القاعدة';
+        const layerBadgeColor = scent.layer === 'top' ? '#40C4FF' : scent.layer === 'heart' ? '#FF4081' : '#8D6E63';
+        const powerValue = scent.boostSillage || scent.boostLongevity || 0;
+        const powerLabel = scent.boostSillage ? `انتشار ${scent.boostSillage}` : scent.boostLongevity ? `ثبات ${scent.boostLongevity}` : '—';
+        
+        return `
+          <tr>
+            <td><span style="font-size:2rem;">${escapeHtml(scent.icon)}</span></td>
+            <td>
+              <div>
+                <strong style="color:var(--text-dark);">${escapeHtml(scent.nameAr)}</strong>
+                ${scent.nameEn ? `<br><small style="color:var(--text-light);">${escapeHtml(scent.nameEn)}</small>` : ''}
+              </div>
+            </td>
+            <td><span class="badge" style="background:${layerBadgeColor}; color:white;">${layerText}</span></td>
+            <td><span style="color:var(--text-mid); font-size:0.88rem;">${escapeHtml(scent.description)}</span></td>
+            <td><span style="color:var(--gold);">${powerLabel}</span></td>
+            <td>
+              ${scent.isActive 
+                ? '<span class="badge badge-popular" style="background:#28A745;">نشط ✓</span>' 
+                : '<span class="badge" style="background:#999;">مخفي</span>'}
+            </td>
+            <td><span style="color:var(--text-light);">${scent.sortOrder}</span></td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button class="action-btn-sm" onclick="editScent('${scent.id}')" title="تعديل">✏️</button>
+                <button class="action-btn-sm btn-delete" onclick="deleteScentById('${scent.id}')" title="حذف">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openAddScentModal() {
+      document.getElementById('scentModalTitle').textContent = 'إضافة عطر جديد';
+      document.getElementById('scentForm').reset();
+      document.getElementById('scentId').value = '';
+      document.getElementById('scentModal').classList.add('active');
+    }
+
+    function closeScentModal() {
+      document.getElementById('scentModal').classList.remove('active');
+      document.getElementById('scentForm').reset();
+    }
+
+    async function editScent(id) {
+      const scent = allScents.find(s => s.id === id);
+      if (!scent) return;
+      
+      document.getElementById('scentModalTitle').textContent = 'تعديل العطر';
+      document.getElementById('scentId').value = scent.id;
+      document.getElementById('scentLayer').value = scent.layer;
+      document.getElementById('scentNameAr').value = scent.nameAr;
+      document.getElementById('scentNameEn').value = scent.nameEn || '';
+      document.getElementById('scentIcon').value = scent.icon;
+      document.getElementById('scentDescription').value = scent.description;
+      document.getElementById('scentColor').value = scent.color;
+      document.getElementById('scentGlowColor').value = scent.glowColor;
+      document.getElementById('scentBoostSillage').value = scent.boostSillage || '';
+      document.getElementById('scentBoostLongevity').value = scent.boostLongevity || '';
+      document.getElementById('scentIsActive').value = String(scent.isActive);
+      document.getElementById('scentSortOrder').value = scent.sortOrder;
+      
+      document.getElementById('scentModal').classList.add('active');
+    }
+
+    async function saveScent(e) {
+      e.preventDefault();
+      
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'جاري الحفظ...';
+      
+      const id = document.getElementById('scentId').value;
+      const scentData = {
+        layer: document.getElementById('scentLayer').value,
+        nameAr: document.getElementById('scentNameAr').value.trim(),
+        nameEn: document.getElementById('scentNameEn').value.trim() || null,
+        icon: document.getElementById('scentIcon').value.trim(),
+        description: document.getElementById('scentDescription').value.trim(),
+        color: document.getElementById('scentColor').value.trim(),
+        glowColor: document.getElementById('scentGlowColor').value.trim(),
+        boostSillage: document.getElementById('scentBoostSillage').value ? parseInt(document.getElementById('scentBoostSillage').value) : null,
+        boostLongevity: document.getElementById('scentBoostLongevity').value ? parseInt(document.getElementById('scentBoostLongevity').value) : null,
+        isActive: document.getElementById('scentIsActive').value === 'true',
+        sortOrder: parseInt(document.getElementById('scentSortOrder').value) || 0
+      };
+      
+      try {
+        if (id) {
+          // Update existing
+          await LAMSA_API.adminUpdateScent(id, scentData);
+          showToast('✅ تم تحديث العطر بنجاح');
+        } else {
+          // Create new
+          await LAMSA_API.adminCreateScent(scentData);
+          showToast('✅ تم إضافة العطر بنجاح');
+        }
+        
+        closeScentModal();
+        await loadScents();
+      } catch (error) {
+        console.error('[Admin] Error saving scent:', error);
+        showToast('⚠️ ' + (error.message || 'حدث خطأ أثناء الحفظ'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    async function deleteScentById(id) {
+      const scent = allScents.find(s => s.id === id);
+      if (!scent) return;
+      
+      if (!confirm(`هل أنت متأكد من حذف "${scent.nameAr}"؟`)) return;
+      
+      try {
+        await LAMSA_API.adminDeleteScent(id);
+        showToast('✅ تم حذف العطر بنجاح');
+        await loadScents();
+      } catch (error) {
+        console.error('[Admin] Error deleting scent:', error);
+        showToast('⚠️ ' + (error.message || 'حدث خطأ أثناء الحذف'));
+      }
+    }
+
+    async function seedDefaultScents() {
+      if (!confirm('هل تريد استعادة قائمة العطور الافتراضية؟\n\n⚠️ تحذير: سيتم حذف جميع العطور الحالية واستبدالها بـ 18 عطر افتراضي.')) {
+        return;
+      }
+      
+      try {
+        showToast('⏳ جاري استعادة العطور الافتراضية...');
+        const data = await LAMSA_API.adminSeedDefaultScents();
+        showToast(`✅ ${data.message || 'تم استعادة العطور الافتراضية بنجاح'}`);
+        await loadScents();
+      } catch (error) {
+        console.error('[Admin] Error seeding default scents:', error);
+        showToast('⚠️ ' + (error.message || 'حدث خطأ أثناء الاستعادة'));
+      }
+    }
+
+    // --------------------------------------------------
+    // SHIPPING FEE SETTINGS (continued)
+    // --------------------------------------------------
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function loadShippingFee() {
+      LAMSA_API.getShippingFee()
+        .then(data => {
+          const fee = data.data.shippingFee;
+          document.getElementById('shipping_fee_input').value = fee;
+        })
+        .catch(error => {
+          console.error('[Admin] Error loading shipping fee:', error);
+          document.getElementById('shipping_fee_input').value = 35; // Default fallback
+        });
+    }
+
+    async function saveShippingFee() {
+      const btn = event.target;
+      const originalText = btn.textContent;
+      const input = document.getElementById('shipping_fee_input');
+      const msgBox = document.getElementById('shipping_fee_message');
+      
+      btn.disabled = true;
+      btn.textContent = 'جاري الحفظ...';
+      msgBox.style.display = 'none';
+
+      const shippingFee = parseInt(input.value);
+
+      // Client-side validation
+      if (isNaN(shippingFee) || shippingFee < 0 || shippingFee > 1000 || shippingFee !== parseFloat(input.value)) {
+        msgBox.style.display = 'block';
+        msgBox.style.background = '#f8d7da';
+        msgBox.style.color = '#721c24';
+        msgBox.innerHTML = '⚠ تكلفة الشحن يجب أن تكون بين 0 و 1000 جنيه';
+        btn.textContent = originalText;
+        btn.disabled = false;
+        return;
+      }
+
+      try {
+        const data = await LAMSA_API.adminUpdateShippingFee(shippingFee);
+        
+        msgBox.style.display = 'block';
+        msgBox.style.background = '#d4edda';
+        msgBox.style.color = '#155724';
+        msgBox.innerHTML = '✓ ' + escapeHtml(data.message || 'تم تحديث تكلفة الشحن بنجاح');
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
+      } catch (error) {
+        console.error('[Admin] Error saving shipping fee:', error);
+        msgBox.style.display = 'block';
+        msgBox.style.background = '#f8d7da';
+        msgBox.style.color = '#721c24';
+        msgBox.innerHTML = '✗ ' + escapeHtml(error.message || 'حدث خطأ أثناء الحفظ');
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // --------------------------------------------------
     // INITIALIZATION
-    // ══════════════════════════════════════════════════
-    // INITIALIZATION
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     async function initAdminDashboard() {
       initializeAttributeCheckboxes(); // Initialize recommendation attributes UI
       await loadProducts(); // Load products from server API
       await initializeOrdersManagement(); // Load orders and stats from API (defined in admin-orders.js)
       await updateDashboard();
+      loadPerfumePrices(); // Load perfume prices from API
+      loadShippingFee(); // Load shipping fee from API
+      await loadScents(); // Load scents from database
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       initAdminDashboard();
     });
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // AUTH GUARD: Check if admin is logged in
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     (async function() {
       const token = localStorage.getItem('lamsa_token');
       const user = JSON.parse(localStorage.getItem('lamsa_user') || '{}');
@@ -1790,9 +2169,9 @@
       }
     })();
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // CONTACT MESSAGES MANAGEMENT
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     let currentMessagesFilter = 'all';
     let allMessages = [];
 
@@ -1965,6 +2344,19 @@
         </tr>
       `;
     }
+  </script>
+  <!-- Navbar Auth State -->
+  <script src="js/navbar-auth.js"></script>
+
+  <script>
+    // Admin-specific: show logout button
+    document.addEventListener('DOMContentLoaded', function() {
+      const authBtn = document.getElementById('authBtn');
+      const token = localStorage.getItem('lamsa_token');
+      if (token && authBtn) {
+        authBtn.style.display = 'inline-flex';
+      }
+    });
   </script>
 </body>
 </html>

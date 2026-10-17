@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LAMSA API Client Wrapper (Vanilla JS)
  * Handles API calls to backend endpoints with fallback safety
  */
@@ -34,21 +34,36 @@
       if (response.ok) {
         return data; // Return data directly on success
       } else {
-        // For error responses, throw the error message from server
+        // For 429 (rate limit), include retry info in error
+        if (response.status === 429) {
+          const retryAfter = data.retryAfter || data.waitMinutes * 60 || 180; // default 3 minutes in seconds
+          const waitMinutes = data.waitMinutes || Math.ceil(retryAfter / 60);
+          const errorMsg = data.message || `عدد محاولات الطلب كبير، يرجى المحاولة بعد ${waitMinutes} دقيقة`;
+          
+          const error = new Error(errorMsg);
+          error.status = 429;
+          error.retryAfter = retryAfter;
+          error.waitMinutes = waitMinutes;
+          throw error;
+        }
+        
+        // For other error responses, throw the error message from server
         throw new Error(data.message || `HTTP ${response.status}`);
       }
     } catch (err) {
-      // Network errors or JSON parse errors
-      if (err.message && err.message !== 'Failed to fetch') {
-        throw err; // Re-throw server error messages
+      // Re-throw if it's already an Error object (including our 429 error above)
+      if (err instanceof Error) {
+        throw err;
       }
+      
+      // Network errors or JSON parse errors
       console.warn(`[API] Network error requesting ${endpoint}:`, err);
-      throw new Error('فشل الاتصال بالسيرفر. يرجى التحقق من الاتصال بالإنترنت.');
+      throw new Error('خطأ في الاتصال بالخادم. يرجى التحقق من الاتصال بالإنترنت.');
     }
   }
 
   const api = {
-    // â”€â”€ Authentication â”€â”€
+    // ── Authentication ──
     async register(userData) {
       return await request('/api/auth/register', {
         method: 'POST',
@@ -63,11 +78,53 @@
       });
     },
 
+    async verifyOtp(otpData) {
+      return await request('/api/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify(otpData),
+      });
+    },
+
+    async resendOtp(emailData) {
+      return await request('/api/auth/resend-otp', {
+        method: 'POST',
+        body: JSON.stringify(emailData),
+      });
+    },
+
+    async googleLogin(googleData) {
+      return await request('/api/auth/google', {
+        method: 'POST',
+        body: JSON.stringify(googleData),
+      });
+    },
+
     async getMe() {
       return await request('/api/auth/me');
     },
 
-    // â”€â”€ Products â”€â”€
+    async updateName(nameData) {
+      return await request('/api/auth/update-name', {
+        method: 'PUT',
+        body: JSON.stringify(nameData),
+      });
+    },
+
+    async changePassword(passwordData) {
+      return await request('/api/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify(passwordData),
+      });
+    },
+
+    async setPassword(passwordData) {
+      return await request('/api/auth/set-password', {
+        method: 'PUT',
+        body: JSON.stringify(passwordData),
+      });
+    },
+
+    // ── Products ──
     async getProducts(params = {}) {
       const query = new URLSearchParams();
       if (params.category && params.category !== 'all') query.set('category', params.category);
@@ -93,12 +150,12 @@
       return await request(`/api/products/${id}`);
     },
 
-    // â”€â”€ Health â”€â”€
+    // ── Health ──
     async checkHealth() {
       return await request('/api/health');
     },
 
-    // â”€â”€ Admin: Products â”€â”€
+    // ── Admin: Products ──
     async adminGetProducts(params = {}) {
       const query = new URLSearchParams();
       if (params.page) query.set('page', params.page);
@@ -151,7 +208,7 @@
       if (response.ok) {
         return data; // Return data directly on success
       } else {
-        throw new Error(data.message || `فشل رفع الصورة`);
+        throw new Error(data.message || `حدث خطأ أثناء رفع الصورة`);
       }
     },
 
@@ -176,7 +233,7 @@
       if (response.ok) {
         return data; // Return data directly on success
       } else {
-        throw new Error(data.message || 'فشل استيراد الملف');
+        throw new Error(data.message || 'خطأ في استيراد المنتجات');
       }
     },
 
@@ -234,13 +291,13 @@
         return;
       } else {
         const data = await response.json();
-        throw new Error(data.message || 'فشل تنزيل القالب');
+        throw new Error(data.message || 'فشل تحميل النموذج');
       }
     },
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // ORDERS
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     
     async createOrder(orderData) {
       return await request('/api/orders', {
@@ -257,9 +314,9 @@
       return await request(`/api/orders/lookup?orderNumber=${orderNumber}&phone=${phone}`);
     },
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // ADMIN ORDERS
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     
     async adminGetOrders(params = {}) {
       const query = new URLSearchParams(params).toString();
@@ -288,9 +345,9 @@
       });
     },
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // SETTINGS
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     
     async getPerfumePrices() {
       return await request('/api/settings/perfume-prices');
@@ -303,9 +360,20 @@
       });
     },
 
-    // ══════════════════════════════════════════════════
+    async getShippingFee() {
+      return await request('/api/settings/shipping');
+    },
+
+    async adminUpdateShippingFee(shippingFee) {
+      return await request('/api/settings/admin/shipping', {
+        method: 'PATCH',
+        body: JSON.stringify({ shippingFee })
+      });
+    },
+
+    // --------------------------------------------------
     // CONTACT
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     
     async submitContactMessage(messageData) {
       return await request('/api/contact', {
@@ -314,9 +382,9 @@
       });
     },
 
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     // ADMIN MESSAGES
-    // ══════════════════════════════════════════════════
+    // --------------------------------------------------
     
     async adminGetMessages(params = {}) {
       const query = new URLSearchParams(params).toString();
@@ -343,3 +411,50 @@
   window.LAMSA_API = api;
 })(window);
 
+
+
+  // --------------------------------------------------
+  // SCENTS (Perfume Management)
+  // --------------------------------------------------
+  
+  async getAllScents(layer = null, active = true) {
+    const params = new URLSearchParams();
+    if (layer) params.append('layer', layer);
+    if (active !== null) params.append('active', String(active));
+    
+    return await request(`/api/scents?${params.toString()}`);
+  },
+
+  async getScentsByLayer(active = true) {
+    const params = new URLSearchParams();
+    if (active !== null) params.append('active', String(active));
+    
+    return await request(`/api/scents/by-layer?${params.toString()}`);
+  },
+
+  async adminCreateScent(scentData) {
+    return await request('/api/scents', {
+      method: 'POST',
+      body: JSON.stringify(scentData)
+    });
+  },
+
+  async adminUpdateScent(id, scentData) {
+    return await request(`/api/scents/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(scentData)
+    });
+  },
+
+  async adminDeleteScent(id) {
+    return await request(`/api/scents/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async adminSeedDefaultScents() {
+    return await request('/api/scents/seed-defaults', {
+      method: 'POST'
+    });
+  }
+};

@@ -1,25 +1,44 @@
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 // Rate limiter for order creation (configurable from .env)
-// Counts ALL requests (successful + failed) to prevent order flooding
+// Only counts FAILED requests - successful orders don't count towards limit
+// Uses user identifier (phone/email/userId) instead of IP for better accuracy
 const orderRateLimiter = rateLimit({
-  windowMs: (parseInt(process.env.ORDER_RATE_LIMIT_WINDOW_MINUTES) || 15) * 60 * 1000,
-  max: parseInt(process.env.ORDER_RATE_LIMIT_MAX) || 5,
-  skipSuccessfulRequests: false, // Count ALL requests to prevent spam
+  windowMs: (parseInt(process.env.ORDER_RATE_LIMIT_WINDOW_MINUTES) || 3) * 60 * 1000, // Default: 3 minutes
+  max: parseInt(process.env.ORDER_RATE_LIMIT_MAX) || 20, // Default: 20 attempts
+  skipSuccessfulRequests: true, // Only count failed orders (successful orders don't count)
+  
+  // Use phone/email/userId as key instead of IP for better tracking
+  keyGenerator: (req, res) => {
+    // In production, prefer user identifiers over IP
+    if (process.env.NODE_ENV !== 'development') {
+      if (req.body?.phone) return req.body.phone;
+      if (req.body?.email) return req.body.email;
+      if (req.user?.id) return req.user.id;
+    }
+    // Fallback to IP with proper IPv6 handling
+    return req.ip ? ipKeyGenerator(req.ip) : 'dev-fallback';
+  },
+  
   message: (req, res) => {
-    const windowMinutes = parseInt(process.env.ORDER_RATE_LIMIT_WINDOW_MINUTES) || 15;
+    const windowMinutes = parseInt(process.env.ORDER_RATE_LIMIT_WINDOW_MINUTES) || 3;
     return {
       success: false,
-      message: `عدد محاولات الطلب كبير، برجاء المحاولة بعد ${windowMinutes} دقيقة أو التواصل معنا`
+      message: `عدد محاولات الطلب كبير، برجاء المحاولة بعد ${windowMinutes} دقيقة أو التواصل معنا`,
+      retryAfter: windowMinutes * 60 // in seconds
     };
   },
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
-    const windowMinutes = parseInt(process.env.ORDER_RATE_LIMIT_WINDOW_MINUTES) || 15;
+    const windowMinutes = parseInt(process.env.ORDER_RATE_LIMIT_WINDOW_MINUTES) || 3;
+    const retryAfter = windowMinutes * 60; // in seconds
+    
     res.status(429).json({
       success: false,
-      message: `عدد محاولات الطلب كبير، برجاء المحاولة بعد ${windowMinutes} دقيقة أو التواصل معنا`
+      message: `عدد محاولات الطلب كبير، برجاء المحاولة بعد ${windowMinutes} دقيقة أو التواصل معنا`,
+      retryAfter: retryAfter, // in seconds for countdown timer
+      waitMinutes: windowMinutes
     });
   }
 });

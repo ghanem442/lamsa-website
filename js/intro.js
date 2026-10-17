@@ -507,7 +507,7 @@ function finishIntro() {
       
       // Redirect to main page
       setTimeout(() => {
-        window.location.href = 'index.html';
+        window.location.href = '/home';
       }, 300);
     }
   });

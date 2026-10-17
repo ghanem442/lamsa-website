@@ -6,6 +6,8 @@ const orderRoutes = require('./order.routes');
 const adminRoutes = require('./admin.routes');
 const settingsRoutes = require('./settings.routes');
 const contactRoutes = require('./contact.routes');
+const configRoutes = require('./config.routes');
+const scentRoutes = require('./scent.routes');
 
 /**
  * GET /api/health
@@ -28,5 +30,7 @@ router.use('/orders', orderRoutes);
 router.use('/admin', adminRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/contact', contactRoutes);
+router.use('/config', configRoutes);
+router.use('/scents', scentRoutes);
 
 module.exports = router;

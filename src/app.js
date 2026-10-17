@@ -19,13 +19,13 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://accounts.google.com", "https://apis.google.com"],
       scriptSrcAttr: ["'unsafe-hashes'", "'unsafe-inline'"], // Allow inline event handlers (onclick, etc.)
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https:"],
-      connectSrc: ["'self'", "https://api.cloudinary.com"],
-      frameSrc: ["'none'"],
+      connectSrc: ["'self'", "https://api.cloudinary.com", "https://accounts.google.com", "https://apis.google.com"],
+      frameSrc: ["https://accounts.google.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
@@ -53,15 +53,46 @@ app.use('/api', apiRoutes);
 const rootDir = path.join(__dirname, '..');
 app.use(express.static(rootDir));
 
-// Friendly page aliases
+// --------------------------------------------------
+// CLEAN URL ROUTES (without .html extension)
+// --------------------------------------------------
+
+// Root route - show intro page
 app.get('/', (req, res) => res.sendFile(path.join(rootDir, 'intro.html')));
-app.get('/index', (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
+
+// Main pages with clean URLs
+app.get('/home', (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
 app.get('/shop', (req, res) => res.sendFile(path.join(rootDir, 'shop.html')));
+app.get('/about', (req, res) => res.sendFile(path.join(rootDir, 'about.html')));
+app.get('/contact', (req, res) => res.sendFile(path.join(rootDir, 'contact.html')));
 app.get('/auth', (req, res) => res.sendFile(path.join(rootDir, 'auth.html')));
+app.get('/account', (req, res) => res.sendFile(path.join(rootDir, 'account.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(rootDir, 'admin.html')));
-app.get('/perfume', (req, res) => res.sendFile(path.join(rootDir, 'perfume.html')));
-app.get('/routine', (req, res) => res.sendFile(path.join(rootDir, 'routine.html')));
-app.get('/gift', (req, res) => res.sendFile(path.join(rootDir, 'gift.html')));
+
+// Service pages with descriptive names
+app.get('/perfume-studio', (req, res) => res.sendFile(path.join(rootDir, 'perfume.html')));
+app.get('/routine-finder', (req, res) => res.sendFile(path.join(rootDir, 'routine.html')));
+app.get('/gift-designer', (req, res) => res.sendFile(path.join(rootDir, 'gift.html')));
+
+// --------------------------------------------------
+// 301 REDIRECTS - Old .html URLs to Clean URLs
+// --------------------------------------------------
+
+app.get('/intro.html', (req, res) => res.redirect(301, '/'));
+app.get('/index.html', (req, res) => res.redirect(301, '/home'));
+app.get('/index', (req, res) => res.redirect(301, '/home'));
+app.get('/shop.html', (req, res) => res.redirect(301, '/shop'));
+app.get('/about.html', (req, res) => res.redirect(301, '/about'));
+app.get('/contact.html', (req, res) => res.redirect(301, '/contact'));
+app.get('/auth.html', (req, res) => res.redirect(301, '/auth'));
+app.get('/account.html', (req, res) => res.redirect(301, '/account'));
+app.get('/admin.html', (req, res) => res.redirect(301, '/admin'));
+app.get('/perfume.html', (req, res) => res.redirect(301, '/perfume-studio'));
+app.get('/perfume', (req, res) => res.redirect(301, '/perfume-studio'));
+app.get('/routine.html', (req, res) => res.redirect(301, '/routine-finder'));
+app.get('/routine', (req, res) => res.redirect(301, '/routine-finder'));
+app.get('/gift.html', (req, res) => res.redirect(301, '/gift-designer'));
+app.get('/gift', (req, res) => res.redirect(301, '/gift-designer'));
 
 // SEO: robots.txt
 app.get('/robots.txt', (req, res) => {
@@ -70,10 +101,9 @@ app.get('/robots.txt', (req, res) => {
   res.send(`# robots.txt for LAMSA Store
 User-agent: *
 Allow: /
-Disallow: /admin.html
 Disallow: /admin
-Disallow: /auth.html
 Disallow: /auth
+Disallow: /account
 Disallow: /api/
 
 Sitemap: ${siteUrl}/sitemap.xml
@@ -87,13 +117,13 @@ app.get('/sitemap.xml', (req, res) => {
   
   const urls = [
     { loc: '/', priority: '1.0', changefreq: 'daily' },
-    { loc: '/index.html', priority: '1.0', changefreq: 'daily' },
-    { loc: '/shop.html', priority: '0.9', changefreq: 'daily' },
-    { loc: '/routine.html', priority: '0.8', changefreq: 'weekly' },
-    { loc: '/gift.html', priority: '0.8', changefreq: 'weekly' },
-    { loc: '/perfume.html', priority: '0.8', changefreq: 'weekly' },
-    { loc: '/about.html', priority: '0.7', changefreq: 'monthly' },
-    { loc: '/contact.html', priority: '0.7', changefreq: 'monthly' }
+    { loc: '/home', priority: '1.0', changefreq: 'daily' },
+    { loc: '/shop', priority: '0.9', changefreq: 'daily' },
+    { loc: '/routine-finder', priority: '0.8', changefreq: 'weekly' },
+    { loc: '/gift-designer', priority: '0.8', changefreq: 'weekly' },
+    { loc: '/perfume-studio', priority: '0.8', changefreq: 'weekly' },
+    { loc: '/about', priority: '0.7', changefreq: 'monthly' },
+    { loc: '/contact', priority: '0.7', changefreq: 'monthly' }
   ];
   
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

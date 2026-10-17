@@ -31,7 +31,7 @@ model User {
   id             String           @id @default(uuid())
   name           String
   email          String           @unique
-  passwordHash   String           @map("password_hash")
+  passwordHash   String?          @map("password_hash")
   phone          String?
   role           Role             @default(customer)
   isVerified     Boolean          @default(false) @map("is_verified")
@@ -161,4 +161,42 @@ model ContactMessage {
 
   @@index([isRead, createdAt(sort: Desc)], map: "idx_contact_messages_read_created")
   @@map("contact_messages")
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  otpCode   String   @map("otp_code")
+  expiresAt DateTime @map("expires_at")
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email, expiresAt], map: "idx_otp_email_expires")
+  @@map("otps")
+}
+
+enum ScentLayer {
+  top
+  heart
+  base
+}
+
+model Scent {
+  id              String     @id @default(uuid())
+  layer           ScentLayer
+  nameAr          String     @map("name_ar")
+  nameEn          String?    @map("name_en")
+  icon            String     @default("🌸")
+  description     String     @db.Text
+  color           String     @default("#FFE066")
+  glowColor       String     @default("rgba(255, 224, 102, 0.5)") @map("glow_color")
+  boostSillage    Int?       @map("boost_sillage")
+  boostLongevity  Int?       @map("boost_longevity")
+  isActive        Boolean    @default(true) @map("is_active")
+  sortOrder       Int        @default(0) @map("sort_order")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@index([layer, isActive, sortOrder])
+  @@map("scents")
 }

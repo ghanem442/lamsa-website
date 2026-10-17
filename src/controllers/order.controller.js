@@ -5,10 +5,13 @@ const {
   PERFUME_SIZES, 
   PERFUME_CONCENTRATIONS, 
   PERFUME_SETTINGS_KEY,
-  ALLOWED_SCENTS,
   MAX_CUSTOM_NAME_LENGTH,
   MAX_NOTES_LENGTH
 } = require('../constants/perfume');
+const {
+  SHIPPING_SETTINGS_KEY,
+  DEFAULT_SHIPPING_FEE
+} = require('../constants/shipping');
 
 // Egyptian phone validation
 const egyptianPhoneSchema = z.string().regex(
@@ -35,11 +38,7 @@ const createOrderSchema = z.object({
   customPerfume: z.object({
     customName: z.string()
       .min(1, 'اسم العطر مطلوب')
-      .max(MAX_CUSTOM_NAME_LENGTH, `اسم العطر يجب ألا يتجاوز ${MAX_CUSTOM_NAME_LENGTH} حرف`)
-      .refine(
-        (name) => ALLOWED_SCENTS.includes(name),
-        { message: 'اسم العطر غير مسموح به. يرجى اختيار عطر من القائمة المتاحة' }
-      ),
+      .max(MAX_CUSTOM_NAME_LENGTH, `اسم العطر يجب ألا يتجاوز ${MAX_CUSTOM_NAME_LENGTH} حرف`),
     topNote: z.string().min(1).max(100, 'المقدمة يجب ألا تتجاوز 100 حرف'),
     heartNote: z.string().min(1).max(100, 'القلب يجب ألا تتجاوز 100 حرف'),
     baseNote: z.string().min(1).max(100, 'القاعدة يجب ألا تتجاوز 100 حرف'),
@@ -118,16 +117,18 @@ async function createOrder(req, res, next) {
           subtotal = calculatedPerfumePrice;
         } else {
           // Regular products order
-          // 1. Load all products WITH ROW LOCKS to prevent race conditions
+          // 1. Load all products (Prisma handles UUID automatically, no raw SQL needed)
           const productIds = validatedData.items.map(item => item.productId);
           
-          // Use raw query to get row-level locks (FOR UPDATE)
-          // This ensures no other transaction can read/write these products until we commit
-          const products = await tx.$queryRaw`
-            SELECT * FROM products 
-            WHERE id = ANY(${productIds}::uuid[])
-            FOR UPDATE
-          `;
+          // Use Prisma Client - automatically handles UUID conversion
+          // Transaction provides isolation, no need for explicit FOR UPDATE
+          const products = await tx.product.findMany({
+            where: {
+              id: {
+                in: productIds
+              }
+            }
+          });
           
           // Map products by ID
           const productMap = {};
@@ -143,10 +144,10 @@ async function createOrder(req, res, next) {
               throw new Error(`المنتج غير موجود: ${item.productId}`);
             }
             
-            // Critical: check stock AFTER acquiring lock
-            if (product.stock_qty < item.quantity) {
+            // Critical: check stock
+            if (product.stockQty < item.quantity) {
               throw new Error(
-                `الكمية المطلوبة من "${product.name_ar}" غير متوفرة في المخزون. المتاح: ${product.stock_qty}`
+                `الكمية المطلوبة من "${product.nameAr}" غير متوفرة في المخزون. المتاح: ${product.stockQty}`
               );
             }
             
@@ -157,15 +158,19 @@ async function createOrder(req, res, next) {
               productId: product.id,
               quantity: item.quantity,
               unitPrice: product.price,
-              productName: product.name_ar,
-              productImage: product.image_url,
+              productName: product.nameAr,
+              productImage: product.imageUrl,
               productEmoji: product.emoji
             });
           }
         }
         
-        // 3. Calculate total
-        const shippingFee = 35;
+        // 3. Get shipping fee from settings
+        const shippingSetting = await tx.setting.findUnique({
+          where: { key: SHIPPING_SETTINGS_KEY }
+        });
+        const shippingFee = shippingSetting ? Number(shippingSetting.value) : DEFAULT_SHIPPING_FEE;
+        
         const totalAmount = subtotal + shippingFee;
         
         // 4. Generate order number
@@ -299,6 +304,7 @@ async function createOrder(req, res, next) {
       });
     }
     
+    // Business logic errors (stock, pricing, etc.)
     if (error.message && (error.message.includes('المنتج') || error.message.includes('الكمية') || error.message.includes('المخزون') || error.message.includes('أسعار'))) {
       return res.status(400).json({
         success: false,
@@ -306,6 +312,32 @@ async function createOrder(req, res, next) {
       });
     }
     
+    // Database connection errors
+    if (error.code === 'P1001' || error.code === 'P1002' || error.message?.includes("Can't reach database") || error.message?.includes('ECONNREFUSED') || error.message?.includes('ETIMEDOUT')) {
+      console.error('[Order] Database connection error:', error.message);
+      return res.status(503).json({
+        success: false,
+        message: 'قاعدة البيانات غير متاحة مؤقتاً. يرجى المحاولة بعد قليل أو التواصل معنا عبر واتساب.'
+      });
+    }
+    
+    // Prisma errors (P2xxx codes)
+    if (error.code && error.code.startsWith('P2')) {
+      console.error('[Order] Prisma error:', error.code, error.message);
+      // In development, return detailed error
+      if (process.env.NODE_ENV === 'development') {
+        return res.status(500).json({
+          success: false,
+          message: `خطأ في قاعدة البيانات: ${error.code} - ${error.message}`,
+          debug: {
+            code: error.code,
+            meta: error.meta
+          }
+        });
+      }
+    }
+    
+    // Generic server error
     console.error('[Order] Create order error:', error);
     res.status(500).json({
       success: false,

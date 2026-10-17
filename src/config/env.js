@@ -26,6 +26,13 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('*'),
   SITE_URL: z.string().url().optional(), // For canonical URLs and sitemap
   
+  // Google OAuth (optional)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  
+  // Email configuration (optional - for OTP)
+  EMAIL_USER: z.string().optional(),
+  EMAIL_PASS: z.string().optional(),
+  
   // Rate Limiting (configurable from .env)
   ORDER_RATE_LIMIT_MAX: z.string().default('5'),
   ORDER_RATE_LIMIT_WINDOW_MINUTES: z.string().default('15'),

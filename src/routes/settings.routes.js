@@ -1,21 +1,14 @@
-/**
- * Settings Routes
- */
-
 const express = require('express');
 const router = express.Router();
 const settingsController = require('../controllers/settings.controller');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 
-// Public: Get perfume prices
+// Public endpoints
+router.get('/shipping', settingsController.getShippingFee);
 router.get('/perfume-prices', settingsController.getPerfumePrices);
 
-// Admin only: Update perfume prices
-router.put(
-  '/perfume-prices',
-  authenticate,
-  requireAdmin,
-  settingsController.updatePerfumePrices
-);
+// Admin endpoints
+router.patch('/admin/shipping', authenticate, requireAdmin, settingsController.updateShippingFee);
+router.put('/perfume-prices', authenticate, requireAdmin, settingsController.updatePerfumePrices);
 
 module.exports = router;

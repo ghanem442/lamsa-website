@@ -178,3 +178,25 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+  // 4. Create default shipping fee setting (only if missing)
+  try {
+    const shippingFeeSetting = await prisma.setting.findUnique({
+      where: { key: 'shipping_fee' }
+    });
+
+    if (!shippingFeeSetting) {
+      await prisma.setting.create({
+        data: {
+          key: 'shipping_fee',
+          value: 35
+        }
+      });
+      console.log('✅ Created default shipping fee setting (35 EGP)');
+    } else {
+      console.log('ℹ️  Shipping fee setting already exists, skipping');
+    }
+  } catch (error) {
+    console.error('❌ Failed to create shipping fee setting:', error);
+    throw error;
+  }

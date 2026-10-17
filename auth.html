@@ -224,16 +224,6 @@
       box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
     }
 
-    /* Guest Skip Link */
-    .guest-link {
-      display: inline-block;
-      margin-top: 18px;
-      color: rgba(255, 255, 255, 0.65);
-      font-size: 0.86rem;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-
     /* OTP Verification Styles */
     .otp-inputs {
       display: flex;
@@ -302,7 +292,7 @@
       <p class="auth-sub">سجل دخولك لتجربة تسوق فاخرة وحفظ روتينك وخلطاتك العطرية</p>
 
       <!-- Primary Google Gmail Login Button -->
-      <button class="btn-google-luxury" onclick="handleGoogleLogin()">
+      <button class="btn-google-luxury" id="googleLoginBtn">
         <svg viewBox="0 0 24 24">
           <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
           <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
@@ -352,6 +342,9 @@
           أرسلنا رمز تأكيد سري إلى بريدك:<br>
           <strong id="otpTargetEmail" style="color: var(--gold-light);"></strong>
         </p>
+        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 10px;">
+          💡 لم تجد الرسالة؟ تحقق من مجلد <strong style="color: var(--gold-light);">الرسائل غير المرغوب فيها (Spam)</strong> أو <strong style="color: var(--gold-light);">المهملات</strong>
+        </p>
 
         <div class="otp-inputs">
           <input type="text" class="otp-box" maxlength="1" id="otp1" oninput="moveOtpFocus(this, 'otp2', null)" autofocus>
@@ -369,11 +362,6 @@
         </div>
       </div>
 
-      <!-- Continue as Guest -->
-      <a href="intro.html" class="guest-link" id="guestLink">
-        تخطي والدخول كـ زائر الآن ←
-      </a>
-
     </div>
   </div>
 
@@ -386,8 +374,147 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
+  
+  <!-- Google Identity Services (loaded dynamically if configured) -->
   <script>
     let currentAuthMode = 'login';
+    let googleClientId = null;
+
+    // Load public config and initialize Google Sign-In
+    async function initializeAuth() {
+      try {
+        // Fetch public config to get Google Client ID
+        const response = await fetch('/api/config/public');
+        const data = await response.json();
+        
+        if (data.success && data.data.googleClientId) {
+          googleClientId = data.data.googleClientId;
+          
+          // Load Google Identity Services script
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true;
+          script.defer = true;
+          script.onload = initializeGoogleSignIn;
+          script.onerror = () => {
+            console.warn('[Google Auth] Failed to load Google Identity Services');
+            hideGoogleButton();
+          };
+          document.head.appendChild(script);
+        } else {
+          // Google OAuth not configured - hide button
+          hideGoogleButton();
+        }
+      } catch (error) {
+        console.error('[Auth] Failed to load config:', error);
+        hideGoogleButton();
+      }
+    }
+
+    function hideGoogleButton() {
+      const googleBtn = document.querySelector('.btn-google-luxury');
+      if (googleBtn) {
+        googleBtn.style.display = 'none';
+      }
+      const divider = document.querySelector('.auth-divider');
+      if (divider) {
+        divider.style.display = 'none';
+      }
+    }
+
+    function initializeGoogleSignIn() {
+      if (!window.google || !googleClientId) {
+        hideGoogleButton();
+        return;
+      }
+
+      try {
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleCallback,
+          auto_select: false
+        });
+      } catch (error) {
+        console.error('[Google Auth] Failed to initialize:', error);
+        hideGoogleButton();
+      }
+    }
+
+    function handleGoogleLogin() {
+      if (!window.google || !googleClientId) {
+        showToast('⚠️ تسجيل الدخول عبر Google غير متاح حالياً');
+        return;
+      }
+
+      try {
+        // Show Google One Tap or prompt
+        google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            // If prompt fails, show error
+            showToast('⚠️ فشل فتح نافذة Google. يرجى التحقق من إعدادات المتصفح');
+          }
+        });
+      } catch (error) {
+        console.error('[Google Auth] Error showing prompt:', error);
+        showToast('⚠️ حدث خطأ. يرجى المحاولة مرة أخرى');
+      }
+    }
+
+    async function handleGoogleCallback(response) {
+      if (!response.credential) {
+        showToast('⚠️ فشل الحصول على بيانات Google');
+        return;
+      }
+
+      try {
+        // Send ID token to backend
+        const data = await LAMSA_API.googleLogin({ credential: response.credential });
+        
+        // Same handling as email login
+        const { user, token } = data.data;
+        
+        // Store token and user info
+        localStorage.setItem('lamsa_token', token);
+        localStorage.setItem('lamsa_user', JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.role === 'admin' ? '👑' : '✨',
+          loginTime: new Date().toISOString()
+        }));
+
+        triggerConfetti();
+        showToast(`✓ ${data.message || 'تم تسجيل الدخول بنجاح'}`);
+        
+        // Redirect based on role
+        const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
+        sessionStorage.removeItem('lamsa_auth_redirect');
+        
+        setTimeout(() => {
+          if (user.role === 'admin') {
+            window.location.href = 'admin.html';
+          } else {
+            window.location.href = returnUrl || 'index.html';
+          }
+        }, 800);
+        
+      } catch (error) {
+        console.error('[Google Auth] Login failed:', error);
+        showToast('⚠️ ' + (error.message || 'فشل تسجيل الدخول عبر Google'));
+      }
+    }
+
+    // Initialize auth on page load
+    initializeAuth();
+    
+    // Attach Google login handler after page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const googleBtn = document.getElementById('googleLoginBtn');
+      if (googleBtn) {
+        googleBtn.addEventListener('click', handleGoogleLogin);
+      }
+    });
 
     function switchAuthTab(mode) {
       currentAuthMode = mode;
@@ -408,12 +535,11 @@
       }
     }
 
-    // Google Login Simulator (will be replaced with real OAuth in later task)
-    function handleGoogleLogin() {
-      showToast('⚠️ تسجيل الدخول عبر Google سيتم إضافته قريباً');
-    }
-
     // Email / Password Handler - Uses Backend API
+    let pendingRegistration = null;
+    let lastResendTime = 0;
+    const RESEND_COOLDOWN = 60000; // 60 seconds
+
     async function handleEmailAuth(e) {
       e.preventDefault();
       const email = document.getElementById('authEmail').value.trim();
@@ -428,19 +554,28 @@
         let data;
         
         if (currentAuthMode === 'signup') {
-          // Register new account
+          // Register new account (Step 1: Send OTP)
           const name = document.getElementById('authName').value.trim();
           data = await LAMSA_API.register({ name, email, password });
+          
+          // Check if OTP is required
+          if (data.data && data.data.requiresOtp) {
+            // Store registration data for OTP verification
+            pendingRegistration = { name, email, password };
+            
+            // Show OTP screen
+            showOtpScreen(email);
+            showToast(`✓ ${data.message}`);
+            return;
+          }
         } else {
           // Login
           data = await LAMSA_API.login({ email, password });
         }
 
-        // After Task 5 fix: API returns data directly on success, throws on error
-        // Server returns: { success: true, message: "...", data: { user, token } }
+        // Direct login success (no OTP required or login mode)
         const { user, token } = data.data;
         
-        // Store token and user info in the SAME keys that admin.html and main.js read
         localStorage.setItem('lamsa_token', token);
         localStorage.setItem('lamsa_user', JSON.stringify({
           id: user.id,
@@ -452,11 +587,8 @@
         }));
 
         triggerConfetti();
-        
-        // Show server's success message
         showToast(`✓ ${data.message || 'تم تسجيل الدخول بنجاح'}`);
         
-        // Redirect based on role
         const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
         sessionStorage.removeItem('lamsa_auth_redirect');
         
@@ -464,12 +596,11 @@
           if (user.role === 'admin') {
             window.location.href = 'admin.html';
           } else {
-            window.location.href = returnUrl || 'shop.html';
+            window.location.href = returnUrl || 'index.html';
           }
         }, 800);
         
       } catch (error) {
-        // error.message contains the server's Arabic error message or network error
         console.error('[Auth] Login/Register failed:', error.message || error);
         showToast('⚠️ ' + (error.message || 'حدث خطأ في الاتصال'));
         
@@ -480,9 +611,17 @@
       }
     }
 
-    // OTP Navigation and Handling (disabled for now - will be enabled in later task)
-    let pendingUser = null;
-    let demoOtpCode = '1234';
+    function showOtpScreen(email) {
+      document.getElementById('authForm').style.display = 'none';
+      document.querySelector('.auth-tabs').style.display = 'none';
+      document.querySelector('.auth-divider').style.display = 'none';
+      document.getElementById('googleLoginBtn').style.display = 'none';
+      
+      const otpSection = document.getElementById('otpSection');
+      otpSection.style.display = 'block';
+      document.getElementById('otpTargetEmail').textContent = email;
+      document.getElementById('otp1').focus();
+    }
 
     function moveOtpFocus(current, nextId, prevId) {
       if (current.value.length === 1 && nextId) {
@@ -490,12 +629,96 @@
       }
     }
 
-    function verifyOtpCode() {
-      showToast('⚠️ التحقق بالرمز سيتم إضافته قريباً');
+    async function verifyOtpCode() {
+      if (!pendingRegistration) {
+        showToast('⚠️ خطأ: لا توجد بيانات تسجيل معلقة');
+        return;
+      }
+
+      const otp1 = document.getElementById('otp1').value;
+      const otp2 = document.getElementById('otp2').value;
+      const otp3 = document.getElementById('otp3').value;
+      const otp4 = document.getElementById('otp4').value;
+      const otpCode = otp1 + otp2 + otp3 + otp4;
+
+      if (otpCode.length !== 4) {
+        showToast('⚠️ يرجى إدخال الرمز كاملاً');
+        return;
+      }
+
+      try {
+        const data = await LAMSA_API.verifyOtp({
+          email: pendingRegistration.email,
+          otpCode: otpCode,
+          name: pendingRegistration.name,
+          password: pendingRegistration.password
+        });
+
+        const { user, token } = data.data;
+        
+        localStorage.setItem('lamsa_token', token);
+        localStorage.setItem('lamsa_user', JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.role === 'admin' ? '👑' : '✨',
+          loginTime: new Date().toISOString()
+        }));
+
+        triggerConfetti();
+        showToast(`✓ ${data.message}`);
+        
+        const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
+        sessionStorage.removeItem('lamsa_auth_redirect');
+        
+        setTimeout(() => {
+          window.location.href = returnUrl || 'index.html';
+        }, 800);
+
+      } catch (error) {
+        console.error('[Auth] OTP verification failed:', error);
+        showToast('⚠️ ' + (error.message || 'رمز التحقق غير صحيح'));
+        
+        // Clear OTP inputs
+        document.getElementById('otp1').value = '';
+        document.getElementById('otp2').value = '';
+        document.getElementById('otp3').value = '';
+        document.getElementById('otp4').value = '';
+        document.getElementById('otp1').focus();
+      }
     }
 
-    function resendOtpCode() {
-      showToast('⚠️ إعادة الإرسال ستتم إضافتها قريباً');
+    async function resendOtpCode() {
+      if (!pendingRegistration) {
+        showToast('⚠️ خطأ: لا توجد بيانات تسجيل معلقة');
+        return;
+      }
+
+      const now = Date.now();
+      const timeSinceLastResend = now - lastResendTime;
+      
+      if (timeSinceLastResend < RESEND_COOLDOWN) {
+        const remainingSeconds = Math.ceil((RESEND_COOLDOWN - timeSinceLastResend) / 1000);
+        showToast(`⏳ يرجى الانتظار ${remainingSeconds} ثانية قبل إعادة الإرسال`);
+        return;
+      }
+
+      try {
+        const data = await LAMSA_API.resendOtp({ email: pendingRegistration.email });
+        lastResendTime = now;
+        showToast(`✓ ${data.message}`);
+        
+        // Clear and focus first OTP input
+        document.getElementById('otp1').value = '';
+        document.getElementById('otp2').value = '';
+        document.getElementById('otp3').value = '';
+        document.getElementById('otp4').value = '';
+        document.getElementById('otp1').focus();
+      } catch (error) {
+        console.error('[Auth] Resend OTP failed:', error);
+        showToast('⚠️ ' + (error.message || 'فشل إعادة إرسال الرمز'));
+      }
     }
 
     // Confetti effect
@@ -507,30 +730,6 @@
           origin: { y: 0.6 }
         });
       }
-    }
-  </script>
-        showToast('🎉 تم تأكيد البريد بنجاح! جاري تحويلك للمتجر...');
-
-        const returnUrl = sessionStorage.getItem('lamsa_auth_redirect');
-        if (returnUrl) sessionStorage.removeItem('lamsa_auth_redirect');
-
-        setTimeout(() => {
-          window.location.href = returnUrl || 'intro.html';
-        }, 1200);
-      } else {
-        showToast('❌ رمز التأكيد غير صحيح! حاول مرة أخرى');
-        document.getElementById('otp1').value = '';
-        document.getElementById('otp2').value = '';
-        document.getElementById('otp3').value = '';
-        document.getElementById('otp4').value = '';
-        document.getElementById('otp1').focus();
-      }
-    }
-
-    function resendOtpCode() {
-      demoOtpCode = Math.floor(1000 + Math.random() * 9000).toString();
-      showToast(`🔄 تم إعادة إرسال الرمز إلى ${pendingUser.email} (رمز الاختبار: ${demoOtpCode})`, 6000);
-      document.getElementById('otp1').focus();
     }
   </script>
 </body>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
@@ -108,76 +108,115 @@
 
   <!-- Mobile Nav -->
   <div class="mobile-nav" id="mobileNav">
-    <a href="index.html" class="active" data-key="nav_sets">الرئيسية</a>
-    <a href="shop.html" data-key="nav_shop">المتجر</a>
-    <a href="routine.html" data-key="nav_routine">اختارلي روتين 🔥</a>
-    <a href="gift.html" data-key="nav_gift">صمم هديتك 🎁</a>
-    <a href="perfume.html" data-key="nav_perfume">اعمل برفانك 🌹</a>
-    <a href="about.html" data-key="nav_about">عن لمسة</a>
-    <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+    <a href="/home" class="active" data-key="nav_sets">الرئيسية</a>
+    <a href="/shop" data-key="nav_shop">المتجر</a>
+    <a href="/routine-finder" data-key="nav_routine">اختارلي روتين 🔥</a>
+    <a href="/gift-designer" data-key="nav_gift">صمم هديتك 🎁</a>
+    <a href="/perfume-studio" data-key="nav_perfume">اعمل برفانك 🌹</a>
+    <a href="/about" data-key="nav_about">عن لمسة</a>
+    <a href="/contact" data-key="nav_contact">تواصل معنا</a>
   </div>
 
   <!-- Navbar -->
   <header class="navbar">
     <div class="container nav-inner">
-      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
-        <span></span><span></span><span></span>
-      </button>
-
-      <a href="index.html" class="nav-logo">
-        <img src="assets/logo.png" alt="LAMSA - لمسة" loading="lazy" decoding="async" style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+      <!-- RIGHT: Logo -->
+      <a href="/home" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" loading="lazy" decoding="async" style="width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #C9A86A; object-fit: cover; flex-shrink:0;">
         <span class="nav-logo-text">LAMSA</span>
       </a>
 
+      <!-- CENTER: 5 nav links only -->
       <nav class="nav-links">
-        <a href="index.html" class="active" data-key="nav_sets">الرئيسية</a>
-        <a href="shop.html" data-key="nav_shop">المتجر</a>
-        <a href="routine.html" data-key="nav_routine">اختارلي روتين</a>
-        <a href="gift.html" data-key="nav_gift">صمم هديتك</a>
-        <a href="perfume.html" data-key="nav_perfume">اعمل برفانك</a>
-        <a href="about.html" data-key="nav_about">عن لمسة</a>
-        <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+        <a href="/home" class="active" data-key="nav_home">&#1575;&#1604;&#1605;&#1580;&#1605;&#1608;&#1593;&#1575;&#1578;</a>
+        <a href="/shop" data-key="nav_shop">&#1575;&#1604;&#1605;&#1578;&#1580;&#1585;</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-trigger" type="button">&#1582;&#1583;&#1605;&#1575;&#1578;&#1606;&#1575; <span class="nav-arrow">&#9660;</span></button>
+          <div class="nav-dropdown-menu">
+            <a href="/routine-finder">&#127807; &#1575;&#1582;&#1578;&#1575;&#1585;&#1610; &#1585;&#1608;&#1578;&#1610;&#1606;&#1603;</a>
+            <a href="/gift-designer">&#127873; &#1589;&#1605;&#1605; &#1607;&#1583;&#1610;&#1578;&#1603;</a>
+            <a href="/perfume-studio">&#127801; &#1575;&#1593;&#1605;&#1604; &#1576;&#1585;&#1601;&#1575;&#1606;&#1603;</a>
+          </div>
+        </div>
+        <a href="/about" data-key="nav_about">&#1593;&#1606; &#1604;&#1605;&#1587;&#1577;</a>
+        <a href="/contact" data-key="nav_contact">&#1578;&#1608;&#1575;&#1589;&#1604; &#1605;&#1593;&#1606;&#1575;</a>
       </nav>
 
+      <!-- LEFT: Actions - always visible, no dropdown hiding -->
       <div class="nav-actions">
-        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <!-- Language pill -->
         <div class="lang-toggle">
-          <button class="lang-btn active" data-lang="ar">عربي</button>
+          <button class="lang-btn active" data-lang="ar">&#1593;&#1585;&#1576;&#1610;</button>
           <button class="lang-btn" data-lang="en">EN</button>
         </div>
-        <a href="admin.html" class="admin-crown-btn" id="adminCrownBtn" data-tooltip="لوحة الإدارة" style="display: none;">👑</a>
-        <button class="nav-icon-btn" id="favoritesToggle" aria-label="المفضلة">
-          🤍
+        
+        <!-- Dark mode -->
+        <button class="nav-icon-btn theme-toggle-btn" aria-label="&#1578;&#1576;&#1583;&#1610;&#1604; &#1575;&#1604;&#1608;&#1590;&#1593;" title="&#1578;&#1576;&#1583;&#1610;&#1604; &#1575;&#1604;&#1608;&#1590;&#1593;">&#127769;</button>
+        
+        <!-- Cart -->
+        <button class="nav-icon-btn" id="cartToggle" aria-label="&#1575;&#1604;&#1587;&#1604;&#1577;" title="&#1575;&#1604;&#1587;&#1604;&#1577;">
+          &#128717;&#65039;
+          <span class="cart-count">0</span>
+        </button>
+        
+        <!-- Wishlist -->
+        <button class="nav-icon-btn" id="favoritesToggle" aria-label="&#1575;&#1604;&#1605;&#1601;&#1590;&#1604;&#1577;" title="&#1575;&#1604;&#1605;&#1601;&#1590;&#1604;&#1577;">
+          &#129293;
           <span class="cart-count" id="favoritesCount">0</span>
         </button>
-        <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
-          🛍️
-          <span class="cart-count">0</span>
+        
+        <!-- Auth buttons - INLINE, always visible -->
+        <div class="nav-auth-group" id="navAuthGroup">
+          <!-- Not logged in: show login button -->
+          <a href="/auth" class="nav-auth-btn" id="navLoginBtn" style="display:none;">
+            <span class="auth-icon">&#128100;</span>
+            <span class="auth-text">&#1578;&#1587;&#1580;&#1610;&#1604; &#1575;&#1604;&#1583;&#1582;&#1608;&#1604;</span>
+          </a>
+          
+          <!-- Logged in: show account + logout -->
+          <a href="/account" class="nav-auth-btn" id="navAccountBtn" style="display:none;">
+            <span class="auth-icon">&#128100;</span>
+            <span class="auth-text">&#1581;&#1587;&#1575;&#1576;&#1610;</span>
+          </a>
+          <button class="nav-auth-btn nav-logout-btn" id="navLogoutBtn" style="display:none;">
+            <span class="auth-text">&#1578;&#1587;&#1580;&#1610;&#1604; &#1575;&#1604;&#1582;&#1585;&#1608;&#1580;</span>
+          </button>
+          
+          <!-- Admin only -->
+          <a href="/admin" class="nav-auth-btn nav-admin-btn" id="navAdminBtn" style="display:none;">
+            <span class="auth-icon">&#128081;</span>
+            <span class="auth-text">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1573;&#1583;&#1575;&#1585;&#1577;</span>
+          </a>
+        </div>
+        
+        <!-- Mobile hamburger -->
+        <button class="menu-toggle" id="menuToggle" aria-label="&#1575;&#1604;&#1602;&#1575;&#1574;&#1605;&#1577;">
+          <span></span><span></span><span></span>
         </button>
       </div>
     </div>
   </header>
 
   <!-- Hero -->
-  <section class="hero">
+  <section class="hero" style="padding-bottom: 3rem;">
     <div class="hero-content">
       <img src="assets/logo.png" alt="LAMSA - لمسة" class="hero-logo-img" loading="lazy" decoding="async">
       <div class="hero-tag" data-key="hero_tag">✨ عالم الجمال والعناية الفاخرة</div>
       <h1 data-key="hero_title">لمسة تفرق</h1>
       <p data-key="hero_sub">عناية فائقة بالبشرة والشعر، تركيبات عطور حصرية نصنعها لك، وهدايا مميزة تليق بك — كل ما تحتاجينه في مكان واحد.</p>
-      <div class="hero-btns">
-        <a href="shop.html" class="btn btn-gold btn-lg" data-key="hero_cta">تسوقي الآن 🛍️</a>
-        <a href="routine.html" class="btn btn-white btn-lg" data-key="hero_cta2">اكتشفي روتينك 🔥</a>
+      <div class="hero-btns" style="gap: 1rem; margin-bottom: 2.5rem;">
+        <a href="/shop" class="btn btn-gold btn-lg" data-key="hero_cta">تسوقي الآن 🛍️</a>
+        <a href="/routine-finder" class="btn btn-white btn-lg" data-key="hero_cta2">اكتشفي روتينك 🔥</a>
       </div>
     </div>
   </section>
 
   <!-- 3 Interactive Feature Cards -->
-  <section class="features-section">
+  <section class="features-section" style="margin-top: 3rem;">
     <div class="container">
       <div class="grid-3">
         <!-- Card 1: Routine -->
-        <a href="routine.html" class="feature-card">
+        <a href="/routine-finder" class="feature-card">
           <img src="assets/features/routine.jpg" alt="روتين عناية مخصص للبشرة" class="feature-card-bg" loading="lazy">
           <div class="feature-card-overlay"></div>
           <div class="feature-card-content">
@@ -188,7 +227,7 @@
         </a>
 
         <!-- Card 2: Gift -->
-        <a href="gift.html" class="feature-card">
+        <a href="/gift-designer" class="feature-card">
           <img src="assets/features/gift.jpg" alt="تنسيق هدايا فاخرة ومميزة" class="feature-card-bg" loading="lazy">
           <div class="feature-card-overlay"></div>
           <div class="feature-card-content">
@@ -199,7 +238,7 @@
         </a>
 
         <!-- Card 3: Perfume -->
-        <a href="perfume.html" class="feature-card">
+        <a href="/perfume-studio" class="feature-card">
           <img src="assets/features/perfume.jpg" alt="تركيبات عطور وبدائل يدوية" class="feature-card-bg" loading="lazy">
           <div class="feature-card-overlay"></div>
           <div class="feature-card-content">
@@ -224,7 +263,7 @@
       <div class="grid-3" id="picksGrid"></div>
 
       <div class="text-center mt-32">
-        <a href="shop.html" class="btn btn-outline btn-lg" data-key="view_all">عرض جميع المنتجات (8 أقسام) ←</a>
+        <a href="/shop" class="btn btn-outline btn-lg" data-key="view_all">عرض جميع المنتجات (8 أقسام) ←</a>
       </div>
     </div>
   </section>
@@ -238,7 +277,7 @@
           <h2 data-key="about_title" class="mb-16">عن متجرنا</h2>
           <p class="mb-16">نحن في <strong>لمسة</strong> نؤمن بأن الجمال تجربة متكاملة تبدأ من التفاصيل الدقيقة. نوفر لك مستحضرات العناية بالبشرة والشعر، أدوات التصفيف، مجوهرات الإكسسوارات، وهدايا المناسبات الفاخرة.</p>
           <p class="mb-24">ميزتنا الفريدة هي <strong>تركيبات البرفانات اليدوية</strong> التي نبتكرها خصيصاً لتمنحك توقيعاً عطرياً لا ينسى.</p>
-          <a href="about.html" class="btn btn-primary" data-key="nav_about">تعرفي علينا أكثر</a>
+          <a href="/about" class="btn btn-primary" data-key="nav_about">تعرفي علينا أكثر</a>
         </div>
         <div class="store-photo-mockup">
           <span>🏪✨</span>
@@ -370,11 +409,11 @@
         <div class="footer-col">
           <h4 data-key="footer_links">تجارب تفاعلية</h4>
           <ul>
-            <li><a href="routine.html" data-key="nav_routine">اختارلي روتين 🔥</a></li>
-            <li><a href="gift.html" data-key="nav_gift">صمم هديتك 🎁</a></li>
-            <li><a href="perfume.html" data-key="nav_perfume">اعمل برفانك 🌹</a></li>
-            <li><a href="about.html" data-key="nav_about">عن لمسة</a></li>
-            <li><a href="contact.html" data-key="nav_contact">تواصل معنا</a></li>
+            <li><a href="/routine-finder" data-key="nav_routine">اختارلي روتين 🔥</a></li>
+            <li><a href="/gift-designer" data-key="nav_gift">صمم هديتك 🎁</a></li>
+            <li><a href="/perfume-studio" data-key="nav_perfume">اعمل برفانك 🌹</a></li>
+            <li><a href="/about" data-key="nav_about">عن لمسة</a></li>
+            <li><a href="/contact" data-key="nav_contact">تواصل معنا</a></li>
           </ul>
         </div>
 

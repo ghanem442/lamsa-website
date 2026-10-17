@@ -664,12 +664,28 @@ function getCartCount() {
 // and mobile Safari does so very aggressively.
 // Store settings live in js/config.js (load it BEFORE this file).
 const LAMSA_CFG = window.LAMSA_CONFIG || (console.error('LAMSA_CONFIG missing: add <script src="js/config.js"> before js/main.js'),
-  { whatsappNumber: '', phoneDisplay: '', shipping: { defaultFee: 0, cities: [] } });
+  { whatsappNumber: '', phoneDisplay: '' });
 const WHATSAPP_NUMBER = LAMSA_CFG.whatsappNumber;
 
-function getShippingFee(city) {
-  const c = LAMSA_CFG.shipping.cities.find(x => x.name === city);
-  return c ? c.fee : LAMSA_CFG.shipping.defaultFee;
+// Global shipping fee cache (loaded from API)
+let cachedShippingFee = null;
+
+/**
+ * Load shipping fee from API
+ * @returns {Promise<number>} shipping fee in EGP
+ */
+async function loadShippingFee() {
+  try {
+    const response = await LAMSA_API.getShippingFee();
+    cachedShippingFee = response.data.shippingFee;
+    return cachedShippingFee;
+  } catch (error) {
+    console.error('[Shipping] Failed to load fee from API:', error);
+    // Fallback to default shipping fee (35 EGP)
+    cachedShippingFee = 35;
+    showToast('⚠️ تم استخدام رسوم الشحن الافتراضية', 3000);
+    return cachedShippingFee;
+  }
 }
 
 function formatShipping(fee) {
@@ -726,7 +742,7 @@ function requireAuth(redirectAction = 'checkout') {
     sessionStorage.setItem('lamsa_auth_redirect', window.location.href);
     showToast('🔒 يرجى تسجيل الدخول أو إنشاء حساب لإتمام طلبك ومتابعة الشحن');
     setTimeout(() => {
-      window.location.href = 'auth.html';
+      window.location.href = '/auth';
     }, 1200);
     return false;
   }
@@ -941,7 +957,7 @@ function closeQuickView() {
 }
 
 // ── Full Checkout Modal ───────────────────────
-function openCheckoutModal() {
+async function openCheckoutModal() {
   if (cart.length === 0) return;
 
   closeCart();
@@ -956,115 +972,232 @@ function openCheckoutModal() {
 
   const lang = currentLang;
   const subtotal = getCartTotal();
-  const cities = LAMSA_CFG.shipping.cities;
-  const shipping = getShippingFee(cities.length ? cities[0].name : '');
-  const grandTotal = subtotal + shipping;
-
+  
+  // Show loading state while fetching shipping fee
   modal.innerHTML = `
     <div class="luxury-modal-box" style="max-width:620px;">
       <div class="flex-between mb-20">
         <h2 style="font-size:1.6rem; color:var(--burgundy);">إتمام الطلب والشحن 🚀</h2>
         <button class="cart-close" onclick="closeCheckoutModal()">✕</button>
       </div>
-
-      <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:24px;">
-        من فضلك اكتبي بيانات التوصيل وسنقوم بتجهيز وتغليف طلبك فوراً بعناية لمسة الفاخرة 🎀
-      </p>
-
-      <form id="checkoutForm" onsubmit="submitOrder(event)">
-        
-        <div class="input-group">
-          <label>الاسم بالكامل *</label>
-          <input type="text" class="form-input" id="coName" required placeholder="اسمك الكريم">
-        </div>
-
-        <div class="grid-2">
-          <div class="input-group">
-            <label>رقم الهاتف الأساسي *</label>
-            <input type="tel" class="form-input" id="coPhone" required placeholder="01xxxxxxxxx">
-            <small style="color:var(--text-light); font-size:0.85rem; display:block; margin-top:4px;">سنتواصل معك على هذا الرقم لتأكيد الطلب</small>
-          </div>
-          <div class="input-group">
-            <label>رقم واتساب إضافي</label>
-            <input type="tel" class="form-input" id="coWhatsapp" placeholder="01xxxxxxxxx (اختياري)">
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="input-group">
-            <label>المحافظة *</label>
-            <select class="form-select" id="coCity" required onchange="updateCheckoutTotals()">
-              ${cities.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('')}
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label>المنطقة / الحي *</label>
-            <input type="text" class="form-input" id="coArea" required placeholder="مثال: المعادي / النزهة">
-          </div>
-        </div>
-
-        <div class="input-group">
-          <label>العنوان بالتفصيل (الشارع، العمارة، الشقة) *</label>
-          <input type="text" class="form-input" id="coAddress" required placeholder="رقم العمارة واسم الشارع والشقة...">
-        </div>
-
-        <div class="input-group">
-          <label>ملاحظات إضافية (اختياري)</label>
-          <textarea class="form-textarea" id="coNotes" placeholder="مثال: التوصيل بعد الساعة 6 مساءً" rows="2"></textarea>
-        </div>
-
-        <label style="font-weight:700; margin-bottom:8px; display:block;">طريقة الدفع المفضلة:</label>
-        <div class="payment-grid">
-          <div class="payment-card selected" onclick="selectPayment('cod', this)">
-            <span class="payment-card-icon">💵</span>
-            <div class="payment-card-title">كاش عند الاستلام</div>
-          </div>
-          <div class="payment-card" onclick="selectPayment('instapay', this)">
-            <span class="payment-card-icon">⚡</span>
-            <div class="payment-card-title">إنستاباي (InstaPay)</div>
-          </div>
-          <div class="payment-card" onclick="selectPayment('voda', this)">
-            <span class="payment-card-icon">📱</span>
-            <div class="payment-card-title">فودافون كاش</div>
-          </div>
-        </div>
-
-        <div style="background:var(--bg-subtle); padding:16px 20px; border-radius:var(--radius-lg); margin-bottom:24px; border:1px solid var(--border);">
-          <div class="flex-between mb-8" style="font-size:0.95rem;">
-            <span>مجموع المنتجات (${getCartCount()} قطع):</span>
-            <strong>${subtotal} ج.م</strong>
-          </div>
-          <div class="flex-between mb-8" style="font-size:0.95rem; color:var(--text-mid);">
-            <span>مصاريف الشحن والتوصيل:</span>
-            <span id="coShipping">${formatShipping(shipping)}</span>
-          </div>
-          <div class="divider" style="margin:10px 0;"></div>
-          <div class="flex-between" style="font-size:1.2rem; font-weight:800; color:var(--burgundy);">
-            <span>المجموع النهائي:</span>
-            <span id="coGrandTotal">${grandTotal} ج.م</span>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-full btn-lg" style="font-size:1.1rem;">
-          تأكيد الطلب ✅
-        </button>
-      </form>
+      <div style="text-align:center; padding:60px 20px; color:var(--text-mid);">
+        <div class="spinner" style="margin:0 auto 16px;"></div>
+        <p>جاري تحميل بيانات الشحن...</p>
+      </div>
     </div>
   `;
-
   modal.classList.add('active');
+
+  try {
+    // Load shipping fee from API (with automatic fallback to 35 EGP if API fails)
+    const shipping = await loadShippingFee();
+    const grandTotal = subtotal + shipping;
+
+    // Render the full checkout form
+    modal.innerHTML = `
+      <div class="luxury-modal-box" style="max-width:620px;">
+        <div class="flex-between mb-20">
+          <h2 style="font-size:1.6rem; color:var(--burgundy);">إتمام الطلب والشحن 🚀</h2>
+          <button class="cart-close" onclick="closeCheckoutModal()">✕</button>
+        </div>
+
+        <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:24px;">
+          من فضلك اكتبي بيانات التوصيل وسنقوم بتجهيز وتغليف طلبك فوراً بعناية لمسة الفاخرة 🎀
+        </p>
+
+        <form id="checkoutForm" onsubmit="submitOrder(event)">
+          
+          <div class="input-group">
+            <label>الاسم بالكامل *</label>
+            <input type="text" class="form-input" id="coName" required placeholder="اسمك الكريم">
+          </div>
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>رقم الهاتف الأساسي *</label>
+              <input type="tel" class="form-input" id="coPhone" required placeholder="01xxxxxxxxx">
+              <small style="color:var(--text-light); font-size:0.85rem; display:block; margin-top:4px;">سنتواصل معك على هذا الرقم لتأكيد الطلب</small>
+            </div>
+            <div class="input-group">
+              <label>رقم واتساب إضافي</label>
+              <input type="tel" class="form-input" id="coWhatsapp" placeholder="01xxxxxxxxx (اختياري)">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>المحافظة *</label>
+              <select class="form-select" id="coCity" required>
+                <option value="القاهرة">القاهرة</option>
+                <option value="الجيزة">الجيزة</option>
+                <option value="الإسكندرية">الإسكندرية</option>
+                <option value="المنصورة / الدقهلية">المنصورة / الدقهلية</option>
+                <option value="طنطا / الغربية">طنطا / الغربية</option>
+                <option value="الشرقية">الشرقية</option>
+                <option value="باقي المحافظات">باقي المحافظات</option>
+              </select>
+            </div>
+
+            <div class="input-group">
+              <label>المنطقة / الحي *</label>
+              <input type="text" class="form-input" id="coArea" required placeholder="مثال: المعادي / النزهة">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>العنوان بالتفصيل (الشارع، العمارة، الشقة) *</label>
+            <input type="text" class="form-input" id="coAddress" required placeholder="رقم العمارة واسم الشارع والشقة...">
+          </div>
+
+          <div class="input-group">
+            <label>ملاحظات إضافية (اختياري)</label>
+            <textarea class="form-textarea" id="coNotes" placeholder="مثال: التوصيل بعد الساعة 6 مساءً" rows="2"></textarea>
+          </div>
+
+          <label style="font-weight:700; margin-bottom:8px; display:block;">طريقة الدفع المفضلة:</label>
+          <div class="payment-grid">
+            <div class="payment-card selected" onclick="selectPayment('cod', this)">
+              <span class="payment-card-icon">💵</span>
+              <div class="payment-card-title">كاش عند الاستلام</div>
+            </div>
+            <div class="payment-card" onclick="selectPayment('instapay', this)">
+              <span class="payment-card-icon">⚡</span>
+              <div class="payment-card-title">إنستاباي (InstaPay)</div>
+            </div>
+            <div class="payment-card" onclick="selectPayment('voda', this)">
+              <span class="payment-card-icon">📱</span>
+              <div class="payment-card-title">فودافون كاش</div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-subtle); padding:16px 20px; border-radius:var(--radius-lg); margin-bottom:24px; border:1px solid var(--border);">
+            <div class="flex-between mb-8" style="font-size:0.95rem;">
+              <span>مجموع المنتجات (${getCartCount()} قطع):</span>
+              <strong>${subtotal} ج.م</strong>
+            </div>
+            <div class="flex-between mb-8" style="font-size:0.95rem; color:var(--text-mid);">
+              <span>مصاريف الشحن والتوصيل:</span>
+              <span id="coShipping">${formatShipping(shipping)}</span>
+            </div>
+            <div class="divider" style="margin:10px 0;"></div>
+            <div class="flex-between" style="font-size:1.2rem; font-weight:800; color:var(--burgundy);">
+              <span>المجموع النهائي:</span>
+              <span id="coGrandTotal">${grandTotal} ج.م</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-lg" style="font-size:1.1rem;">
+            تأكيد الطلب ✅
+          </button>
+        </form>
+      </div>
+    `;
+  } catch (error) {
+    // Unexpected error - show checkout form with default shipping (35 EGP) anyway
+    console.error('[Checkout] Unexpected error loading shipping, using fallback:', error);
+    const defaultShipping = 35;
+    const grandTotal = subtotal + defaultShipping;
+    
+    showToast('⚠️ تم استخدام رسوم الشحن الافتراضية (35 ج.م)', 4000);
+    
+    // Still show the form with fallback values
+    modal.innerHTML = `
+      <div class="luxury-modal-box" style="max-width:620px;">
+        <div class="flex-between mb-20">
+          <h2 style="font-size:1.6rem; color:var(--burgundy);">إتمام الطلب والشحن 🚀</h2>
+          <button class="cart-close" onclick="closeCheckoutModal()">✕</button>
+        </div>
+
+        <div style="background:var(--gold-light); padding:12px; border-radius:var(--radius-md); margin-bottom:16px; text-align:center;">
+          <p style="color:var(--burgundy); font-size:0.9rem; margin:0;">
+            ⚠️ تم استخدام رسوم الشحن الافتراضية: 35 ج.م
+          </p>
+        </div>
+
+        <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:24px;">
+          من فضلك اكتبي بيانات التوصيل وسنقوم بتجهيز وتغليف طلبك فوراً بعناية لمسة الفاخرة 🎀
+        </p>
+
+        <form id="checkoutForm" onsubmit="submitOrder(event)">
+          <div class="input-group">
+            <label>الاسم بالكامل *</label>
+            <input type="text" class="form-input" id="coName" required placeholder="اسمك الكريم">
+          </div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>رقم الهاتف الأساسي *</label>
+              <input type="tel" class="form-input" id="coPhone" required placeholder="01xxxxxxxxx">
+            </div>
+            <div class="input-group">
+              <label>رقم واتساب إضافي</label>
+              <input type="tel" class="form-input" id="coWhatsapp" placeholder="01xxxxxxxxx (اختياري)">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>المحافظة *</label>
+              <select class="form-select" id="coCity" required>
+                <option value="القاهرة">القاهرة</option>
+                <option value="الجيزة">الجيزة</option>
+                <option value="الإسكندرية">الإسكندرية</option>
+                <option value="المنصورة / الدقهلية">المنصورة / الدقهلية</option>
+                <option value="طنطا / الغربية">طنطا / الغربية</option>
+                <option value="الشرقية">الشرقية</option>
+                <option value="باقي المحافظات">باقي المحافظات</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>المنطقة / الحي *</label>
+              <input type="text" class="form-input" id="coArea" required placeholder="مثال: سموحة">
+            </div>
+          </div>
+          <div class="input-group">
+            <label>عنوان التوصيل بالتفصيل *</label>
+            <textarea class="form-input" id="coAddress" rows="2" required placeholder="رقم المبنى، الشارع، أقرب معلم"></textarea>
+          </div>
+          <div class="input-group">
+            <label>ملاحظات إضافية</label>
+            <textarea class="form-input" id="coNotes" rows="2" placeholder="أي تعليمات خاصة للتوصيل (اختياري)"></textarea>
+          </div>
+          <div style="background:var(--bg-subtle); padding:16px; border-radius:var(--radius-md); margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span style="color:var(--text-mid);">المجموع الفرعي</span>
+              <span style="font-weight:600; color:var(--text-dark);">${subtotal} ج.م</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+              <span style="color:var(--text-mid);">رسوم الشحن</span>
+              <span style="font-weight:600; color:var(--text-dark);">${defaultShipping} ج.م</span>
+            </div>
+            <div style="border-top:1.5px solid var(--border); padding-top:12px; display:flex; justify-content:space-between;">
+              <span style="font-size:1.1rem; font-weight:700; color:var(--burgundy);">الإجمالي النهائي</span>
+              <span style="font-size:1.3rem; font-weight:700; color:var(--burgundy);">${grandTotal} ج.م</span>
+            </div>
+          </div>
+          <h3 style="margin-bottom:16px; color:var(--burgundy); font-size:1.1rem;">طريقة الدفع</h3>
+          <div class="grid-3" style="margin-bottom:24px; gap:12px;">
+            <div class="payment-card selected" onclick="selectPayment('cod', this)">
+              <div class="payment-icon">💵</div>
+              <div class="payment-name">الدفع عند الاستلام</div>
+            </div>
+            <div class="payment-card" onclick="selectPayment('instapay', this)">
+              <div class="payment-icon">📱</div>
+              <div class="payment-name">InstaPay</div>
+            </div>
+            <div class="payment-card" onclick="selectPayment('voda', this)">
+              <div class="payment-icon">💳</div>
+              <div class="payment-name">Vodafone Cash</div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-full">
+            إرسال الطلب 🎉
+          </button>
+        </form>
+      </div>
+    `;
+  }
 }
 
-// Recalculates shipping + grand total when the customer changes the governorate
-function updateCheckoutTotals() {
-  const city = document.getElementById('coCity')?.value;
-  const shipping = getShippingFee(city);
-  const shipEl = document.getElementById('coShipping');
-  const totalEl = document.getElementById('coGrandTotal');
-  if (shipEl) shipEl.textContent = formatShipping(shipping);
-  if (totalEl) totalEl.textContent = `${getCartTotal() + shipping} ج.م`;
-}
+// Removed updateCheckoutTotals() - shipping fee is now uniform across all governorates
 
 function selectPayment(method, el) {
   selectedPaymentMethod = method;
@@ -1129,17 +1262,33 @@ async function submitOrder(e) {
     
     // Show clear Arabic error message in modal instead of alert
     let errorMessage = 'عذراً، حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.';
+    let isRateLimitError = false;
+    let retryAfterSeconds = 0;
     
     if (error.message) {
       // Server returned a specific error (rate limit, out of stock, validation, etc.)
       errorMessage = error.message;
+      
+      // Check if it's a rate limit error (429)
+      if (error.status === 429 || error.message.includes('عدد محاولات الطلب كبير')) {
+        isRateLimitError = true;
+        retryAfterSeconds = error.retryAfter || (error.waitMinutes ? error.waitMinutes * 60 : 180);
+        
+        const waitMinutes = error.waitMinutes || Math.ceil(retryAfterSeconds / 60);
+        errorMessage = `عدد محاولات الطلب كبير جداً. يرجى الانتظار ${waitMinutes} دقيقة قبل المحاولة مرة أخرى.`;
+      }
     } else if (!navigator.onLine) {
       errorMessage = 'لا يوجد اتصال بالإنترنت. يرجى التحقق من الاتصال والمحاولة مرة أخرى.';
     }
     
     // Show error in modal instead of alert
     closeCheckoutModal(); // Close checkout modal first
-    showErrorModal(errorMessage);
+    
+    if (isRateLimitError && retryAfterSeconds > 0) {
+      showRateLimitErrorModal(errorMessage, retryAfterSeconds);
+    } else {
+      showErrorModal(errorMessage);
+    }
   } finally {
     // Re-enable submit button
     if (submitBtn) {
@@ -1234,6 +1383,84 @@ function showErrorModal(errorMessage) {
   document.body.appendChild(modal);
 }
 
+function showRateLimitErrorModal(errorMessage, retryAfterSeconds) {
+  const modal = document.createElement('div');
+  modal.className = 'luxury-modal-backdrop active';
+  modal.id = 'rateLimitModal';
+  
+  const minutes = Math.ceil(retryAfterSeconds / 60);
+  
+  modal.innerHTML = `
+    <div class="luxury-modal-box" style="max-width:560px; text-align:center;">
+      <span style="font-size:4rem; display:block; margin-bottom:16px;">⏱️</span>
+      <h2 style="color:#FF6B00; margin-bottom:16px; font-size:1.6rem;">تم تجاوز الحد المسموح</h2>
+      
+      <div style="background:var(--bg-subtle); padding:24px; border-radius:var(--radius-lg); margin-bottom:24px; border:2px solid #FFE0B2; text-align:center;">
+        <p style="color:var(--text-dark); line-height:1.8; font-size:1rem; margin-bottom:16px;">
+          ${escapeHtml(errorMessage)}
+        </p>
+        
+        <div style="background:linear-gradient(135deg, #FF6B00 0%, #C43E00 100%); padding:16px; border-radius:var(--radius-md); margin-top:16px;">
+          <div style="font-size:2rem; font-weight:700; color:white; font-family:monospace;" id="countdownTimer">
+            ${minutes}:00
+          </div>
+          <p style="color:rgba(255,255,255,0.9); font-size:0.85rem; margin-top:8px;">المتبقي للمحاولة التالية</p>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <button class="btn btn-primary btn-lg" disabled id="retryOrderBtn" style="opacity:0.5; cursor:not-allowed;">
+          انتظر ${minutes} دقيقة ⏳
+        </button>
+        <button class="btn btn-outline btn-lg" onclick="closeErrorModal(this.closest('.luxury-modal-backdrop'))">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  // Start countdown timer
+  let remainingSeconds = retryAfterSeconds;
+  const timerEl = document.getElementById('countdownTimer');
+  const retryBtn = document.getElementById('retryOrderBtn');
+  
+  const countdownInterval = setInterval(() => {
+    remainingSeconds--;
+    
+    if (remainingSeconds <= 0) {
+      clearInterval(countdownInterval);
+      if (retryBtn) {
+        retryBtn.disabled = false;
+        retryBtn.style.opacity = '1';
+        retryBtn.style.cursor = 'pointer';
+        retryBtn.textContent = 'حاول مرة أخرى 🔄';
+        retryBtn.onclick = () => {
+          closeErrorModal(modal);
+          // Reopen checkout modal to allow retry
+          const checkoutBtn = document.getElementById('cartCheckout');
+          if (checkoutBtn) checkoutBtn.click();
+        };
+      }
+      if (timerEl) {
+        timerEl.textContent = '0:00';
+      }
+      return;
+    }
+    
+    const mins = Math.floor(remainingSeconds / 60);
+    const secs = remainingSeconds % 60;
+    if (timerEl) {
+      timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+  }, 1000);
+  
+  // Clean up interval when modal is closed
+  modal.addEventListener('remove', () => {
+    clearInterval(countdownInterval);
+  });
+}
+
 function closeErrorModal(modal) {
   modal.remove();
 }
@@ -1291,62 +1518,52 @@ document.addEventListener('DOMContentLoaded', () => {
   applyLang(currentLang);
   applySiteConfig();
 
-  // User Auth Badge in Navbar
+  // ── New premium navbar: inline auth buttons (no dropdown) ──
   const savedUser = JSON.parse(localStorage.getItem('lamsa_user') || 'null');
-  const navActions = document.querySelector('.nav-actions');
-  if (navActions && !document.getElementById('navUserBtn')) {
-    const userBtn = document.createElement('a');
-    userBtn.id = 'navUserBtn';
-    userBtn.href = (savedUser && savedUser.role === 'admin') ? 'admin.html' : 'auth.html';
-    userBtn.className = 'nav-icon-btn';
-    userBtn.style.fontSize = '1.05rem';
-    userBtn.style.textDecoration = 'none';
-    if (savedUser) {
-      if (savedUser.role === 'admin') {
-        userBtn.innerHTML = `<span style="font-size:1.15rem;">👑</span>`;
-        userBtn.title = 'لوحة إدارة المتجر (Admin)';
-      } else {
-        userBtn.innerHTML = `<span>${savedUser.avatar || '👤'}</span>`;
-        userBtn.title = `أهلاً بك يا ${savedUser.name} (اضغط لتغيير الحساب)`;
-      }
-    } else {
-      userBtn.innerHTML = `<span>👤</span>`;
-      userBtn.title = 'تسجيل الدخول / حسابي';
-    }
-    navActions.prepend(userBtn);
+  const token = localStorage.getItem('lamsa_token');
 
-    // If admin is logged in, show direct admin link in navbar
-    if (savedUser && savedUser.role === 'admin' && !document.getElementById('navAdminLink')) {
-      const adminLink = document.createElement('a');
-      adminLink.id = 'navAdminLink';
-      adminLink.href = 'admin.html';
-      adminLink.className = 'btn btn-gold btn-sm';
-      adminLink.style.padding = '4px 10px';
-      adminLink.style.fontSize = '0.8rem';
-      adminLink.style.borderRadius = '12px';
-      adminLink.innerHTML = '👑 لوحة الإدارة';
-      navActions.prepend(adminLink);
+  const navLoginBtn   = document.getElementById('navLoginBtn');
+  const navAccountBtn = document.getElementById('navAccountBtn');
+  const navLogoutBtn  = document.getElementById('navLogoutBtn');
+  const navAdminBtn   = document.getElementById('navAdminBtn');
+
+  if (token && savedUser) {
+    // ── Logged in ──
+    if (navLoginBtn) navLoginBtn.style.display = 'none';
+    if (navAccountBtn) navAccountBtn.style.display = '';
+    if (navLogoutBtn) navLogoutBtn.style.display = '';
+    
+    // Show admin button only for admins
+    if (navAdminBtn) {
+      navAdminBtn.style.display = savedUser.role === 'admin' ? '' : 'none';
     }
+    
+    // Wire logout button
+    if (navLogoutBtn) {
+      navLogoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+          localStorage.removeItem('lamsa_token');
+          localStorage.removeItem('lamsa_user');
+          sessionStorage.removeItem('lamsa_auth_redirect');
+          window.location.href = '/auth';
+        }
+      });
+    }
+  } else {
+    // ── Logged out ──
+    if (navLoginBtn) navLoginBtn.style.display = '';
+    if (navAccountBtn) navAccountBtn.style.display = 'none';
+    if (navLogoutBtn) navLogoutBtn.style.display = 'none';
+    if (navAdminBtn) navAdminBtn.style.display = 'none';
   }
 
-  // Universal Admin link in Desktop Nav Links
-  const navLinks = document.querySelector('.nav-links');
-  if (navLinks && !document.getElementById('navAdminItem')) {
-    const aItem = document.createElement('a');
-    aItem.id = 'navAdminItem';
-    aItem.href = 'admin.html';
-    aItem.style.color = 'var(--gold)';
-    aItem.style.fontWeight = '700';
-    aItem.innerHTML = '👑 لوحة الإدارة';
-    navLinks.appendChild(aItem);
-  }
-
-  // Universal Admin link in Mobile Nav
+  // Admin link in mobile nav (keep for mobile access)
   const mobileNav = document.getElementById('mobileNav');
-  if (mobileNav && !document.getElementById('mobileAdminLink')) {
+  if (mobileNav && savedUser?.role === 'admin' && !document.getElementById('mobileAdminLink')) {
     const mLink = document.createElement('a');
     mLink.id = 'mobileAdminLink';
-    mLink.href = 'admin.html';
+    mLink.href = '/admin';
     mLink.style.color = 'var(--gold)';
     mLink.style.fontWeight = '700';
     mLink.innerHTML = '👑 لوحة الإدارة (Admin)';
@@ -1410,11 +1627,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Active nav link
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  // Active nav link - Updated for clean URLs
+  const currentPage = window.location.pathname;
   document.querySelectorAll('.nav-links a, .mobile-nav a').forEach(link => {
     const href = link.getAttribute('href');
-    if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+    if (href === currentPage || (currentPage === '/' && href === '/home')) {
       link.classList.add('active');
     }
   });

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
@@ -64,6 +64,41 @@
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
+
+  <style>
+    /* Auth Button */
+    .auth-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: 1.5px solid;
+      white-space: nowrap;
+    }
+    .auth-btn[data-auth-state="login"] {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: var(--bg-dark);
+      border-color: var(--gold);
+    }
+    .auth-btn[data-auth-state="login"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    }
+    .auth-btn[data-auth-state="logout"] {
+      background: linear-gradient(135deg, #8B1520 0%, #5C0E14 100%);
+      color: #FFFFFF;
+      border-color: rgba(255, 100, 100, 0.4);
+    }
+    .auth-btn[data-auth-state="logout"]:hover {
+      background: linear-gradient(135deg, #A01828 0%, #6B1118 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(139, 21, 32, 0.4);
+    }
+  </style>
   <style>
     .about-story-grid {
       display: grid;
@@ -143,46 +178,90 @@
 
   <!-- Mobile Nav -->
   <div class="mobile-nav" id="mobileNav">
-    <a href="index.html" data-key="nav_sets">الرئيسية</a>
-    <a href="shop.html" data-key="nav_shop">المتجر</a>
-    <a href="routine.html" data-key="nav_routine">اختارلي روتين 🔥</a>
-    <a href="gift.html" data-key="nav_gift">صمم هديتك 🎁</a>
-    <a href="perfume.html" data-key="nav_perfume">اعمل برفانك 🌹</a>
-    <a href="about.html" class="active" data-key="nav_about">عن لمسة</a>
-    <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+    <a href="/home" data-key="nav_sets">الرئيسية</a>
+    <a href="/shop" data-key="nav_shop">المتجر</a>
+    <a href="/routine-finder" data-key="nav_routine">اختارلي روتين 🔥</a>
+    <a href="/gift-designer" data-key="nav_gift">صمم هديتك 🎁</a>
+    <a href="/perfume-studio" data-key="nav_perfume">اعمل برفانك 🌹</a>
+    <a href="/about" class="active" data-key="nav_about">عن لمسة</a>
+    <a href="/contact" data-key="nav_contact">تواصل معنا</a>
   </div>
 
   <!-- Navbar -->
   <header class="navbar">
     <div class="container nav-inner">
-      <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
-        <span></span><span></span><span></span>
-      </button>
-
-      <a href="index.html" class="nav-logo">
-        <img src="assets/logo.png" alt="LAMSA - لمسة" loading="lazy" decoding="async" style="width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--gold); object-fit: cover;">
+      <!-- RIGHT: Logo -->
+      <a href="/home" class="nav-logo">
+        <img src="assets/logo.png" alt="LAMSA" loading="lazy" decoding="async" style="width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #C9A86A; object-fit: cover; flex-shrink:0;">
         <span class="nav-logo-text">LAMSA</span>
       </a>
 
+      <!-- CENTER: 5 nav links only -->
       <nav class="nav-links">
-        <a href="index.html" data-key="nav_sets">الرئيسية</a>
-        <a href="shop.html" data-key="nav_shop">المتجر</a>
-        <a href="routine.html" data-key="nav_routine">اختارلي روتين</a>
-        <a href="gift.html" data-key="nav_gift">صمم هديتك</a>
-        <a href="perfume.html" data-key="nav_perfume">اعمل برفانك</a>
-        <a href="about.html" class="active" data-key="nav_about">عن لمسة</a>
-        <a href="contact.html" data-key="nav_contact">تواصل معنا</a>
+        <a href="/home" data-key="nav_home">&#1575;&#1604;&#1605;&#1580;&#1605;&#1608;&#1593;&#1575;&#1578;</a>
+        <a href="/shop" data-key="nav_shop">&#1575;&#1604;&#1605;&#1578;&#1580;&#1585;</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-trigger" type="button">&#1582;&#1583;&#1605;&#1575;&#1578;&#1606;&#1575; <span class="nav-arrow">&#9660;</span></button>
+          <div class="nav-dropdown-menu">
+            <a href="/routine-finder">&#127807; &#1575;&#1582;&#1578;&#1575;&#1585;&#1610; &#1585;&#1608;&#1578;&#1610;&#1606;&#1603;</a>
+            <a href="/gift-designer">&#127873; &#1589;&#1605;&#1605; &#1607;&#1583;&#1610;&#1578;&#1603;</a>
+            <a href="/perfume-studio">&#127801; &#1575;&#1593;&#1605;&#1604; &#1576;&#1585;&#1601;&#1575;&#1606;&#1603;</a>
+          </div>
+        </div>
+        <a href="/about" class="active" data-key="nav_about">&#1593;&#1606; &#1604;&#1605;&#1587;&#1577;</a>
+        <a href="/contact" data-key="nav_contact">&#1578;&#1608;&#1575;&#1589;&#1604; &#1605;&#1593;&#1606;&#1575;</a>
       </nav>
 
+      <!-- LEFT: Actions - always visible, no dropdown hiding -->
       <div class="nav-actions">
-        <button class="theme-toggle-btn" aria-label="تبديل الوضع">🌙</button>
+        <!-- Language pill -->
         <div class="lang-toggle">
-          <button class="lang-btn active" data-lang="ar">عربي</button>
+          <button class="lang-btn active" data-lang="ar">&#1593;&#1585;&#1576;&#1610;</button>
           <button class="lang-btn" data-lang="en">EN</button>
         </div>
-        <button class="nav-icon-btn" id="cartToggle" aria-label="السلة">
-          🛍️
+        
+        <!-- Dark mode -->
+        <button class="nav-icon-btn theme-toggle-btn" aria-label="&#1578;&#1576;&#1583;&#1610;&#1604; &#1575;&#1604;&#1608;&#1590;&#1593;" title="&#1578;&#1576;&#1583;&#1610;&#1604; &#1575;&#1604;&#1608;&#1590;&#1593;">&#127769;</button>
+        
+        <!-- Cart -->
+        <button class="nav-icon-btn" id="cartToggle" aria-label="&#1575;&#1604;&#1587;&#1604;&#1577;" title="&#1575;&#1604;&#1587;&#1604;&#1577;">
+          &#128717;&#65039;
           <span class="cart-count">0</span>
+        </button>
+        
+        <!-- Wishlist -->
+        <button class="nav-icon-btn" id="favoritesToggle" aria-label="&#1575;&#1604;&#1605;&#1601;&#1590;&#1604;&#1577;" title="&#1575;&#1604;&#1605;&#1601;&#1590;&#1604;&#1577;">
+          &#129293;
+          <span class="cart-count" id="favoritesCount">0</span>
+        </button>
+        
+        <!-- Auth buttons - INLINE, always visible -->
+        <div class="nav-auth-group" id="navAuthGroup">
+          <!-- Not logged in: show login button -->
+          <a href="/auth" class="nav-auth-btn" id="navLoginBtn" style="display:none;">
+            <span class="auth-icon">&#128100;</span>
+            <span class="auth-text">&#1578;&#1587;&#1580;&#1610;&#1604; &#1575;&#1604;&#1583;&#1582;&#1608;&#1604;</span>
+          </a>
+          
+          <!-- Logged in: show account + logout -->
+          <a href="/account" class="nav-auth-btn" id="navAccountBtn" style="display:none;">
+            <span class="auth-icon">&#128100;</span>
+            <span class="auth-text">&#1581;&#1587;&#1575;&#1576;&#1610;</span>
+          </a>
+          <button class="nav-auth-btn nav-logout-btn" id="navLogoutBtn" style="display:none;">
+            <span class="auth-text">&#1578;&#1587;&#1580;&#1610;&#1604; &#1575;&#1604;&#1582;&#1585;&#1608;&#1580;</span>
+          </button>
+          
+          <!-- Admin only -->
+          <a href="/admin" class="nav-auth-btn nav-admin-btn" id="navAdminBtn" style="display:none;">
+            <span class="auth-icon">&#128081;</span>
+            <span class="auth-text">&#1604;&#1608;&#1581;&#1577; &#1575;&#1604;&#1573;&#1583;&#1575;&#1585;&#1577;</span>
+          </a>
+        </div>
+        
+        <!-- Mobile hamburger -->
+        <button class="menu-toggle" id="menuToggle" aria-label="&#1575;&#1604;&#1602;&#1575;&#1574;&#1605;&#1577;">
+          <span></span><span></span><span></span>
         </button>
       </div>
     </div>
@@ -190,17 +269,18 @@
 
   <!-- Page Header -->
   <div class="page-header">
-    <div class="container">
+    <div class="container" style="max-width: 1400px; margin: 0 auto; padding: 0 2.5rem;">
       <h1 data-key="about_title">عن لمسة</h1>
       <p>قصة شغف بالجمال، العناية الفائقة، وصناعة العطور الحصرية</p>
     </div>
   </div>
 
   <!-- About Content -->
-  <main class="container section">
+  <main class="section" style="max-width: 1400px; margin: 0 auto; padding: 0 2.5rem;">
+    <div class="container">
     
     <!-- Story -->
-    <div class="about-story-grid">
+    <div class="about-story-grid" style="gap: 2rem; padding: 0 1.5rem;">
       <div>
         <span class="badge badge-popular mb-8">من نحن</span>
         <h2 style="color:var(--burgundy-dark); margin-bottom:20px;">حكاية لمسة: الجمال يبدأ من التفاصيل</h2>
@@ -214,8 +294,8 @@
           أما شغفنا الحقيقي فهو **العطور والتركيبات اليدوية**؛ حيث نقوم بصناعة وابتكار تركيبات عطرية خاصة بمكونات نقية وثبات يدوم، لتمنحك توقيعاً عطرياً لا يشبه أحداً.
         </p>
         <div class="flex gap-16">
-          <a href="routine.html" class="btn btn-primary">اكتشفي روتينك 🔥</a>
-          <a href="perfume.html" class="btn btn-outline">صممي عطرك 🌹</a>
+          <a href="/routine-finder" class="btn btn-primary">اكتشفي روتينك 🔥</a>
+          <a href="/perfume-studio" class="btn btn-outline">صممي عطرك 🌹</a>
         </div>
       </div>
 
@@ -229,7 +309,7 @@
     </div>
 
     <!-- Stats -->
-    <div class="stats-row">
+    <div class="stats-row" style="padding: 0 1.5rem;">
       <div class="stat-card">
         <div class="stat-number">+1000</div>
         <div class="stat-label">عميل سعيد ومستمر</div>
@@ -337,7 +417,7 @@
           <p style="color: var(--text-mid); line-height: 1.8;">
             ابتكر عطرك الخاص! نحن نصنع تركيبات عطرية حصرية بمكونات فاخرة وثبات استثنائي. اختر العائلة العطرية، التركيز، والحجم، وسنقوم بصناعته خصيصاً لك.
           </p>
-          <a href="perfume.html" class="btn btn-sm btn-outline mt-16">ابدأ التصميم 🎨</a>
+          <a href="/perfume-studio" class="btn btn-sm btn-outline mt-16">ابدأ التصميم 🎨</a>
         </div>
 
         <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 32px; box-shadow: 0 4px 20px var(--shadow); border-top: 4px solid var(--burgundy);">
@@ -346,7 +426,7 @@
           <p style="color: var(--text-mid); line-height: 1.8;">
             أجب على 4 أسئلة بسيطة وسنقترح روتين عناية مخصص تماماً لنوع بشرتك وشعرك ومشاكلك الرئيسية وحتى ميزانيتك!
           </p>
-          <a href="routine.html" class="btn btn-sm btn-outline mt-16">جرب الآن 🚀</a>
+          <a href="/routine-finder" class="btn btn-sm btn-outline mt-16">جرب الآن 🚀</a>
         </div>
 
         <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 32px; box-shadow: 0 4px 20px var(--shadow); border-top: 4px solid var(--burgundy);">
@@ -355,7 +435,7 @@
           <p style="color: var(--text-mid); line-height: 1.8;">
             ما تحتاري في الهدية! نحن ننسق هدايا احترافية للمناسبات المختلفة مع تغليف فاخر ولمسات شخصية تسعد من تحبين.
           </p>
-          <a href="gift.html" class="btn btn-sm btn-outline mt-16">صمم هديتك 💝</a>
+          <a href="/gift-designer" class="btn btn-sm btn-outline mt-16">صمم هديتك 💝</a>
         </div>
 
       </div>
@@ -390,7 +470,7 @@
       </div>
 
       <div style="margin-top: 48px;">
-        <a href="shop.html" class="btn" style="background: var(--gold); color: var(--burgundy); padding: 16px 48px; font-size: 1.1rem; font-weight: 700;">ابدأ التسوق الآن 🛍️</a>
+        <a href="/shop" class="btn" style="background: var(--gold); color: var(--burgundy); padding: 16px 48px; font-size: 1.1rem; font-weight: 700;">ابدأ التسوق الآن 🛍️</a>
       </div>
     </section>
 
@@ -402,7 +482,7 @@
       </p>
       <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
         <a href="#" data-wa-link target="_blank" class="btn btn-primary">تواصل عبر واتساب 💬</a>
-        <a href="contact.html" class="btn btn-outline">أرسل رسالة 📧</a>
+        <a href="/contact" class="btn btn-outline">أرسل رسالة 📧</a>
       </div>
     </section>
 
@@ -419,6 +499,9 @@
   <script src="js/data.js"></script>
   <script src="js/config.js"></script>
   <script src="js/main.js"></script>
+
+  <!-- Navbar Auth State -->
+  <script src="js/navbar-auth.js"></script>
   <a href="https://wa.me/201080239612" target="_blank" class="whatsapp-float" aria-label="واتساب">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/></svg>
   </a>
