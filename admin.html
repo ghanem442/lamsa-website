@@ -690,76 +690,29 @@
         <input type="hidden" id="scentId">
 
         <div class="input-group">
+          <label>اسم العطر بالعربية *</label>
+          <input type="text" class="form-input" id="scentNameAr" required placeholder="مثال: برغموت إيطالي" style="font-size: 1.1rem;">
+        </div>
+
+        <div class="input-group">
           <label>الطبقة / Layer *</label>
-          <select class="form-select" id="scentLayer" required>
+          <select class="form-select" id="scentLayer" required style="font-size: 1.1rem;">
             <option value="top">المقدمة (Top Notes)</option>
             <option value="heart">القلب (Heart Notes)</option>
             <option value="base">القاعدة (Base Notes)</option>
           </select>
         </div>
 
-        <div class="input-group">
-          <label>اسم العطر بالعربية *</label>
-          <input type="text" class="form-input" id="scentNameAr" required placeholder="مثال: برغموت إيطالي">
-        </div>
-
-        <div class="input-group">
-          <label>اسم العطر بالإنجليزية</label>
-          <input type="text" class="form-input" id="scentNameEn" placeholder="مثال: Bergamot">
-        </div>
-
-        <div class="grid-2">
-          <div class="input-group">
-            <label>الرمز التعبيري (Emoji) *</label>
-            <input type="text" class="form-input" id="scentIcon" required placeholder="🍋" maxlength="2" style="font-size: 1.5rem; text-align: center;">
-          </div>
-
-          <div class="input-group">
-            <label>اللون (Hex) *</label>
-            <input type="text" class="form-input" id="scentColor" required placeholder="#FFE066" pattern="^#[0-9A-Fa-f]{6}$">
-          </div>
-        </div>
-
-        <div class="input-group">
-          <label>لون التوهج (RGBA) *</label>
-          <input type="text" class="form-input" id="scentGlowColor" required placeholder="rgba(255, 224, 102, 0.5)">
-          <small style="color: var(--text-light); font-size: 0.85rem;">مثال: rgba(255, 224, 102, 0.5)</small>
-        </div>
-
-        <div class="input-group">
-          <label>الوصف *</label>
-          <textarea class="form-input" id="scentDescription" required placeholder="حمضي منعش وفواح" rows="2" style="resize: vertical;"></textarea>
-        </div>
-
-        <div class="grid-2">
-          <div class="input-group">
-            <label>قوة الانتشار (Sillage)</label>
-            <input type="number" class="form-input" id="scentBoostSillage" min="1" max="15" placeholder="للمقدمة والقلب فقط">
-            <small style="color: var(--text-light); font-size: 0.85rem;">1-15 (للمقدمة والقلب)</small>
-          </div>
-
-          <div class="input-group">
-            <label>قوة الثبات (Longevity)</label>
-            <input type="number" class="form-input" id="scentBoostLongevity" min="1" max="15" placeholder="للقاعدة فقط">
-            <small style="color: var(--text-light); font-size: 0.85rem;">1-15 (للقاعدة فقط)</small>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="input-group">
-            <label>الحالة</label>
-            <select class="form-select" id="scentIsActive">
-              <option value="true">نشط (يظهر للزبائن)</option>
-              <option value="false">غير نشط (مخفي)</option>
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label>ترتيب العرض</label>
-            <input type="number" class="form-input" id="scentSortOrder" value="0" min="0">
-            <small style="color: var(--text-light); font-size: 0.85rem;">الأقل يظهر أولاً</small>
-          </div>
-        </div>
+        <!-- Hidden fields with default values -->
+        <input type="hidden" id="scentNameEn" value="">
+        <input type="hidden" id="scentIcon" value="🌿">
+        <input type="hidden" id="scentColor" value="#FFE066">
+        <input type="hidden" id="scentGlowColor" value="rgba(255, 224, 102, 0.5)">
+        <input type="hidden" id="scentDescription" value="رائحة مميزة">
+        <input type="hidden" id="scentBoostSillage" value="7">
+        <input type="hidden" id="scentBoostLongevity" value="9">
+        <input type="hidden" id="scentIsActive" value="true">
+        <input type="hidden" id="scentSortOrder" value="0">
 
         <div class="flex gap-10" style="margin-top: 24px;">
           <button type="submit" class="btn btn-primary" style="flex: 1;">💾 حفظ العطر</button>

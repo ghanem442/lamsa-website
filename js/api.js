@@ -406,55 +406,53 @@
         cache: 'no-store'
       });
     },
+
+    // --------------------------------------------------
+    // SCENTS (Perfume Management)
+    // --------------------------------------------------
+    
+    async getAllScents(layer = null, active = true) {
+      const params = new URLSearchParams();
+      if (layer) params.append('layer', layer);
+      if (active !== null) params.append('active', String(active));
+      
+      return await request(`/api/scents?${params.toString()}`);
+    },
+
+    async getScentsByLayer(active = true) {
+      const params = new URLSearchParams();
+      if (active !== null) params.append('active', String(active));
+      
+      return await request(`/api/scents/by-layer?${params.toString()}`);
+    },
+
+    async adminCreateScent(scentData) {
+      return await request('/api/scents', {
+        method: 'POST',
+        body: JSON.stringify(scentData)
+      });
+    },
+
+    async adminUpdateScent(id, scentData) {
+      return await request(`/api/scents/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(scentData)
+      });
+    },
+
+    async adminDeleteScent(id) {
+      return await request(`/api/scents/${id}`, {
+        method: 'DELETE'
+      });
+    },
+
+    async adminSeedDefaultScents() {
+      return await request('/api/scents/seed-defaults', {
+        method: 'POST'
+      });
+    }
   };
 
   window.LAMSA_API = api;
 })(window);
 
-
-
-  // --------------------------------------------------
-  // SCENTS (Perfume Management)
-  // --------------------------------------------------
-  
-  async getAllScents(layer = null, active = true) {
-    const params = new URLSearchParams();
-    if (layer) params.append('layer', layer);
-    if (active !== null) params.append('active', String(active));
-    
-    return await request(`/api/scents?${params.toString()}`);
-  },
-
-  async getScentsByLayer(active = true) {
-    const params = new URLSearchParams();
-    if (active !== null) params.append('active', String(active));
-    
-    return await request(`/api/scents/by-layer?${params.toString()}`);
-  },
-
-  async adminCreateScent(scentData) {
-    return await request('/api/scents', {
-      method: 'POST',
-      body: JSON.stringify(scentData)
-    });
-  },
-
-  async adminUpdateScent(id, scentData) {
-    return await request(`/api/scents/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(scentData)
-    });
-  },
-
-  async adminDeleteScent(id) {
-    return await request(`/api/scents/${id}`, {
-      method: 'DELETE'
-    });
-  },
-
-  async adminSeedDefaultScents() {
-    return await request('/api/scents/seed-defaults', {
-      method: 'POST'
-    });
-  }
-};

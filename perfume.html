@@ -732,7 +732,8 @@
   <script src="js/main.js"></script>
   <script>
     // ── Olfactory Notes Database ──────────────────────────
-    const TOP_NOTES = [
+    // Default fallback scents (will be replaced by API data)
+    let TOP_NOTES = [
       { id: 'top_bergamot', name: 'برغموت إيطالي', icon: '🍋', desc: 'حمضي منعش وفواح', color: '#FFE066', glow: 'rgba(255, 224, 102, 0.5)', boostSillage: 8 },
       { id: 'top_lavender', name: 'لافندر فرنسي', icon: '🪻', desc: 'أناقة وهدوء كلاسيكي', color: '#B388FF', glow: 'rgba(179, 136, 255, 0.5)', boostSillage: 5 },
       { id: 'top_cardamom', name: 'هيل وتوابل حارة', icon: '🌿', desc: 'دفء وجاذبية آسرة', color: '#80E27E', glow: 'rgba(128, 226, 126, 0.5)', boostSillage: 7 },
@@ -741,7 +742,7 @@
       { id: 'top_citrus', name: 'حمضيات استوائية', icon: '🍊', desc: 'انتعاش وطاقة إيجابية', color: '#FFA726', glow: 'rgba(255, 167, 38, 0.5)', boostSillage: 7 }
     ];
 
-    const HEART_NOTES = [
+    let HEART_NOTES = [
       { id: 'heart_jasmine', name: 'ياسمين دمشقي', icon: '🌸', desc: 'رقة وأنوثة فتاكة', color: '#FFF9C4', glow: 'rgba(255, 249, 196, 0.4)', boostSillage: 6 },
       { id: 'heart_rose', name: 'ورد طائفي ملكي', icon: '🌹', desc: 'أصالة وفخامة شرقية', color: '#FF4081', glow: 'rgba(255, 64, 129, 0.5)', boostSillage: 8 },
       { id: 'heart_tonka', name: 'تونكا وكراميل', icon: '🌰', desc: 'حلاوة دافئة ومثيرة', color: '#FFB74D', glow: 'rgba(255, 183, 77, 0.5)', boostSillage: 7 },
@@ -750,7 +751,7 @@
       { id: 'heart_iris', name: 'زهرة السوسن الفرنسية', icon: '🪷', desc: 'نبل وأناقة راقية', color: '#9FA8DA', glow: 'rgba(159, 168, 218, 0.5)', boostSillage: 7 }
     ];
 
-    const BASE_NOTES = [
+    let BASE_NOTES = [
       { id: 'base_oud', name: 'عود كمبودي معتق', icon: '🪵', desc: 'ثبات جبار وفخامة طاغية', color: '#4E342E', glow: 'rgba(78, 52, 46, 0.7)', boostLongevity: 12 },
       { id: 'base_amber', name: 'عنبر ملكي نادر', icon: '💎', desc: 'دفء وفوحان يدوم لأيام', color: '#FF8F00', glow: 'rgba(255, 143, 0, 0.6)', boostLongevity: 10 },
       { id: 'base_vanilla', name: 'فانيليا مدغشقر', icon: '🍦', desc: 'إغراء ونعومة ساحرة', color: '#FFE082', glow: 'rgba(255, 224, 130, 0.5)', boostLongevity: 8 },
@@ -760,10 +761,63 @@
     ];
 
     // Selected state
-    let selectedTop = TOP_NOTES[0];
-    let selectedHeart = HEART_NOTES[1];
-    let selectedBase = BASE_NOTES[0];
+    let selectedTop = null;
+    let selectedHeart = null;
+    let selectedBase = null;
     let customName = "سوفاج الملكي (Sauvage Blend)";
+
+    // ── Load Scents from Database API ──────────────────────────
+    async function loadScentsFromAPI() {
+      try {
+        const response = await LAMSA_API.getScentsByLayer(true);
+        
+        if (response.success && response.data) {
+          // Transform database scents to match UI format
+          const transformScent = (dbScent, layer) => {
+            const prefix = layer === 'top' ? 'top' : layer === 'heart' ? 'heart' : 'base';
+            return {
+              id: `${prefix}_${dbScent.id}`,
+              name: dbScent.nameAr,
+              icon: dbScent.icon || '🌿',
+              desc: dbScent.description || 'رائحة مميزة',
+              color: dbScent.color || '#FFE066',
+              glow: dbScent.glowColor || 'rgba(255, 224, 102, 0.5)',
+              boostSillage: dbScent.boostSillage || 7,
+              boostLongevity: dbScent.boostLongevity || 9
+            };
+          };
+
+          // Update arrays with database scents (if they exist)
+          if (response.data.top && response.data.top.length > 0) {
+            TOP_NOTES = response.data.top.map(s => transformScent(s, 'top'));
+          }
+          if (response.data.heart && response.data.heart.length > 0) {
+            HEART_NOTES = response.data.heart.map(s => transformScent(s, 'heart'));
+          }
+          if (response.data.base && response.data.base.length > 0) {
+            BASE_NOTES = response.data.base.map(s => transformScent(s, 'base'));
+          }
+
+          console.log('✅ تم تحميل العطور من قاعدة البيانات:', {
+            top: TOP_NOTES.length,
+            heart: HEART_NOTES.length,
+            base: BASE_NOTES.length
+          });
+        }
+      } catch (error) {
+        console.warn('⚠️ فشل تحميل العطور من API، استخدام العطور الافتراضية:', error);
+        // Keep using fallback arrays defined above
+      }
+
+      // Initialize selected notes (first of each type)
+      selectedTop = TOP_NOTES[0];
+      selectedHeart = HEART_NOTES[1] || HEART_NOTES[0];
+      selectedBase = BASE_NOTES[0];
+
+      // Render UI
+      renderNotesGrid();
+      updateLiquidAndGauges();
+    }
 
     function switchAtelierMode(mode) {
       document.getElementById('btnModeLab').classList.toggle('active', mode === 'lab');
@@ -1013,13 +1067,12 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Load perfume prices from API
-      loadPerfumePricesFromAPI();
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load scents and prices from API
+      await loadScentsFromAPI();
+      await loadPerfumePricesFromAPI();
       
-      renderNotesGrid();
       renderPresetsGrid();
-      updateLiquidAndGauges();
     });
 
     // Global variable to store loaded prices
